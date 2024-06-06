@@ -157,63 +157,61 @@ const QuestionPortal: React.FC = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
-
-      <Button title="Add an image" onPress={pickImage} />
+    <View style={styles.container}>
 
       <DraggableFlatList
         data={data.filter(item => item.identifier !== 'question')}
         renderItem={renderItem}
         keyExtractor={(item) => item.key}
         onDragEnd={({ data: newData }) => setData(newData)}
+        ListHeaderComponent={<Button title="Add an image" onPress={pickImage} />}
+        ListFooterComponent={<View><TouchableOpacity
+          style={styles.addButton}
+          onPress={handleAddTextComponent}
+        >
+          <Text style={styles.buttonText}>Add Text Component</Text>
+        </TouchableOpacity>
+  
+        <TextInput
+          multiline
+          style={[styles.input, { height: Math.max(40, qText.split('\n').length * 20) }]}
+          onChangeText={text => setQText(text)}
+          value={qText}
+          placeholder="Enter text for a text component or answer choice here!"
+        />
+  
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={handleAddAnswerChoice}
+        >
+        <Text style={styles.buttonText}>Add Answer Choice</Text>
+        </TouchableOpacity>
+  
+        <Text style={styles.largeText}>Question</Text>
+  
+        <TextInput
+          multiline
+          style={[styles.input, { height: Math.max(40, value.split('\n').length * 20) }]}
+          onChangeText={text => onChangeText(text)}
+          value={value}
+          placeholder="This is the question!"
+        />
+  
+        <DraggableFlatList
+          data={data.filter(item => item.identifier === 'question')}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.key}
+          onDragEnd={({ data: newData }) => setData(newData)}
+        />
+  
+        <TouchableOpacity
+          style={styles.submitButton}
+          onPress={handleSubmit}
+        >
+          <Text style={styles.buttonText}>Submit</Text>
+        </TouchableOpacity></View>}
       />
-
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={handleAddTextComponent}
-      >
-        <Text style={styles.buttonText}>Add Text Component</Text>
-      </TouchableOpacity>
-
-      <TextInput
-        multiline
-        style={[styles.input, { height: Math.max(40, qText.split('\n').length * 20) }]}
-        onChangeText={text => setQText(text)}
-        value={qText}
-        placeholder="Enter text for a text component or answer choice here!"
-      />
-
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={handleAddAnswerChoice}
-      >
-      <Text style={styles.buttonText}>Add Answer Choice</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.largeText}>Question</Text>
-
-      <TextInput
-        multiline
-        style={[styles.input, { height: Math.max(40, value.split('\n').length * 20) }]}
-        onChangeText={text => onChangeText(text)}
-        value={value}
-        placeholder="This is the question!"
-      />
-
-      <DraggableFlatList
-        data={data.filter(item => item.identifier === 'question')}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.key}
-        onDragEnd={({ data: newData }) => setData(newData)}
-      />
-
-      <TouchableOpacity
-        style={styles.submitButton}
-        onPress={handleSubmit}
-      >
-        <Text style={styles.buttonText}>Submit</Text>
-      </TouchableOpacity>
-    </ScrollView>
+    </View>
   );
 };
 
