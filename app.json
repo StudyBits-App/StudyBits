@@ -33,6 +33,7 @@
     "plugins": [
       "@react-native-google-signin/google-signin",
       "@react-native-firebase/app",
+      "expo-secure-store",
       "expo-router",
       [
         "expo-build-properties",
