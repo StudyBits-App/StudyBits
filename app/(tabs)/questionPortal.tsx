@@ -68,7 +68,6 @@ const QuestionPortal: React.FC = () => {
       };
 
       setData(prevData => [...prevData, newItem]);
-      setQText("");
     }
   };
 
@@ -83,7 +82,6 @@ const QuestionPortal: React.FC = () => {
       };
 
       setData(prevData => [...prevData, newItem]);
-      setQText("");
     }
   };
 
@@ -160,6 +158,7 @@ const QuestionPortal: React.FC = () => {
 
   return (
     <ScrollView style={styles.container}>
+
       <Button title="Add an image" onPress={pickImage} />
 
       <DraggableFlatList
@@ -188,7 +187,7 @@ const QuestionPortal: React.FC = () => {
         style={styles.addButton}
         onPress={handleAddAnswerChoice}
       >
-        <Text style={styles.buttonText}>Add Answer Choice</Text>
+      <Text style={styles.buttonText}>Add Answer Choice</Text>
       </TouchableOpacity>
 
       <Text style={styles.largeText}>Question</Text>
