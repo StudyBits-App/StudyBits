@@ -13,6 +13,7 @@ import * as ImagePicker from 'expo-image-picker';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 import { CheckBox } from 'rn-inkpad';
+import firestore from '@react-native-firebase/firestore';
 
 interface QuestionItem {
   key: string;
@@ -50,7 +51,7 @@ const QuestionPortal: React.FC = () => {
         content: "",
         image: result.assets[0].uri,
         identifier: "image",
-        selected:false,
+        selected: false,
         delete: () => handleDelete(newItem.key)
       };
 
@@ -65,7 +66,7 @@ const QuestionPortal: React.FC = () => {
         key: uuidv4(),
         content,
         identifier: "text",
-        selected:false,
+        selected: false,
         delete: () => handleDelete(newItem.key)
       };
 
@@ -108,9 +109,17 @@ const QuestionPortal: React.FC = () => {
   };
 
   const handleSubmit = () => {
-    console.log("Current Question Input:", value);
-    console.log("Current Components on Screen:", components);
-    console.log("Current Answer Choices:", answerChoices);
+    const filteredComponents = components.map(component => {
+      const { delete: _, ...filteredComponent } = component;
+      return filteredComponent;
+    });
+
+    const filteredAnswers = answerChoices.map(answerChoice => {
+      const { delete: _, ...filteredComponent } = answerChoice;
+      return filteredComponent;
+    });
+
+    firestore().collection('questions').add({ question: value, text: filteredComponents, answers: filteredAnswers });
   };
 
   const renderItem = ({ item, drag }: RenderItemParams<QuestionItem>) => {
