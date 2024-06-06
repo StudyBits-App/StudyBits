@@ -77,7 +77,11 @@ const ComponentList = () => {
 
   return (
     <View style={styles.container}>
-      {components.map((component, index) => {
+      <View style={styles.questionContainer}>
+        <Text style={styles.text}>{question}</Text>
+      </View>
+
+      {components?.map((component, index) => {
         if (component.identifier === 'text') {
           return (
             <View key={index} style={styles.textContainer}>
@@ -87,10 +91,6 @@ const ComponentList = () => {
         }
         return null;
       })}
-
-      <View style={styles.questionContainer}>
-        <Text style={styles.text}>{question}</Text>
-      </View>
 
       {answerChoices.map((choice, index) => (
         <TouchableOpacity
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     backgroundColor: '#f0f0f0',
     padding: 10,
-    borderRadius: 5,
+    borderRadius: 5
   },
   answerContainer: {
     marginBottom: 10,
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   text: {
-    fontSize: 10,
+    fontSize: 20,
   },
 });
 
