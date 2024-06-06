@@ -20,7 +20,7 @@ interface QuestionItem {
   content: string;
   image?: string;
   identifier: string;
-  selected: boolean;
+  answer: boolean;
   delete: () => void;
 }
 
@@ -51,7 +51,7 @@ const QuestionPortal: React.FC = () => {
         content: "",
         image: result.assets[0].uri,
         identifier: "image",
-        selected: false,
+        answer: false,
         delete: () => handleDelete(newItem.key)
       };
 
@@ -66,7 +66,7 @@ const QuestionPortal: React.FC = () => {
         key: uuidv4(),
         content,
         identifier: "text",
-        selected: false,
+        answer: false,
         delete: () => handleDelete(newItem.key)
       };
 
@@ -81,7 +81,7 @@ const QuestionPortal: React.FC = () => {
         key: uuidv4(),
         content: newQuestion,
         identifier: "question",
-        selected: false,
+        answer: false,
         delete: () => handleDelete(newItem.key)
       };
 
@@ -97,13 +97,13 @@ const QuestionPortal: React.FC = () => {
   const handleToggleSelect = (key: string) => {
     setComponents(prevComponents =>
       prevComponents.map(item =>
-        item.key === key ? { ...item, selected: !item.selected } : item
+        item.key === key ? { ...item, answer: !item.answer } : item
       )
     );
 
     setAnswerChoices(prevChoices =>
       prevChoices.map(item =>
-        item.key === key ? { ...item, selected: !item.selected } : item
+        item.key === key ? { ...item, answer: !item.answer } : item
       )
     );
   };
@@ -148,7 +148,7 @@ const QuestionPortal: React.FC = () => {
           onLongPress={drag}
         >
           <CheckBox
-            checked={item.selected || false}
+            checked={item.answer || false}
             iconColor={'#464EE5'}
             iconSize={20}
             onChange={() => handleToggleSelect(item.key)}

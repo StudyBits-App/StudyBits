@@ -1,71 +1,42 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Button } from 'react-native';
-
-interface AnswerChoice {
-  content: string;
-  identifier: string;
-  selected: boolean;
-  correct: boolean;
-}
+import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore'
 
 interface Component {
+  key: string;
   content: string;
+  image?: string;
   identifier: string;
-  selected: boolean;
+  answer: boolean;
+  selected: boolean
 }
 
-const initialComponents: Component[] = [
-  {
-    "content": "",
-    "identifier": "image",
-    "selected": false
-  },
-  {
-    "content": "1",
-    "identifier": "text",
-    "selected": false
-  },
-  {
-    "content": "3",
-    "identifier": "text",
-    "selected": false
-  },
-  {
-    "content": "2",
-    "identifier": "text",
-    "selected": false
-  }
-];
+let questionInfo: FirebaseFirestoreTypes.DocumentData;
 
-const initialAnswerChoices: AnswerChoice[] = [
-  {
-    "content": "Ans3",
-    "identifier": "answer",
-    "selected": false,
-    "correct": false
-  },
-  {
-    "content": "Ans1",
-    "identifier": "answer",
-    "selected": false,
-    "correct": true
-  },
-  {
-    "content": "Ans2",
-    "identifier": "answer",
-    "selected": false,
-    "correct": false
-  }
-];
+firestore().collection('questions').get().then(querySnapshot => {
+  questionInfo = querySnapshot.docs[Math.floor(Math.random() * querySnapshot.size)].data()
+});
 
-const initialQuestion = "This is a question";
+// const initialComponents: Component[] = questionInfo.text;
+
+// const initialAnswerChoices: Component[] = questionInfo.answers;
+
+// const initialQuestion = questionInfo.question;
 
 const ComponentList = () => {
   const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
   const [answersSubmitted, setAnswersSubmitted] = useState(false);
-  const [answerChoices, setAnswerChoices] = useState<AnswerChoice[]>(initialAnswerChoices);
-  const [components, setComponents] = useState<Component[]>(initialComponents);
-  const [question, setQuestion] = useState(initialQuestion);
+  const [answerChoices, setAnswerChoices] = useState<Component[]>();
+  const [components, setComponents] = useState<Component[]>();
+  const [question, setQuestion] = useState<string>();
+
+  useEffect(() => {
+    setAnswerChoices(questionInfo.answers);
+    setComponents(questionInfo.text);
+    setQuestion(questionInfo.question);
+  }, [questionInfo])
+
+  if (!answerChoices) return <Text>Loading...</Text>
 
   const handleAnswerClick = (index: number) => {
     if (!answersSubmitted) {
@@ -93,9 +64,15 @@ const ComponentList = () => {
   const handleNext = () => {
     setSelectedAnswers([]);
     setAnswersSubmitted(false);
-    setAnswerChoices(initialAnswerChoices.map(choice => ({ ...choice, selected: false })));
-    setComponents(initialComponents.map(component => ({ ...component, selected: false })));
-    setQuestion(initialQuestion);
+    // setAnswerChoices(initialAnswerChoices.map(choice => ({ ...choice, selected: false })));
+    // setComponents(initialComponents.map(component => ({ ...component, selected: false })));
+    // setQuestion(initialQuestion);
+    firestore().collection('questions').get().then(querySnapshot => {
+      questionInfo = querySnapshot.docs[Math.floor(Math.random() * querySnapshot.size)].data()
+      setAnswerChoices(questionInfo.answers);
+      setComponents(questionInfo.text);
+      setQuestion(questionInfo.question);
+    });
   };
 
   return (
@@ -121,8 +98,8 @@ const ComponentList = () => {
           style={[
             styles.answerContainer,
             choice.selected ? styles.selectedAnswerContainer : {},
-            answersSubmitted && choice.selected && choice.correct ? styles.correctAnswerContainer : {},
-            answersSubmitted && choice.selected && !choice.correct ? styles.incorrectAnswerContainer : {},
+            answersSubmitted && choice.selected && choice.answer ? styles.correctAnswerContainer : {},
+            answersSubmitted && choice.selected && !choice.answer ? styles.incorrectAnswerContainer : {},
           ]}
           onPress={() => handleAnswerClick(index)}
           disabled={answersSubmitted}
