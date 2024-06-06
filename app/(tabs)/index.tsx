@@ -6,12 +6,14 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import auth from '@react-native-firebase/auth';
+import { useSession } from '@/context/ctx';
 
 GoogleSignin.configure({
   webClientId: '1098397225551-ibat99410nloiruc9g7aecrkvb83ptpf.apps.googleusercontent.com'
 });
 
 export default function HomeScreen() {
+  const { user, isLoading } = useSession();
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
@@ -27,12 +29,19 @@ export default function HomeScreen() {
       </ThemedView>
       <ThemedView>
         <Pressable style={styles.button} onPress={onPress}>
-          <Text style={styles.text}>{"Sign in with Google"}</Text>
+          <Text style={styles.text}>Sign in with Google</Text>
           <Image source={require('@/assets/images/react-logo.png')} style={styles.signInImage}></Image>
+        </Pressable>
+        <Pressable style={styles.button} onPress={logout}>
+          <Text style={styles.text}>Logout</Text>
         </Pressable>
       </ThemedView>
     </ParallaxScrollView>
   );
+}
+
+const logout = async () => {
+  auth().signOut()
 }
 
 const onPress = async () => {
@@ -59,6 +68,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   button: {
+    marginVertical: '10%',
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
