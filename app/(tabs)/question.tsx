@@ -9,7 +9,7 @@ const components = {};
 export default function Question() {
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView>
       <ThemeProvider theme={theme} components={components}>
         <QuestionPortal />
       </ThemeProvider>
