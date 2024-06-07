@@ -34,6 +34,15 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="answer"
+        options={{
+          title: 'Answer questions',
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name={focused ? 'code' : 'code-outline'} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

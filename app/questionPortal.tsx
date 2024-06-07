@@ -2,11 +2,11 @@ import React, { useState } from "react";
 import {
   Text,
   TextInput,
-  TouchableOpacity,
   StyleSheet,
   Button,
   Image,
   View,
+  Pressable,
 } from "react-native";
 import DraggableFlatList, { RenderItemParams } from "react-native-draggable-flatlist";
 import * as ImagePicker from 'expo-image-picker';
@@ -14,6 +14,7 @@ import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 import { CheckBox } from 'rn-inkpad';
 import firestore from '@react-native-firebase/firestore';
+import Animated, { Easing, useSharedValue, withTiming, useAnimatedStyle } from 'react-native-reanimated';
 
 interface QuestionItem {
   key: string;
@@ -28,7 +29,31 @@ const QuestionPortal: React.FC = () => {
   const [components, setComponents] = useState<QuestionItem[]>([]);
   const [answerChoices, setAnswerChoices] = useState<QuestionItem[]>([]);
   const [qText, setQText] = useState<string>("");
-  const [value, onChangeText] = React.useState("");
+  const [value, onChangeText] = useState<string>("");
+  const [answerText, setAnswerText] = useState<string>("");
+
+  const [showFirstContainer, setShowFirstContainer] = useState(true);
+
+  const animation = useSharedValue(1);
+
+  {/* Mess with animations here w*/}  
+  const toggleContainers = () => {
+    animation.value = withTiming(animation.value === 1 ? 0 : 1, {
+      duration: 200,
+      easing: Easing.inOut(Easing.ease),
+    });
+    setShowFirstContainer(!showFirstContainer);
+  };
+
+  const animatedStyleFirstContainer = useAnimatedStyle(() => ({
+    opacity: animation.value,
+    display: animation.value === 1 ? 'flex' : 'none',
+  }));
+
+  const animatedStyleSecondContainer = useAnimatedStyle(() => ({
+    opacity: 1 - animation.value,
+    display: animation.value === 0 ? 'flex' : 'none',
+  }));
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -71,11 +96,12 @@ const QuestionPortal: React.FC = () => {
       };
 
       setComponents(prevComponents => [...prevComponents, newItem]);
+      setQText("")
     }
   };
 
   const handleAddAnswerChoice = () => {
-    const newQuestion = qText.trim();
+    const newQuestion = answerText.trim();
     if (newQuestion) {
       const newItem: QuestionItem = {
         key: uuidv4(),
@@ -86,6 +112,7 @@ const QuestionPortal: React.FC = () => {
       };
 
       setAnswerChoices(prevChoices => [...prevChoices, newItem]);
+      setAnswerText("");
     }
   };
 
@@ -125,7 +152,7 @@ const QuestionPortal: React.FC = () => {
   const renderItem = ({ item, drag }: RenderItemParams<QuestionItem>) => {
     if (item.identifier === 'image') {
       return (
-        <TouchableOpacity
+        <Pressable
           style={styles.imageContainer}
           onLongPress={drag}
         >
@@ -136,102 +163,118 @@ const QuestionPortal: React.FC = () => {
             resizeMode="contain"
           />
 
-          <TouchableOpacity onPress={item.delete} style={styles.deleteButton}>
+          <Pressable onPress={item.delete} style={styles.deleteButton}>
             <Text style={{ color: 'red' }}>Delete</Text>
-          </TouchableOpacity>
-        </TouchableOpacity>
+          </Pressable>
+        </Pressable>
       );
     } else if (item.identifier === 'question') {
       return (
-        <TouchableOpacity
+        <Pressable
           style={styles.item}
           onLongPress={drag}
         >
           <CheckBox
             checked={item.answer || false}
-            iconColor={'#464EE5'}
-            iconSize={20}
+            iconSize={30}
             onChange={() => handleToggleSelect(item.key)}
             title={item.content}
           />
-          <TouchableOpacity onPress={item.delete} style={styles.deleteButton}>
+          
+          <Pressable onPress={item.delete} style={styles.deleteButton}>
             <Text style={{ color: 'red' }}>Delete</Text>
-          </TouchableOpacity>
-        </TouchableOpacity>
+          </Pressable>
+          
+        </Pressable>
       );
     } else {
       return (
-        <TouchableOpacity
+        <Pressable
           style={styles.item}
           onLongPress={drag}
         >
           <View style={{ flex: 1 }}>
             <Text style={styles.itemText}>{item.content}</Text>
           </View>
-          <TouchableOpacity onPress={item.delete} style={styles.deleteButton}>
+
+          <Pressable onPress={item.delete} style={styles.deleteButton}>
             <Text style={{ color: 'red' }}>Delete</Text>
-          </TouchableOpacity>
-        </TouchableOpacity>
+          </Pressable>
+
+        </Pressable>
       );
     }
   };
 
   return (
     <View style={styles.container}>
-      <DraggableFlatList
-        data={components}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.key}
-        onDragEnd={({ data: newData }) => setComponents(newData)}
-        ListHeaderComponent={<Button title="Add an image" onPress={pickImage} />}
-        ListFooterComponent={<View>
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={handleAddTextComponent}
-          >
-            <Text style={styles.buttonText}>Add Text Component</Text>
-          </TouchableOpacity>
+      <Animated.View style={[styles.innerContainer, animatedStyleFirstContainer]}>
 
-          <TextInput
-            multiline
-            style={[styles.input, { height: Math.max(40, qText.split('\n').length * 20) }]}
-            onChangeText={text => setQText(text)}
-            value={qText}
-            placeholder="Enter text for a text component or answer choice here!"
-          />
+      <Text style={styles.largeText}>Pre-Question Components</Text>
+      <Text style={styles.smallText}>Add background information and images for your question!</Text>
 
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={handleAddAnswerChoice}
-          >
-            <Text style={styles.buttonText}>Add Answer Choice</Text>
-          </TouchableOpacity>
-
-          <Text style={styles.largeText}>Question</Text>
-
-          <TextInput
-            multiline
-            style={[styles.input, { height: Math.max(40, value.split('\n').length * 20) }]}
-            onChangeText={text => onChangeText(text)}
-            value={value}
-            placeholder="This is the question!"
-          />
-
-          <DraggableFlatList
-            data={answerChoices}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.key}
-            onDragEnd={({ data: newData }) => setAnswerChoices(newData)}
-          />
-
-          <TouchableOpacity
-            style={styles.submitButton}
-            onPress={handleSubmit}
-          >
-            <Text style={styles.buttonText}>Submit</Text>
-          </TouchableOpacity>
-        </View>}
+      <TextInput
+        multiline
+        style={[styles.input, { height: Math.max(40, qText.split('\n').length * 20) }]}
+        onChangeText={text => setQText(text)}
+        value={qText}
+        placeholder="Enter text for a text component or answer choice here!"
       />
+
+      <Pressable
+        style={styles.addButton}
+        onPress={handleAddTextComponent}>
+        <Text style={styles.buttonText}>Add Text Component</Text>
+      </Pressable>
+
+      <Button title="Add an image" onPress={pickImage} />
+
+        <DraggableFlatList
+          data={components}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.key}
+          onDragEnd={({ data: newData }) => setComponents(newData)}
+          ListFooterComponent={<Button title="Next" onPress={toggleContainers} />}
+        />
+      </Animated.View>
+
+      <Animated.View style={[styles.innerContainer, animatedStyleSecondContainer]}>
+
+        <Text style={styles.largeText}>Question</Text>
+
+        <TextInput
+          multiline
+          style={[styles.input, { height: Math.max(40, value.split('\n').length * 20) }]}
+          onChangeText={text => onChangeText(text)}
+          value={value}
+          placeholder="This is the question!"
+        />
+
+       <TextInput
+          multiline
+          style={[styles.input, { height: Math.max(40, answerText.split('\n').length * 20) }]}
+          onChangeText={text => setAnswerText(text)}
+          value={answerText}
+          placeholder="Enter answer choice text"
+        />
+
+        <Pressable
+          style={styles.addButton}
+          onPress={handleAddAnswerChoice}>
+          <Text style={styles.buttonText}>Add Answer Choice</Text>
+        </Pressable>
+
+        <DraggableFlatList
+          data={answerChoices}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.key}
+          onDragEnd={({ data: newData }) => setAnswerChoices(newData)}
+          ListHeaderComponent={<Button title="Previous" onPress={toggleContainers} />}
+          ListFooterComponent={<Button title="submit" onPress={handleSubmit} />}
+        />
+
+      </Animated.View>
+      
     </View>
   );
 };
@@ -239,8 +282,13 @@ const QuestionPortal: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 50,
+    padding: 100,
     paddingHorizontal: 20,
+  },
+  innerContainer: {
+    width: '100%',
+    flex:1,
+    marginBottom:200
   },
   item: {
     backgroundColor: "#f9c2ff",
@@ -248,7 +296,6 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     borderRadius: 10,
   },
   itemText: {
@@ -261,12 +308,10 @@ const styles = StyleSheet.create({
     padding: 10,
     marginVertical: 8,
     alignItems: 'center',
-    borderRadius: 10,
   },
   image: {
     width: 300,
     height: 200,
-    borderRadius: 10,
   },
   input: {
     borderColor: "gray",
@@ -294,13 +339,18 @@ const styles = StyleSheet.create({
   largeText: {
     fontSize: 24,
     fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  smallText: {
+    fontSize: 12,
+    padding: 30,
+    textAlign: 'center', 
   },
   submitButton: {
     backgroundColor: "#2196F3",
     padding: 10,
     alignItems: "center",
     borderRadius: 5,
-    marginBottom: 20,
   },
 });
 
