@@ -7,14 +7,18 @@ import {
   Image,
   View,
   Pressable,
+  Modal,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import DraggableFlatList, { RenderItemParams } from "react-native-draggable-flatlist";
 import * as ImagePicker from 'expo-image-picker';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
-import { CheckBox } from 'rn-inkpad';
 import firestore from '@react-native-firebase/firestore';
 import Animated, { Easing, useSharedValue, withTiming, useAnimatedStyle } from 'react-native-reanimated';
+import { Swipeable } from "react-native-gesture-handler";
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 interface QuestionItem {
   key: string;
@@ -32,11 +36,15 @@ const QuestionPortal: React.FC = () => {
   const [value, onChangeText] = useState<string>("");
   const [answerText, setAnswerText] = useState<string>("");
 
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editedItemKey, setEditedItemKey] = useState<string>("");
+  const [editedItemContent, setEditedItemContent] = useState<string>("");
+
   const [showFirstContainer, setShowFirstContainer] = useState(true);
+  const [dragging, setDragging] = useState(false);
 
   const animation = useSharedValue(1);
 
-  {/* Mess with animations here w*/}  
   const toggleContainers = () => {
     animation.value = withTiming(animation.value === 1 ? 0 : 1, {
       duration: 200,
@@ -135,6 +143,32 @@ const QuestionPortal: React.FC = () => {
     );
   };
 
+  const handleEditContent = (key: string, currentContent: string) => {
+    setEditedItemKey(key);
+    setEditedItemContent(currentContent);
+    setModalVisible(true);
+  };
+
+  const handleSaveEdit = () => {
+    setComponents(prevComponents =>
+      prevComponents.map(item =>
+        item.key === editedItemKey ? { ...item, content: editedItemContent } : item
+      )
+    );
+
+    setAnswerChoices(prevChoices =>
+      prevChoices.map(item =>
+        item.key === editedItemKey ? { ...item, content: editedItemContent } : item
+      )
+    );
+
+    setModalVisible(false);
+  };
+
+  const handleCancelEdit = () => {
+    setModalVisible(false);
+  };
+
   const handleSubmit = () => {
     const filteredComponents = components.map(component => {
       const { delete: _, ...filteredComponent } = component;
@@ -150,11 +184,19 @@ const QuestionPortal: React.FC = () => {
   };
 
   const renderItem = ({ item, drag }: RenderItemParams<QuestionItem>) => {
+    const itemStyle = dragging ? { backgroundColor: '#d3d3d3' } : {};
+    const textColor = dragging ? '#757575' : '#000';
+    const backgroundColor = item.answer ? '#C8E6C9' : '#f9c2ff';
+  
     if (item.identifier === 'image') {
       return (
         <Pressable
-          style={styles.imageContainer}
-          onLongPress={drag}
+          style={[styles.imageContainer, itemStyle]}
+          onLongPress={() => {
+            drag();
+            setDragging(true);
+          }}
+          onPressOut={() => setDragging(false)}
         >
           <Image
             source={{ uri: item.image }}
@@ -162,72 +204,66 @@ const QuestionPortal: React.FC = () => {
             borderRadius={10}
             resizeMode="contain"
           />
-
+  
           <Pressable onPress={item.delete} style={styles.deleteButton}>
             <Text style={{ color: 'red' }}>Delete</Text>
           </Pressable>
-        </Pressable>
-      );
-    } else if (item.identifier === 'question') {
-      return (
-        <Pressable
-          style={styles.item}
-          onLongPress={drag}
-        >
-          <CheckBox
-            checked={item.answer || false}
-            iconSize={30}
-            onChange={() => handleToggleSelect(item.key)}
-            title={item.content}
-          />
-          
-          <Pressable onPress={item.delete} style={styles.deleteButton}>
-            <Text style={{ color: 'red' }}>Delete</Text>
-          </Pressable>
-          
         </Pressable>
       );
     } else {
       return (
-        <Pressable
-          style={styles.item}
-          onLongPress={drag}
+        <Swipeable
+          renderRightActions={() => (
+            <Pressable onPress={item.delete} style={styles.deleteButton}>
+              <Text style={{ color: 'red' }}>Delete</Text>
+            </Pressable>
+          )}
         >
-          <View style={{ flex: 1 }}>
-            <Text style={styles.itemText}>{item.content}</Text>
-          </View>
-
-          <Pressable onPress={item.delete} style={styles.deleteButton}>
-            <Text style={{ color: 'red' }}>Delete</Text>
+          <Pressable
+            style={[styles.item, itemStyle, { backgroundColor }]}
+            onPress={() => {
+              if (item.identifier === 'question') {
+                handleToggleSelect(item.key);
+              }
+            }}
+            onLongPress={() => {
+              drag();
+              setDragging(true);
+            }}
+            onPressOut={() => setDragging(false)}
+          >
+            <Text style={[styles.itemText, { color: textColor }]}>{item.content}</Text>
+            <Pressable onPress={() => handleEditContent(item.key, item.content)} style={styles.editButton}>
+              <Ionicons name="pencil" size={20} color="#000" />
+            </Pressable>
           </Pressable>
-
-        </Pressable>
+        </Swipeable>
       );
     }
-  };
+  };  
 
   return (
     <View style={styles.container}>
       <Animated.View style={[styles.innerContainer, animatedStyleFirstContainer]}>
 
-      <Text style={styles.largeText}>Pre-Question Components</Text>
-      <Text style={styles.smallText}>Add background information and images for your question!</Text>
+        <Text style={styles.largeText}>Pre-Question Components</Text>
+        <Text style={styles.smallText}>Add background information and images for your question!</Text>
 
-      <TextInput
-        multiline
-        style={[styles.input, { height: Math.max(40, qText.split('\n').length * 20) }]}
-        onChangeText={text => setQText(text)}
-        value={qText}
-        placeholder="Enter text for a text component or answer choice here!"
-      />
+        <TextInput
+          multiline
+          style={[styles.input, { height: Math.max(40, qText.split('\n').length * 20) }]}
+          onChangeText={text => setQText(text)}
+          value={qText}
+          placeholder="Enter text for a text component or answer choice here!"
+        />
 
-      <Pressable
-        style={styles.addButton}
-        onPress={handleAddTextComponent}>
-        <Text style={styles.buttonText}>Add Text Component</Text>
-      </Pressable>
+        <Pressable
+          style={styles.addButton}
+          onPress={handleAddTextComponent}>
+          <Text style={styles.buttonText}>Add Text Component</Text>
+        </Pressable>
 
-      <Button title="Add an image" onPress={pickImage} />
+        <Button title="Add an image" onPress={pickImage} />
 
         <DraggableFlatList
           data={components}
@@ -241,6 +277,7 @@ const QuestionPortal: React.FC = () => {
       <Animated.View style={[styles.innerContainer, animatedStyleSecondContainer]}>
 
         <Text style={styles.largeText}>Question</Text>
+        <Text style={styles.smallText}>Add your question text here!</Text>
 
         <TextInput
           multiline
@@ -250,7 +287,7 @@ const QuestionPortal: React.FC = () => {
           placeholder="This is the question!"
         />
 
-       <TextInput
+        <TextInput
           multiline
           style={[styles.input, { height: Math.max(40, answerText.split('\n').length * 20) }]}
           onChangeText={text => setAnswerText(text)}
@@ -274,7 +311,33 @@ const QuestionPortal: React.FC = () => {
         />
 
       </Animated.View>
-      
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+        setModalVisible(false);
+        }}
+        >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <TextInput
+                multiline
+                style={styles.modalInput} 
+                onChangeText={text => setEditedItemContent(text)}
+                value={editedItemContent}
+                placeholder="Edit content"
+              />
+              <View style={styles.modalButtons}>
+                <Button title="Save" onPress={handleSaveEdit} />
+                <Button title="Cancel" onPress={handleCancelEdit} />
+              </View>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </View>
   );
 };
@@ -287,8 +350,8 @@ const styles = StyleSheet.create({
   },
   innerContainer: {
     width: '100%',
-    flex:1,
-    marginBottom:200
+    flex: 1,
+    marginBottom: 200
   },
   item: {
     backgroundColor: "#f9c2ff",
@@ -301,7 +364,6 @@ const styles = StyleSheet.create({
   itemText: {
     fontSize: 18,
     flex: 1,
-    marginRight: 10,
   },
   imageContainer: {
     backgroundColor: "transparent",
@@ -333,8 +395,14 @@ const styles = StyleSheet.create({
   },
   deleteButton: {
     padding: 10,
+    backgroundColor: 'transparent',
+    justifyContent: 'center',
+  },
+  editButton: {
+    padding: 10,
     borderRadius: 5,
     backgroundColor: 'transparent',
+    marginLeft: 10,
   },
   largeText: {
     fontSize: 24,
@@ -344,13 +412,41 @@ const styles = StyleSheet.create({
   smallText: {
     fontSize: 12,
     padding: 30,
-    textAlign: 'center', 
+    textAlign: 'center',
   },
   submitButton: {
     backgroundColor: "#2196F3",
     padding: 10,
     alignItems: "center",
     borderRadius: 5,
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    width: '90%',
+    height: '50%'
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 10,
+  },
+  modalInput: {
+    borderColor: "gray",
+    borderWidth: 1,
+    marginBottom: 20,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    width: '100%',
+    height: '80%',
+    flex: 1,
   },
 });
 
