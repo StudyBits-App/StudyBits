@@ -14,16 +14,14 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.studybits.studybits",
-      "googleServicesFile": "./GoogleService-Info.plist"
+      "bundleIdentifier": "com.hackclub.studybits"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "app.studybits.studybits",
-      "googleServicesFile": "./google-services.json"
+      "package": "com.hackclub.studybits"
     },
     "web": {
       "bundler": "metro",

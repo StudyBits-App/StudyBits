@@ -4,11 +4,9 @@ import React from 'react';
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { useSession } from '@/context/ctx';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const { user, isLoading } = useSession();
 
   return (
     <Tabs
