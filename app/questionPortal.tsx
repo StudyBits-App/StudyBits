@@ -19,6 +19,7 @@ import firestore from '@react-native-firebase/firestore';
 import Animated, { Easing, useSharedValue, withTiming, useAnimatedStyle } from 'react-native-reanimated';
 import { Swipeable } from "react-native-gesture-handler";
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import uploadImageToFirebase from "@/services/uploadImage";
 
 interface QuestionItem {
   key: string;
@@ -169,8 +170,22 @@ const QuestionPortal: React.FC = () => {
     setModalVisible(false);
   };
 
-  const handleSubmit = () => {
-    const filteredComponents = components.map(component => {
+  const handleSubmit = async () => {
+    
+    const updatedComponents = Promise.all(components.map(async component => {
+      if (component.image) {
+        const imageRef = await uploadImageToFirebase(component.image, "questions");
+        if (imageRef) {
+          return {
+            ...component,
+            image: imageRef
+          };
+        }
+      }
+      return component;
+    }));
+  
+    const filteredComponents = (await updatedComponents).map(component => {
       const { delete: _, ...filteredComponent } = component;
       return filteredComponent;
     });

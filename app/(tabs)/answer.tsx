@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Button } from 'react-native';
-import firestore, { FirebaseFirestoreTypes } from '@react-native-firebase/firestore'
+import { StyleSheet, View, Text, TouchableOpacity, Button, Image } from 'react-native';
+import firestore from '@react-native-firebase/firestore';
 
 interface Component {
   key: string;
@@ -8,22 +8,14 @@ interface Component {
   image?: string;
   identifier: string;
   answer: boolean;
-  selected: boolean
+  selected: boolean;
 }
-
-let questionInfo: FirebaseFirestoreTypes.DocumentData;
-
-// const initialComponents: Component[] = questionInfo.text;
-
-// const initialAnswerChoices: Component[] = questionInfo.answers;
-
-// const initialQuestion = questionInfo.question;
 
 const ComponentList = () => {
   const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
   const [answersSubmitted, setAnswersSubmitted] = useState(false);
-  const [answerChoices, setAnswerChoices] = useState<Component[]>();
-  const [components, setComponents] = useState<Component[]>();
+  const [answerChoices, setAnswerChoices] = useState<Component[]>([]);
+  const [components, setComponents] = useState<Component[]>([]);
   const [question, setQuestion] = useState<string>();
   const [questionInfo, setQuestionInfo] = useState<any>();
 
@@ -49,7 +41,7 @@ const ComponentList = () => {
     }
   }, [questionInfo]);
 
-  if (!answerChoices) return <Text>Loading...</Text>
+  if (!answerChoices || !components || !question) return <Text>Loading...</Text>;
 
   const handleAnswerClick = (index: number) => {
     if (!answersSubmitted) {
@@ -61,10 +53,9 @@ const ComponentList = () => {
       }
       setSelectedAnswers(newSelectedAnswers);
 
-      // Update answerChoices to reflect selection
       const updatedChoices = answerChoices.map((choice, i) => ({
         ...choice,
-        selected: newSelectedAnswers.includes(i)
+        selected: newSelectedAnswers.includes(i),
       }));
       setAnswerChoices(updatedChoices);
     }
@@ -77,9 +68,6 @@ const ComponentList = () => {
   const handleNext = () => {
     setSelectedAnswers([]);
     setAnswersSubmitted(false);
-    // setAnswerChoices(initialAnswerChoices.map(choice => ({ ...choice, selected: false })));
-    // setComponents(initialComponents.map(component => ({ ...component, selected: false })));
-    // setQuestion(initialQuestion);
     fetchQuestionInfo();
   };
 
@@ -89,35 +77,52 @@ const ComponentList = () => {
         <Text style={styles.text}>{question}</Text>
       </View>
 
-      {components?.map((component, index) => {
+      {components.map((component, index) => {
         if (component.identifier === 'text') {
           return (
             <View key={index} style={styles.textContainer}>
               <Text>{component.content}</Text>
             </View>
           );
+        } else if (component.identifier === 'image') {
+          return (
+            <View key={index} style={styles.imageContainer}>
+
+              <Image 
+                source={{ uri: component.image }} 
+                style={styles.image} 
+              />
+              
+            </View>
+          );
         }
         return null;
       })}
 
-      {answerChoices.map((choice, index) => (
-        <TouchableOpacity
-          key={index}
-          style={[
-            styles.answerContainer,
-            choice.selected ? styles.selectedAnswerContainer : {},
-            answersSubmitted && choice.selected && choice.answer ? styles.correctAnswerContainer : {},
-            answersSubmitted && choice.selected && !choice.answer ? styles.incorrectAnswerContainer : {},
-          ]}
-          onPress={() => handleAnswerClick(index)}
-          disabled={answersSubmitted}
-        >
-          <Text style={styles.answerText}>{choice.content}</Text>
-        </TouchableOpacity>
-      ))}
+  {answerChoices.map((choice, index) => (
+      <TouchableOpacity
+        key={index}
+        style={[
+          styles.answerContainer,
+          choice.selected ? styles.selectedAnswerContainer : {},
+          answersSubmitted && choice.selected && choice.answer
+            ? styles.correctAnswerContainer // Selected correct answer
+            : answersSubmitted && !choice.selected && choice.answer
+            ? styles.correctButNotSelectedContainer // Correct but not selected
+            : answersSubmitted && choice.selected && !choice.answer
+            ? styles.incorrectAnswerContainer // Selected incorrect answer
+            : {},
+      ]}
+      onPress={() => handleAnswerClick(index)}
+      disabled={answersSubmitted}
+    >
+      <Text style={styles.answerText}>{choice.content}</Text>
+    </TouchableOpacity>
+  ))}
+
 
       <Button
-        title={answersSubmitted ? "Next" : "Submit"}
+        title={answersSubmitted ? 'Next' : 'Submit'}
         onPress={answersSubmitted ? handleNext : handleSubmit}
       />
     </View>
@@ -138,7 +143,16 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     backgroundColor: '#f0f0f0',
     padding: 10,
-    borderRadius: 5
+    borderRadius: 5,
+  },
+  imageContainer: {
+    marginBottom: 10,
+    alignItems: 'center',
+  },
+  image: {
+    width: 200,
+    height: 200,
+    resizeMode: 'contain',
   },
   answerContainer: {
     marginBottom: 10,
@@ -154,10 +168,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#aaf',
   },
   correctAnswerContainer: {
-    backgroundColor: '#8bc34a', // Green for correct
+    backgroundColor: '#8bc34a', 
   },
   incorrectAnswerContainer: {
-    backgroundColor: '#e57373', // Red for incorrect
+    backgroundColor: '#e57373',
+  },
+  correctButNotSelectedContainer: {
+    borderColor: '#8bc34a', 
+    borderWidth:4
   },
   answerText: {
     fontSize: 16,

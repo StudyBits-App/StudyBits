@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, Image, StyleSheet, Alert, TouchableOpacity, Text } from 'react-native';
+import uploadImageToFirebase from '@/services/uploadImage';
 import * as ImagePicker from 'expo-image-picker';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
+import firestore from '@react-native-firebase/firestore';
 
 const CreateChannelPage = () => {
   const [bannerImage, setBannerImage] = useState<string | null>(null);
@@ -41,13 +43,36 @@ const CreateChannelPage = () => {
     }
   };
 
-  const handleCreateChannel = () => {
+  const handleCreateChannel = async () => {
     if (!displayName.trim()) {
       Alert.alert('Error', 'You must provide a display name!');
       return;
     }
 
-    console.log('Creating channel with:', { bannerImage, profilePicImage, displayName });
+    try {
+      let bannerURL = null;
+      let profilePicURL = null;
+
+      if (bannerImage) {
+        bannerURL = await uploadImageToFirebase(bannerImage, 'banners');
+      }
+
+      if (profilePicImage) {
+        profilePicURL = await uploadImageToFirebase(profilePicImage, 'profilePics');
+      }
+
+      await firestore().collection('channels').add({
+        displayName: displayName,
+        bannerURL: bannerURL || '', 
+        profilePicURL: profilePicURL || '',
+      });
+
+      console.log('Channel created successfully with:', { bannerURL, profilePicURL, displayName });
+
+    } catch (error) {
+      console.error('Error uploading images or saving to Firestore: ', error);
+      Alert.alert('Error', 'Failed to save images. Please try again.');
+    }
   };
 
   const handleRemoveBanner = () => {
