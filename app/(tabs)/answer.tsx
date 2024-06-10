@@ -13,10 +13,6 @@ interface Component {
 
 let questionInfo: FirebaseFirestoreTypes.DocumentData;
 
-firestore().collection('questions').get().then(querySnapshot => {
-  questionInfo = querySnapshot.docs[Math.floor(Math.random() * querySnapshot.size)].data()
-});
-
 // const initialComponents: Component[] = questionInfo.text;
 
 // const initialAnswerChoices: Component[] = questionInfo.answers;
@@ -29,12 +25,29 @@ const ComponentList = () => {
   const [answerChoices, setAnswerChoices] = useState<Component[]>();
   const [components, setComponents] = useState<Component[]>();
   const [question, setQuestion] = useState<string>();
+  const [questionInfo, setQuestionInfo] = useState<any>();
+
+  const fetchQuestionInfo = async () => {
+    try {
+      const querySnapshot = await firestore().collection('questions').get();
+      const data = querySnapshot.docs[Math.floor(Math.random() * querySnapshot.size)].data();
+      setQuestionInfo(data);
+    } catch (error) {
+      console.error('Error fetching question info:', error);
+    }
+  };
 
   useEffect(() => {
-    setAnswerChoices(questionInfo.answers);
-    setComponents(questionInfo.text);
-    setQuestion(questionInfo.question);
-  }, [questionInfo])
+    fetchQuestionInfo();
+  }, []);
+
+  useEffect(() => {
+    if (questionInfo) {
+      setAnswerChoices(questionInfo.answers);
+      setComponents(questionInfo.text);
+      setQuestion(questionInfo.question);
+    }
+  }, [questionInfo]);
 
   if (!answerChoices) return <Text>Loading...</Text>
 
@@ -67,12 +80,7 @@ const ComponentList = () => {
     // setAnswerChoices(initialAnswerChoices.map(choice => ({ ...choice, selected: false })));
     // setComponents(initialComponents.map(component => ({ ...component, selected: false })));
     // setQuestion(initialQuestion);
-    firestore().collection('questions').get().then(querySnapshot => {
-      questionInfo = querySnapshot.docs[Math.floor(Math.random() * querySnapshot.size)].data()
-      setAnswerChoices(questionInfo.answers);
-      setComponents(questionInfo.text);
-      setQuestion(questionInfo.question);
-    });
+    fetchQuestionInfo();
   };
 
   return (

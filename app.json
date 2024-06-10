@@ -2,7 +2,7 @@
   "expo": {
     "name": "StudyBits",
     "slug": "StudyBits",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -55,6 +55,9 @@
     },
     "runtimeVersion": "1.0.0",
     "updates": {
+      "requestHeaders": {
+        "expo-channel-name": "main"
+      },
       "url": "https://u.expo.dev/abf1e330-d154-4b84-b677-84e7d8f91da3"
     }
   }
