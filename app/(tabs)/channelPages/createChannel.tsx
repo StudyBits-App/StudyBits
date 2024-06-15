@@ -1,14 +1,32 @@
-import React, { useState } from 'react';
-import { View, TextInput, Button, Image, StyleSheet, Alert, TouchableOpacity, Text } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, TextInput, Button, Image, StyleSheet, Alert, TouchableOpacity, Text, useColorScheme} from 'react-native';
 import uploadImageToFirebase from '@/services/uploadImage';
 import * as ImagePicker from 'expo-image-picker';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import firestore from '@react-native-firebase/firestore';
+import { useSession } from '@/context/ctx';
+import { Redirect } from 'expo-router';
 
 const CreateChannelPage = () => {
   const [bannerImage, setBannerImage] = useState<string | null>(null);
   const [profilePicImage, setProfilePicImage] = useState<string | null>(null);
+  const [defaultProfilePicUrl, setDefaultProfilePicUrl] = useState<string | null>(null);
   const [displayName, setDisplayName] = useState<string>('');
+  const [channelCreated, setChannelCreated] = useState<boolean>(false);
+  const { user } = useSession();
+  const colorScheme = useColorScheme()
+  const isDarkMode = colorScheme === 'dark';
+
+  useEffect(() => {
+    const fetchProfilePicUrl = async () => {
+      if (user?.uid) {
+        const url = `https://robohash.org/${user?.uid}`;
+        setDefaultProfilePicUrl(url);
+      }
+    };
+
+    fetchProfilePicUrl();
+  }, [user]);
 
   const handleBannerUpload = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -59,15 +77,19 @@ const CreateChannelPage = () => {
 
       if (profilePicImage) {
         profilePicURL = await uploadImageToFirebase(profilePicImage, 'profilePics');
+      } else if (defaultProfilePicUrl) {
+        profilePicURL = defaultProfilePicUrl;
       }
 
       await firestore().collection('channels').add({
+        user: user?.uid,
         displayName: displayName,
         bannerURL: bannerURL || '', 
         profilePicURL: profilePicURL || '',
       });
 
       console.log('Channel created successfully with:', { bannerURL, profilePicURL, displayName });
+      setChannelCreated(true);
 
     } catch (error) {
       console.error('Error uploading images or saving to Firestore: ', error);
@@ -115,13 +137,17 @@ const CreateChannelPage = () => {
     }
   };
 
+  if (channelCreated) {
+    return <Redirect href="/channelPages/channelPage" />;
+  }
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
       headerImage={
         bannerImage ? (
           <TouchableOpacity onPress={handleRemoveBanner}>
-            <Image source={{ uri: bannerImage }} style={styles.bannerImage} />
+            <Image source={{ uri: bannerImage || undefined }} style={styles.bannerImage} />
           </TouchableOpacity>
         ) : (
           <TouchableOpacity onPress={handleBannerUpload} style={styles.uploadBannerButton}>
@@ -135,9 +161,9 @@ const CreateChannelPage = () => {
           {/* Profile Picture */}
           <TouchableOpacity onPress={handleRemoveProfilePic}>
             {profilePicImage ? (
-              <Image source={{ uri: profilePicImage }} style={styles.profilePic} />
+              <Image source={{ uri: profilePicImage || undefined }} style={styles.profilePic} />
             ) : (
-              <View style={styles.placeholderPic} />
+              <Image source={{ uri: defaultProfilePicUrl || undefined }} style={styles.profilePic} />
             )}
           </TouchableOpacity>
           {/* Upload Profile Picture Button */}
@@ -148,7 +174,10 @@ const CreateChannelPage = () => {
 
         {/* Display Name Input */}
         <TextInput
-          style={styles.input}
+        style={[
+          styles.input,
+          isDarkMode  && styles.darkInput
+        ]}
           placeholder="Display Name"
           value={displayName}
           onChangeText={setDisplayName}
@@ -175,6 +204,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     width: '100%',
   },
+  darkInput: {
+    color: 'white',
+  },
   bannerImage: {
     width: '100%',
     height: 300,
@@ -200,13 +232,6 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    marginRight: 20,
-  },
-  placeholderPic: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#e1e1e1',
     marginRight: 20,
   },
   profileButtonSection: {

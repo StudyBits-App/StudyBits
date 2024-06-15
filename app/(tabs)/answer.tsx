@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Button, Image } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Button, Image, useColorScheme } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 
 interface Component {
@@ -11,13 +11,16 @@ interface Component {
   selected: boolean;
 }
 
-const ComponentList = () => {
+const AnswerQuestions = () => {
+
   const [selectedAnswers, setSelectedAnswers] = useState<number[]>([]);
   const [answersSubmitted, setAnswersSubmitted] = useState(false);
   const [answerChoices, setAnswerChoices] = useState<Component[]>([]);
   const [components, setComponents] = useState<Component[]>([]);
   const [question, setQuestion] = useState<string>();
   const [questionInfo, setQuestionInfo] = useState<any>();
+  const colorScheme = useColorScheme(); 
+  const isDarkMode = colorScheme === 'dark';
 
   const fetchQuestionInfo = async () => {
     try {
@@ -72,54 +75,51 @@ const ComponentList = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: isDarkMode ? '#171616' : '#fff' }]}>
       <View style={styles.questionContainer}>
-        <Text style={styles.text}>{question}</Text>
+        <Text style={[styles.text, { color: isDarkMode ? '#fff' : '#000' }]}>{question}</Text>
       </View>
 
       {components.map((component, index) => {
         if (component.identifier === 'text') {
           return (
-            <View key={index} style={styles.textContainer}>
-              <Text>{component.content}</Text>
+            <View key={index} style={[styles.textContainer, { backgroundColor: isDarkMode ? '#444' : '#f0f0f0' }]}>
+              <Text style={{ color: isDarkMode ? '#fff' : '#000' }}>{component.content}</Text>
             </View>
           );
         } else if (component.identifier === 'image') {
           return (
             <View key={index} style={styles.imageContainer}>
-
               <Image 
                 source={{ uri: component.image }} 
                 style={styles.image} 
               />
-              
             </View>
           );
         }
         return null;
       })}
 
-  {answerChoices.map((choice, index) => (
-      <TouchableOpacity
-        key={index}
-        style={[
-          styles.answerContainer,
-          choice.selected ? styles.selectedAnswerContainer : {},
-          answersSubmitted && choice.selected && choice.answer
-            ? styles.correctAnswerContainer // Selected correct answer
-            : answersSubmitted && !choice.selected && choice.answer
-            ? styles.correctButNotSelectedContainer // Correct but not selected
-            : answersSubmitted && choice.selected && !choice.answer
-            ? styles.incorrectAnswerContainer // Selected incorrect answer
-            : {},
-      ]}
-      onPress={() => handleAnswerClick(index)}
-      disabled={answersSubmitted}
-    >
-      <Text style={styles.answerText}>{choice.content}</Text>
-    </TouchableOpacity>
-  ))}
-
+      {answerChoices.map((choice, index) => (
+        <TouchableOpacity
+          key={index}
+          style={[
+            styles.answerContainer,
+            choice.selected ? styles.selectedAnswerContainer : {},
+            answersSubmitted && choice.selected && choice.answer
+              ? styles.correctAnswerContainer // Selected correct answer
+              : answersSubmitted && !choice.selected && choice.answer
+              ? styles.correctButNotSelectedContainer // Correct but not selected
+              : answersSubmitted && choice.selected && !choice.answer
+              ? styles.incorrectAnswerContainer // Selected incorrect answer
+              : {},
+          ]}
+          onPress={() => handleAnswerClick(index)}
+          disabled={answersSubmitted}
+        >
+          <Text style={[styles.answerText, { color: isDarkMode ? '#fff' : '#000' }]}>{choice.content}</Text>
+        </TouchableOpacity>
+      ))}
 
       <Button
         title={answersSubmitted ? 'Next' : 'Submit'}
@@ -138,10 +138,11 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     marginBottom: 10,
+    padding: 10,
+    borderRadius: 5,
   },
   questionContainer: {
     marginBottom: 10,
-    backgroundColor: '#f0f0f0',
     padding: 10,
     borderRadius: 5,
   },
@@ -156,7 +157,6 @@ const styles = StyleSheet.create({
   },
   answerContainer: {
     marginBottom: 10,
-    backgroundColor: '#fff',
     padding: 10,
     borderRadius: 5,
     borderWidth: 1,
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
   },
   correctButNotSelectedContainer: {
     borderColor: '#8bc34a', 
-    borderWidth:4
+    borderWidth: 4,
   },
   answerText: {
     fontSize: 16,
@@ -185,4 +185,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ComponentList;
+export default AnswerQuestions;

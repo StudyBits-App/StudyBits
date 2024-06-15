@@ -28,7 +28,7 @@ export default function TabLayout() {
         options={{
           title: 'Create a question',
           tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'pencil' : 'pencil-outline'} color={color} />
+            <TabBarIcon name={focused ? 'add-circle' : 'add-circle-sharp'} color={color} />
           ),
         }}
       />
@@ -37,7 +37,16 @@ export default function TabLayout() {
         options={{
           title: 'Answer questions',
           tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'code' : 'code-outline'} color={color} />
+            <TabBarIcon name={focused ? 'pencil' : 'pencil-outline'} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="channelPages"
+        options={{
+          title: 'Channel',
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name={focused ? 'person-circle' : 'person-circle-sharp'} color={color} />
           ),
         }}
       />
