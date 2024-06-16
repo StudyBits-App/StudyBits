@@ -1,84 +1,156 @@
-import { Image, StyleSheet, Pressable, Text } from 'react-native';
-
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import React, { useState } from "react";
+import { SafeAreaView, View, ScrollView, Text, StyleSheet, Pressable, TextInput, Image } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import auth from '@react-native-firebase/auth';
-import { useSession } from '@/context/ctx';
 
 GoogleSignin.configure({
     webClientId: '1098397225551-ibat99410nloiruc9g7aecrkvb83ptpf.apps.googleusercontent.com'
 });
+export default function SignIn() {
+    const [email, onChangeEmail] = React.useState('');
 
-export default function HomeScreen() {
-    const { user, isLoading } = useSession();
+    const signInWithEmail = () => {
+
+    }
+    const signInWithGoogle = async () => {
+        await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+        // Get the users ID token
+        const { idToken } = await GoogleSignin.signIn();
+
+        // Create a Google credential with the token
+        const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+
+        // Sign-in the user with the credential
+        return auth().signInWithCredential(googleCredential);
+    }
+
     return (
-        <ParallaxScrollView
-            headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-            headerImage={
-                <Image
-                    source={require('@/assets/images/partial-react-logo.png')}
-                    style={styles.reactLogo}
+        <SafeAreaView style={styles.safeview}>
+            <LinearGradient
+                colors={['#510083', '#8D39AB', '#EE7200']}
+                style={styles.background}
+            />
+            <View style={styles.container}>
+                <Text style={styles.titleText}>StudyBits</Text>
+                <Text style={styles.headText}>Create an account</Text>
+                <Text style={styles.subText}>Get ready to be an intellectual</Text>
+                <TextInput
+                    style={styles.input}
+                    onChangeText={onChangeEmail}
+                    value={email}
+                    placeholder="email@domain.com"
                 />
-            }>
-            <ThemedView style={styles.titleContainer}>
-                <ThemedText type="title">Welcome!</ThemedText>
-                <HelloWave />
-            </ThemedView>
-            <ThemedView>
-                <Pressable style={styles.button} onPress={onPress}>
-                    <Text style={styles.text}>Sign in with Google</Text>
-                    <Image source={require('@/assets/images/react-logo.png')} style={styles.signInImage}></Image>
+                <Pressable
+                    style={styles.button}
+                    onPress={signInWithEmail}>
+                    <Text style={styles.signuptext}>Sign up with email</Text>
                 </Pressable>
-            </ThemedView>
-        </ParallaxScrollView>
-    );
-}
 
-const onPress = async () => {
-    await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-    // Get the users ID token
-    const { idToken } = await GoogleSignin.signIn();
-
-    // Create a Google credential with the token
-    const googleCredential = auth.GoogleAuthProvider.credential(idToken);
-
-    // Sign-in the user with the credential
-    return auth().signInWithCredential(googleCredential);
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View
+                        style={styles.divider}
+                    />
+                    <View>
+                        <Text style={styles.text}>or continue with</Text>
+                    </View>
+                    <View
+                        style={styles.divider}
+                    />
+                </View>
+                <Pressable
+                    style={styles.button}
+                    onPress={signInWithGoogle}
+                >
+                    <Image source={require('@/assets/images/google-logo.png')} style={styles.signInImage}></Image>
+                    <Text style={styles.signuptext}>Google</Text>
+                </Pressable>
+                <Text style={[styles.text, styles.policies]}>By clicking continue, you agree to our Terms of Service and Privacy Policy</Text>
+            </View>
+        </SafeAreaView >
+    )
 }
 
 const styles = StyleSheet.create({
-    signInImage: {
-        width: 20,
-        height: 20,
-        marginHorizontal: '1%'
+    divider: {
+        width: '21%',
+        marginHorizontal: '2%',
+        borderBottomColor: 'white',
+        borderBottomWidth: 2,
     },
-    titleContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
+    titleText: {
+        fontSize: 24,
+        color: "white",
+        paddingBottom: 100,
+        fontWeight: 'bold'
     },
-    button: {
-        marginVertical: '10%',
+    headText: {
+        fontSize: 18,
+        color: "white",
+        paddingBottom: 20,
+        fontWeight: 'bold'
+    },
+    subText: {
+        color: "white",
+        paddingBottom: 30,
+    },
+    signuptext: {
+        color: 'black',
+        textAlign: 'center'
+    },
+    safeview: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    container: {
+        justifyContent: 'center',
         alignItems: 'center',
+        width: '100%'
+    },
+    policies: {
+        paddingHorizontal: '10%'
+    },
+    text: {
+        color: 'white',
+        textAlign: 'center'
+    },
+    input: {
+        backgroundColor: "#000000",
+        padding: 10,
+        alignItems: "center",
+        borderRadius: 5,
+        width: '75%',
         flexDirection: 'row',
         justifyContent: 'center',
         paddingVertical: 12,
         paddingHorizontal: 32,
-        borderRadius: 4,
-        elevation: 3,
-        backgroundColor: 'black',
+        borderColor: 'white',
+        borderStyle: 'solid',
+        borderWidth: 1
     },
-    text: {
-        color: 'white',
-    },
-    reactLogo: {
-        height: 178,
-        width: 290,
-        bottom: 0,
-        left: 0,
+    background: {
+        alignItems: 'center',
+        justifyContent: 'center',
         position: 'absolute',
+        height: '100%',
+        width: '100%'
+    },
+    button: {
+        backgroundColor: "#ffffff",
+        padding: 10,
+        alignItems: "center",
+        borderRadius: 5,
+        width: '75%',
+        marginVertical: '5%',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 32,
+    },
+    signInImage: {
+        width: 20,
+        height: 20,
+        marginHorizontal: '1%'
     },
 });
