@@ -71,7 +71,7 @@ const UserChannelPage = () => {
 
   const ChannelComponent = ({ channel, hasBanner }: { channel: Channel; hasBanner: boolean }) => {
     return (
-      <View style={[styles.profileWrapper, { marginTop: hasBanner ? -50 : 20 }]}>
+      <View style={[styles.profileWrapper, { marginTop: hasBanner ? 0 : 100 }]}>
         <View style={styles.profileSection}>
           <Image
             source={{ uri: channel.profilePicURL || `https://robohash.org/${channel.user}` }}
@@ -97,12 +97,12 @@ const UserChannelPage = () => {
           headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
           headerImage={<Image source={{ uri: channel.bannerURL }} style={styles.bannerImage} />}
         >
-          <View style={[styles.container, styles.contentContainer]}>
+          <View style={styles.container}>
             <ChannelComponent channel={channel} hasBanner={true} />
           </View>
         </ParallaxScrollView>
       ) : (
-        <View style={[styles.container, styles.contentContainer]}>
+        <View style={styles.container}>
           <ChannelComponent channel={channel} hasBanner={false} />
         </View>
       )}
@@ -116,11 +116,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-start',
   },
-  contentContainer: {
-    width: '100%',
-    alignItems: 'center',
-    paddingTop: 15,
-  },
   bannerImage: {
     width: '100%',
     height: 300,
@@ -128,10 +123,8 @@ const styles = StyleSheet.create({
   },
   profileWrapper: {
     width: '100%',
-    paddingVertical: 40,
     paddingHorizontal: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingBottom: 20,   
   },
   profileSection: {
     flexDirection: 'row',
@@ -147,7 +140,6 @@ const styles = StyleSheet.create({
   },
   profileInfo: {
     marginLeft: 20,
-    alignItems: 'center',
   },
   displayName: {
     fontSize: 24,
@@ -155,4 +147,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default UserChannelPage;
+export default UserChannelPage
