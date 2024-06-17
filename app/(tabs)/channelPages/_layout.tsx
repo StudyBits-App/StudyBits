@@ -29,6 +29,7 @@ export default function ChannelLayout() {
     return hasChannel ? (
         <MaterialTopTabs>
             <MaterialTopTabs.Screen name="channelPage" options={{ title: 'Channel' }} />
+            <MaterialTopTabs.Screen name="createCourse" options={{ title: 'Create a Course' }} />
         </MaterialTopTabs>
     ) : (
         <CreateChannelPage/>

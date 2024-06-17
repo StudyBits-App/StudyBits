@@ -1,11 +1,11 @@
 import React from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import QuestionPortal from '@/screens/QuestionPortal';
-
+import CoursePortal from '@/screens/CreateCourse';
 export default function Question() {
+    
   return (
     <GestureHandlerRootView>
-      <QuestionPortal />
+      <CoursePortal />
     </GestureHandlerRootView>
   );
 }

@@ -44,7 +44,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="channelPages"
         options={{
-          title: 'Channel',
+          title: 'My Channel',
           headerShown: true,
           tabBarIcon: ({ color, focused }) => (
             <TabBarIcon name={focused ? 'person-circle' : 'person-circle-sharp'} color={color} />
