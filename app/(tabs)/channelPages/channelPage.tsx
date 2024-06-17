@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { StyleSheet, Text, View, Image, ScrollView, RefreshControl, useColorScheme } from 'react-native';
-import firestore from '@react-native-firebase/firestore';
 import { useSession } from '@/context/ctx';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { Redirect } from 'expo-router';
+import { getChannelData } from '@/services/getUserData';
 
 interface Channel {
   user: string;
@@ -22,7 +21,6 @@ const defaultChannel: Channel = {
 const UserChannelPage = () => {
   const { user, isLoading } = useSession();
   const [channel, setChannel] = useState<Channel>(defaultChannel);
-  const [redirectTo, setRedirectTo] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
@@ -32,19 +30,10 @@ const UserChannelPage = () => {
       return;
     }
     try {
-      const channelsSnapshot = await firestore()
-        .collection('channels')
-        .where('user', '==', user.uid)
-        .get();
-
-      if (!channelsSnapshot.empty) {
-        const channelData = channelsSnapshot.docs[0].data() as Channel;
+        const channelData = (await getChannelData(user.uid)).docs[0].data() as Channel;
         setChannel(channelData);
-      } else {
-        setRedirectTo('channelPages/createChannel');
-      }
     } catch (error) {
-      console.error('Error fetching user channel: ', error);
+        console.error('Error fetching user channel: ', error);
     }
   };
 
@@ -56,22 +45,18 @@ const UserChannelPage = () => {
     setRefreshing(true);
     fetchUserChannel().finally(() => setRefreshing(false));
   }, [user]);
-
-  if (redirectTo) {
-    return <Redirect href={redirectTo} />;
-  }
-
+  
   if (isLoading) {
     return (
-      <View style={[styles.container, { backgroundColor: isDarkMode ? '#222' : '#fff' }]}>
+      <View style={{ backgroundColor: isDarkMode ? '#222' : '#fff' }}>
         <Text style={{ color: isDarkMode ? '#fff' : '#000' }}>Loading...</Text>
       </View>
     );
   }
 
-  const ChannelComponent = ({ channel, hasBanner }: { channel: Channel; hasBanner: boolean }) => {
+  const ChannelComponent = ({ hasBanner }: {hasBanner: boolean }) => {
     return (
-      <View style={[styles.profileWrapper, { marginTop: hasBanner ? 0 : 100 }]}>
+      <View style={{ marginTop: hasBanner ? 0 : 20 }}>
         <View style={styles.profileSection}>
           <Image
             source={{ uri: channel.profilePicURL || `https://robohash.org/${channel.user}` }}
@@ -97,13 +82,13 @@ const UserChannelPage = () => {
           headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
           headerImage={<Image source={{ uri: channel.bannerURL }} style={styles.bannerImage} />}
         >
-          <View style={styles.container}>
-            <ChannelComponent channel={channel} hasBanner={true} />
+          <View>
+            <ChannelComponent hasBanner={true}/>
           </View>
         </ParallaxScrollView>
       ) : (
-        <View style={styles.container}>
-          <ChannelComponent channel={channel} hasBanner={false} />
+        <View>
+          <ChannelComponent hasBanner={false}/>
         </View>
       )}
     </ScrollView>
@@ -111,26 +96,14 @@ const UserChannelPage = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-  },
   bannerImage: {
-    width: '100%',
     height: 300,
     resizeMode: 'cover',
-  },
-  profileWrapper: {
-    width: '100%',
-    paddingHorizontal: 20,
-    paddingBottom: 20,   
   },
   profileSection: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '100%',
   },
   profilePic: {
     width: 100,
@@ -147,4 +120,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default UserChannelPage
+export default UserChannelPage;
