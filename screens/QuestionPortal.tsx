@@ -46,24 +46,6 @@ const QuestionPortal: React.FC = () => {
 
   const animation = useSharedValue(1);
 
-  const toggleContainers = () => {
-    animation.value = withTiming(animation.value === 1 ? 0 : 1, {
-      duration: 200,
-      easing: Easing.inOut(Easing.ease),
-    });
-    setShowFirstContainer(!showFirstContainer);
-  };
-
-  const animatedStyleFirstContainer = useAnimatedStyle(() => ({
-    opacity: animation.value,
-    display: animation.value === 1 ? 'flex' : 'none',
-  }));
-
-  const animatedStyleSecondContainer = useAnimatedStyle(() => ({
-    opacity: 1 - animation.value,
-    display: animation.value === 0 ? 'flex' : 'none',
-  }));
-
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
@@ -171,7 +153,7 @@ const QuestionPortal: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    
+
     const updatedComponents = Promise.all(components.map(async component => {
       if (component.image) {
         const imageRef = await uploadImageToFirebase(component.image, "questions");
@@ -184,7 +166,7 @@ const QuestionPortal: React.FC = () => {
       }
       return component;
     }));
-  
+
     const filteredComponents = (await updatedComponents).map(component => {
       const { delete: _, ...filteredComponent } = component;
       return filteredComponent;
@@ -202,7 +184,7 @@ const QuestionPortal: React.FC = () => {
     const itemStyle = dragging ? { backgroundColor: '#d3d3d3' } : {};
     const textColor = dragging ? '#757575' : '#000';
     const backgroundColor = item.answer ? '#C8E6C9' : '#f9c2ff';
-  
+
     if (item.identifier === 'image') {
       return (
         <Pressable
@@ -219,7 +201,7 @@ const QuestionPortal: React.FC = () => {
             borderRadius={10}
             resizeMode="contain"
           />
-  
+
           <Pressable onPress={item.delete} style={styles.deleteButton}>
             <Text style={{ color: 'red' }}>Delete</Text>
           </Pressable>
@@ -255,92 +237,83 @@ const QuestionPortal: React.FC = () => {
         </Swipeable>
       );
     }
-  };  
+  };
 
   return (
     <View style={styles.container}>
-      <Animated.View style={[styles.innerContainer, animatedStyleFirstContainer]}>
+      <Text style={styles.largeText}>Pre-Question Components</Text>
+      <Text style={styles.smallText}>Add background information and images for your question!</Text>
 
-        <Text style={styles.largeText}>Pre-Question Components</Text>
-        <Text style={styles.smallText}>Add background information and images for your question!</Text>
+      <TextInput
+        multiline
+        style={[styles.input, { height: Math.max(40, qText.split('\n').length * 20) }]}
+        onChangeText={text => setQText(text)}
+        value={qText}
+        placeholder="Enter text for a text component or answer choice here!"
+      />
 
-        <TextInput
-          multiline
-          style={[styles.input, { height: Math.max(40, qText.split('\n').length * 20) }]}
-          onChangeText={text => setQText(text)}
-          value={qText}
-          placeholder="Enter text for a text component or answer choice here!"
-        />
+      <Pressable
+        style={styles.addButton}
+        onPress={handleAddTextComponent}>
+        <Text style={styles.buttonText}>Add Text Component</Text>
+      </Pressable>
 
-        <Pressable
-          style={styles.addButton}
-          onPress={handleAddTextComponent}>
-          <Text style={styles.buttonText}>Add Text Component</Text>
-        </Pressable>
+      <Button title="Add an image" onPress={pickImage} />
 
-        <Button title="Add an image" onPress={pickImage} />
+      <DraggableFlatList
+        data={components}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.key}
+        onDragEnd={({ data: newData }) => setComponents(newData)}
+      />
 
-        <DraggableFlatList
-          data={components}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.key}
-          onDragEnd={({ data: newData }) => setComponents(newData)}
-          ListFooterComponent={<Button title="Next" onPress={toggleContainers} />}
-        />
-      </Animated.View>
 
-      <Animated.View style={[styles.innerContainer, animatedStyleSecondContainer]}>
+      <Text style={styles.largeText}>Question</Text>
+      <Text style={styles.smallText}>Add your question text here!</Text>
 
-        <Text style={styles.largeText}>Question</Text>
-        <Text style={styles.smallText}>Add your question text here!</Text>
+      <TextInput
+        multiline
+        style={[styles.input, { height: Math.max(40, value.split('\n').length * 20) }]}
+        onChangeText={text => onChangeText(text)}
+        value={value}
+        placeholder="This is the question!"
+      />
 
-        <TextInput
-          multiline
-          style={[styles.input, { height: Math.max(40, value.split('\n').length * 20) }]}
-          onChangeText={text => onChangeText(text)}
-          value={value}
-          placeholder="This is the question!"
-        />
+      <TextInput
+        multiline
+        style={[styles.input, { height: Math.max(40, answerText.split('\n').length * 20) }]}
+        onChangeText={text => setAnswerText(text)}
+        value={answerText}
+        placeholder="Enter answer choice text"
+      />
 
-        <TextInput
-          multiline
-          style={[styles.input, { height: Math.max(40, answerText.split('\n').length * 20) }]}
-          onChangeText={text => setAnswerText(text)}
-          value={answerText}
-          placeholder="Enter answer choice text"
-        />
+      <Pressable
+        style={styles.addButton}
+        onPress={handleAddAnswerChoice}>
+        <Text style={styles.buttonText}>Add Answer Choice</Text>
+      </Pressable>
 
-        <Pressable
-          style={styles.addButton}
-          onPress={handleAddAnswerChoice}>
-          <Text style={styles.buttonText}>Add Answer Choice</Text>
-        </Pressable>
-
-        <DraggableFlatList
-          data={answerChoices}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.key}
-          onDragEnd={({ data: newData }) => setAnswerChoices(newData)}
-          ListHeaderComponent={<Button title="Previous" onPress={toggleContainers} />}
-          ListFooterComponent={<Button title="submit" onPress={handleSubmit} />}
-        />
-
-      </Animated.View>
+      <DraggableFlatList
+        data={answerChoices}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.key}
+        onDragEnd={({ data: newData }) => setAnswerChoices(newData)}
+      />
 
       <Modal
         animationType="slide"
         transparent={true}
         visible={modalVisible}
         onRequestClose={() => {
-        setModalVisible(false);
+          setModalVisible(false);
         }}
-        >
+      >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
               <TextInput
                 multiline
-                style={styles.modalInput} 
+                style={styles.modalInput}
                 onChangeText={text => setEditedItemContent(text)}
                 value={editedItemContent}
                 placeholder="Edit content"

@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { SafeAreaView, View, ScrollView, Text, StyleSheet, Pressable, TextInput, Image } from "react-native";
+import React from "react";
+import { SafeAreaView, View, Text, StyleSheet, Pressable, TextInput, Image } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import auth from '@react-native-firebase/auth';
@@ -7,12 +7,14 @@ import auth from '@react-native-firebase/auth';
 GoogleSignin.configure({
     webClientId: '1098397225551-ibat99410nloiruc9g7aecrkvb83ptpf.apps.googleusercontent.com'
 });
+
 export default function SignIn() {
     const [email, onChangeEmail] = React.useState('');
 
     const signInWithEmail = () => {
 
     }
+
     const signInWithGoogle = async () => {
         await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
         // Get the users ID token
@@ -149,8 +151,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: 32,
     },
     signInImage: {
-        width: 20,
         height: 20,
-        marginHorizontal: '1%'
+        width: 20,
+        marginHorizontal: '2%'
     },
 });
