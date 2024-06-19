@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
     Modal,
     Pressable,
@@ -16,9 +16,11 @@ import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 import DraggableFlatList, { RenderItemParams } from "react-native-draggable-flatlist";
 import { Swipeable } from "react-native-gesture-handler";
+import { AntDesign } from "@expo/vector-icons";
 
 interface Hint {
     key: string;
+    title: string;
     content: string;
     image?: string;
     delete: () => void;
@@ -30,6 +32,9 @@ const NewQuestionPortal: React.FC = () => {
     const [hints, setHints] = useState<Hint[]>([]);
     const [hintModalVisible, setHintModalVisible] = useState(false);
     const [hintModalContent, setHintModalContent] = useState<string>('');
+    const [hintModalTitle, setHintModalTitle] = useState<string>('');
+    const [editingHint, setEditingHint] = useState<Hint | null>(null);
+    const swipeableRefs = useRef<{ [key: string]: Swipeable | null }>({});
 
     const handleDelete = (key: string) => {
         setHints(prevHints => prevHints.filter(item => item.key !== key));
@@ -46,6 +51,7 @@ const NewQuestionPortal: React.FC = () => {
         if (!result.canceled) {
             const image: Hint = {
                 key: uuidv4(),
+                title: "",
                 content: "",
                 image: result.assets[0].uri,
                 delete: () => handleDelete(image.key)
@@ -57,59 +63,87 @@ const NewQuestionPortal: React.FC = () => {
     };
 
     const addHint = () => {
-        const text = hintModalContent.trim()
+        const text = hintModalContent.trim();
+        const title = hintModalTitle.trim();
         if (text) {
             const newItem: Hint = {
                 key: uuidv4(),
+                title: hintModalTitle,
                 content: text,
                 delete: () => handleDelete(newItem.key)
-            }
+            };
             setHints(prevHints => [...prevHints, newItem]);
+            setHintModalContent('');
+            setHintModalVisible(false);
+        }
+    }
+
+    const updateHint = () => {
+        const text = hintModalContent.trim();
+        const title = hintModalTitle.trim()
+        if (text && editingHint) {
+            setHints(prevHints =>
+                prevHints.map(hint =>
+                    hint.key === editingHint.key ? { ...hint, content: text, title: hintModalTitle } : hint
+                )
+            );
+            if (swipeableRefs.current[editingHint.key]) {
+                swipeableRefs.current[editingHint.key]?.close();
+            }
+            setHintModalTitle('')
+            setHintModalContent('');
+            setEditingHint(null);
             setHintModalVisible(false);
         }
     }
 
     const handleCancelHint = () => {
         setHintModalVisible(false);
+        setHintModalContent('');
+        setHintModalTitle('');
+        setEditingHint(null);
     }
 
-    const renderAnswer = ({ item, drag }: RenderItemParams<Hint>) => {
-        return (
-            <Swipeable
-                renderRightActions={() => (
-                    <Pressable onPress={item.delete}>
-                        <Text style={{ color: 'red' }}>Delete</Text>
-                    </Pressable>
-                )}
-            >
-                <Pressable
-                    onLongPress={() => {
-                        drag();
-                    }}
-                >
-                    <Text>{item.content}</Text>
-                </Pressable>
-            </Swipeable>
-        );
+    const openEditModal = (hint: Hint) => {
+        console.log(hint)
+        setEditingHint(hint);
+        setHintModalContent(hint.content);
+        setHintModalTitle(hint.title);
+        setHintModalVisible(true);
     }
 
     const renderHint = ({ item, drag }: RenderItemParams<Hint>) => {
         return (
             <Swipeable
+                ref={ref => {
+                    if (ref && item.key) {
+                        swipeableRefs.current[item.key] = ref;
+                    }
+                }}
                 renderRightActions={() => (
-                    <Pressable onPress={item.delete}>
-                        <Text style={{ color: 'red' }}>Delete</Text>
-                    </Pressable>
+                    <View style={{ flexDirection: 'row' }}>
+                        <Pressable onPress={() => openEditModal(item)} style={{ backgroundColor: '#0D99FF', justifyContent: 'center' }}>
+                            <Text style={{ color: 'white' }}>Edit</Text>
+                        </Pressable>
+                        <Pressable onPress={item.delete} style={{ marginRight: 10, backgroundColor: '#FF0D0D', justifyContent: 'center' }}>
+                            <Text style={{ color: 'white' }}>Delete</Text>
+                        </Pressable>
+                    </View >
                 )}
             >
                 <Pressable
+                    style={styles.hint}
                     onLongPress={() => {
                         drag();
                     }}
                 >
-                    <Text style={{ width: '100%' }}>{item.content}</Text>
+
+                    <Text style={{ color: 'white', marginRight: 10 }}>{item.title}</Text>
+                    <Text style={{ width: '75%', color: 'white' }}>{item.content}</Text>
+                    <AntDesign style={{}} name="menufold" size={20} color="white" />
+
                 </Pressable>
-            </Swipeable>
+            </Swipeable >
         );
 
     }
@@ -137,12 +171,12 @@ const NewQuestionPortal: React.FC = () => {
                         <Pressable onPress={() => setHintModalVisible(true)}><Text style={styles.add}>+</Text></Pressable>
                     </View>
                     <DraggableFlatList
-                        style={{ backgroundColor: 'white', width: '100%' }}
                         data={hints}
                         renderItem={renderHint}
                         keyExtractor={(item) => { return item.key; }}
                         onDragEnd={({ data: newData }) => setHints(newData)}
                     />
+
                 </View>
                 <View style={styles.infoContainer}>
                     <View style={styles.infoText}>
@@ -151,13 +185,11 @@ const NewQuestionPortal: React.FC = () => {
                     </View>
                 </View>
             </View>
-            < Modal
+            <Modal
                 animationType="slide"
                 transparent={true}
                 visible={hintModalVisible}
-                onRequestClose={() => {
-                    setHintModalVisible(false);
-                }}
+                onRequestClose={handleCancelHint}
             >
                 <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                     <View style={styles.modalContainer}>
@@ -165,12 +197,23 @@ const NewQuestionPortal: React.FC = () => {
                             <TextInput
                                 multiline
                                 style={styles.modalInput}
+                                onChangeText={text => setHintModalTitle(text)}
+                                value={hintModalTitle}
+                                placeholder="Add title"
+                            />
+                            <TextInput
+                                multiline
+                                style={styles.modalInput}
                                 onChangeText={text => setHintModalContent(text)}
                                 value={hintModalContent}
-                                placeholder="add"
+                                placeholder="Add content"
                             />
                             <View style={styles.modalButtons}>
-                                <Button title="Save" onPress={addHint} />
+                                {editingHint ? (
+                                    <Button title="Update" onPress={updateHint} />
+                                ) : (
+                                    <Button title="Save" onPress={addHint} />
+                                )}
                                 <Button title="Cancel" onPress={handleCancelHint} />
                             </View>
                         </View>
@@ -281,10 +324,12 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     hint: {
-        padding: 10,
+        flex: 1,
+        paddingVertical: '2%',
+        fontSize: 14,
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#0D99FF',
+        justifyContent: 'center'
     }
 });
 
