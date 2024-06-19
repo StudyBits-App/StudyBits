@@ -14,6 +14,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from 'expo-image-picker';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
+import DraggableFlatList, { RenderItemParams } from "react-native-draggable-flatlist";
+import { Swipeable } from "react-native-gesture-handler";
 
 interface Hint {
     key: string;
@@ -30,7 +32,7 @@ const NewQuestionPortal: React.FC = () => {
     const [hintModalContent, setHintModalContent] = useState<string>('');
 
     const handleDelete = (key: string) => {
-        setHints(prevHints => prevHints.filter(item => item.key));
+        setHints(prevHints => prevHints.filter(item => item.key !== key));
     }
 
     const pickImage = async () => {
@@ -63,12 +65,53 @@ const NewQuestionPortal: React.FC = () => {
                 delete: () => handleDelete(newItem.key)
             }
             setHints(prevHints => [...prevHints, newItem]);
-            console.log(hints);
+            setHintModalVisible(false);
         }
     }
 
     const handleCancelHint = () => {
         setHintModalVisible(false);
+    }
+
+    const renderAnswer = ({ item, drag }: RenderItemParams<Hint>) => {
+        return (
+            <Swipeable
+                renderRightActions={() => (
+                    <Pressable onPress={item.delete}>
+                        <Text style={{ color: 'red' }}>Delete</Text>
+                    </Pressable>
+                )}
+            >
+                <Pressable
+                    onLongPress={() => {
+                        drag();
+                    }}
+                >
+                    <Text>{item.content}</Text>
+                </Pressable>
+            </Swipeable>
+        );
+    }
+
+    const renderHint = ({ item, drag }: RenderItemParams<Hint>) => {
+        return (
+            <Swipeable
+                renderRightActions={() => (
+                    <Pressable onPress={item.delete}>
+                        <Text style={{ color: 'red' }}>Delete</Text>
+                    </Pressable>
+                )}
+            >
+                <Pressable
+                    onLongPress={() => {
+                        drag();
+                    }}
+                >
+                    <Text style={{ width: '100%' }}>{item.content}</Text>
+                </Pressable>
+            </Swipeable>
+        );
+
     }
 
 
@@ -93,6 +136,13 @@ const NewQuestionPortal: React.FC = () => {
                         <Text style={[styles.label, styles.labelWithPlus]}>Additional Information (optional)</Text>
                         <Pressable onPress={() => setHintModalVisible(true)}><Text style={styles.add}>+</Text></Pressable>
                     </View>
+                    <DraggableFlatList
+                        style={{ backgroundColor: 'white', width: '100%' }}
+                        data={hints}
+                        renderItem={renderHint}
+                        keyExtractor={(item) => { return item.key; }}
+                        onDragEnd={({ data: newData }) => setHints(newData)}
+                    />
                 </View>
                 <View style={styles.infoContainer}>
                     <View style={styles.infoText}>
@@ -101,8 +151,7 @@ const NewQuestionPortal: React.FC = () => {
                     </View>
                 </View>
             </View>
-
-            <Modal
+            < Modal
                 animationType="slide"
                 transparent={true}
                 visible={hintModalVisible}
@@ -128,7 +177,6 @@ const NewQuestionPortal: React.FC = () => {
                     </View>
                 </TouchableWithoutFeedback>
             </Modal>
-
         </SafeAreaView>
     );
 };
@@ -150,7 +198,7 @@ const styles = StyleSheet.create({
         width: '75%'
     },
     infoContainer: {
-        width: '100%',
+        flex: 1,
         textAlign: 'center',
         alignItems: 'center'
     },
@@ -191,7 +239,8 @@ const styles = StyleSheet.create({
     container: {
         justifyContent: 'center',
         alignItems: 'center',
-        width: '100%'
+        width: '100%',
+        flex: 1
     },
     imageInsert: {
         color: '#0D99FF',
@@ -226,6 +275,17 @@ const styles = StyleSheet.create({
         height: '80%',
         flex: 1,
     },
+    deleteButton: {
+        color: 'white',
+        padding: 10,
+        justifyContent: 'center',
+    },
+    hint: {
+        padding: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#0D99FF',
+    }
 });
 
 export default NewQuestionPortal;
