@@ -26,7 +26,6 @@ interface Hint {
     delete: () => void;
 }
 
-
 const NewQuestionPortal: React.FC = () => {
     const [question, setQuestion] = useState<string>('');
     const [hints, setHints] = useState<Hint[]>([]);
@@ -57,9 +56,7 @@ const NewQuestionPortal: React.FC = () => {
                 delete: () => handleDelete(image.key)
             }
             setHints(prevHints => [...prevHints, image]);
-
         }
-
     };
 
     const addHint = () => {
@@ -68,29 +65,28 @@ const NewQuestionPortal: React.FC = () => {
         if (text) {
             const newItem: Hint = {
                 key: uuidv4(),
-                title: hintModalTitle,
+                title: title,
                 content: text,
                 delete: () => handleDelete(newItem.key)
             };
             setHints(prevHints => [...prevHints, newItem]);
             setHintModalContent('');
+            setHintModalTitle('');
             setHintModalVisible(false);
         }
     }
 
     const updateHint = () => {
         const text = hintModalContent.trim();
-        const title = hintModalTitle.trim()
-        if (text && editingHint) {
+        const title = hintModalTitle.trim();
+        if (text && editingHint && title) {
             setHints(prevHints =>
                 prevHints.map(hint =>
-                    hint.key === editingHint.key ? { ...hint, content: text, title: hintModalTitle } : hint
+                    hint.key === editingHint.key ? { ...hint, content: text, title: title } : hint
                 )
             );
-            if (swipeableRefs.current[editingHint.key]) {
-                swipeableRefs.current[editingHint.key]?.close();
-            }
-            setHintModalTitle('')
+            swipeableRefs.current[editingHint.key]?.close();
+            setHintModalTitle('');
             setHintModalContent('');
             setEditingHint(null);
             setHintModalVisible(false);
@@ -102,10 +98,12 @@ const NewQuestionPortal: React.FC = () => {
         setHintModalContent('');
         setHintModalTitle('');
         setEditingHint(null);
+        if (editingHint) {
+            swipeableRefs.current[editingHint.key]?.close();
+        }
     }
 
     const openEditModal = (hint: Hint) => {
-        console.log(hint)
         setEditingHint(hint);
         setHintModalContent(hint.content);
         setHintModalTitle(hint.title);
@@ -137,27 +135,22 @@ const NewQuestionPortal: React.FC = () => {
                         drag();
                     }}
                 >
-
                     <Text style={{ color: 'white', marginRight: 10 }}>{item.title}</Text>
                     <Text style={{ width: '75%', color: 'white' }}>{item.content}</Text>
                     <AntDesign style={{}} name="menufold" size={20} color="white" />
-
                 </Pressable>
             </Swipeable >
         );
-
     }
-
 
     return (
         <SafeAreaView style={styles.safeview}>
             <View style={styles.container}>
-                <Pressable
-                    onPress={pickImage}>
+                <Pressable onPress={pickImage}>
                     <Text style={styles.imageInsert}>Add Image</Text>
                 </Pressable>
                 <View style={styles.questionContainer}>
-                    <Text style={[styles.label, styles.regularLabel]}>Question</Text>
+                    <Text style={styles.label}>Question</Text>
                     <TextInput
                         multiline
                         style={styles.input}
@@ -166,23 +159,27 @@ const NewQuestionPortal: React.FC = () => {
                     />
                 </View>
                 <View style={styles.infoContainer}>
-                    <View style={styles.infoText}>
-                        <Text style={[styles.label, styles.labelWithPlus]}>Additional Information (optional)</Text>
-                        <Pressable onPress={() => setHintModalVisible(true)}><Text style={styles.add}>+</Text></Pressable>
+                    <View style={styles.infoHeader}>
+                        <Text style={[styles.label, styles.safeview]}>Additional Information (optional)</Text>
+                        <Pressable onPress={() => setHintModalVisible(true)}>
+                            <Text style={styles.add}>+</Text>
+                        </Pressable>
                     </View>
                     <DraggableFlatList
                         data={hints}
                         renderItem={renderHint}
-                        keyExtractor={(item) => { return item.key; }}
+                        keyExtractor={(item) => item.key}
                         onDragEnd={({ data: newData }) => setHints(newData)}
                     />
-
                 </View>
                 <View style={styles.infoContainer}>
-                    <View style={styles.infoText}>
-                        <Text style={[styles.label, styles.labelWithPlus]}>Answers</Text>
-                        <Pressable><Text style={styles.add}>+</Text></Pressable>
+                    <View style={styles.infoHeader}>
+                        <Text style={[styles.label, styles.safeview]}>Answers</Text>
+                        <Pressable>
+                            <Text style={styles.add}>+</Text>
+                        </Pressable>
                     </View>
+                    {/* Render answers here */}
                 </View>
             </View>
             <Modal
@@ -229,66 +226,48 @@ const styles = StyleSheet.create({
         color: '#00FF00',
         fontWeight: 'medium',
         fontSize: 20,
-        alignSelf: 'flex-end',
-        flex: 1
     },
-    labelWithPlus: {
-        flex: 1
-    },
-    infoText: {
-        alignItems: 'center',
+    infoHeader: {
         flexDirection: 'row',
-        width: '75%'
+        alignItems: 'center',
     },
     infoContainer: {
-        flex: 1,
-        textAlign: 'center',
-        alignItems: 'center'
+        width: '90%',
+        marginBottom: 10,
     },
     questionContainer: {
-        width: '100%',
-        textAlign: 'left',
-        alignItems: 'center'
-    },
-    regularLabel: {
-        width: '75%'
+        width: '90%',
+        marginVertical: 10,
     },
     label: {
         color: 'white',
         fontWeight: 'bold',
         fontSize: 15,
-        marginVertical: '2%'
+        marginBottom: 10,
     },
     input: {
         backgroundColor: "#000000",
         padding: 10,
-        alignItems: "center",
         borderRadius: 5,
-        width: '75%',
-        flexDirection: 'row',
-        justifyContent: 'center',
-        paddingVertical: 12,
-        paddingHorizontal: 32,
         borderColor: 'white',
-        borderStyle: 'solid',
         borderWidth: 1,
-        fontSize: 18
+        color: 'white',
+        fontSize: 18,
+        textAlignVertical: 'top',
     },
     safeview: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center'
     },
     container: {
-        justifyContent: 'center',
-        alignItems: 'center',
+        flex: 1,
         width: '100%',
-        flex: 1
+        alignItems: 'center',
     },
     imageInsert: {
         color: '#0D99FF',
         fontWeight: 'bold',
-        fontSize: 14
+        fontSize: 14,
+        marginVertical: 20,
     },
     modalContainer: {
         flex: 1,
@@ -297,11 +276,10 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
     modalContent: {
-        backgroundColor: '#fff',
-        padding: 20,
+        backgroundColor: '#1f1e1e',
+        padding: 30,
         borderRadius: 10,
         width: '90%',
-        height: '50%'
     },
     modalButtons: {
         flexDirection: 'row',
@@ -313,24 +291,18 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         marginBottom: 20,
         paddingHorizontal: 10,
-        borderRadius: 10,
+        borderRadius: 5,
         width: '100%',
-        height: '80%',
-        flex: 1,
-    },
-    deleteButton: {
         color: 'white',
-        padding: 10,
-        justifyContent: 'center',
     },
     hint: {
-        flex: 1,
-        paddingVertical: '2%',
-        fontSize: 14,
+        backgroundColor: '#333333',
+        padding: 10,
+        borderRadius: 5,
+        marginBottom: 10,
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'center'
-    }
+    },
 });
 
 export default NewQuestionPortal;
