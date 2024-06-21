@@ -8,7 +8,8 @@ import {
     View,
     Keyboard,
     Button,
-    TouchableWithoutFeedback
+    TouchableWithoutFeedback,
+    Image
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from 'expo-image-picker';
@@ -37,11 +38,22 @@ const NewQuestionPortal: React.FC = () => {
     const [question, setQuestion] = useState<string>('');
     const [hints, setHints] = useState<Hint[]>([]);
     const [answerChoices, setAnswerChoices] = useState<Answer[]>([]);
+
     const [hintModalVisible, setHintModalVisible] = useState(false);
     const [hintModalContent, setHintModalContent] = useState<string>('');
     const [hintModalTitle, setHintModalTitle] = useState<string>('');
     const [editingHint, setEditingHint] = useState<Hint | null>(null);
+
+    const [imageModalVisible, setImageModalVisible] = useState(false);
+    const [imageModalImage, setImageModalImage] = useState<string>('');
+
     const swipeableRefs = useRef<{ [key: string]: Swipeable | null }>({});
+
+    const handleSubmit =  () => {
+        console.log(question);
+        console.log(hints);
+        console.log(answerChoices);
+    };
 
     const handleHintDelete = (key: string) => {
         setHints(prevHints => prevHints.filter(item => item.key !== key));
@@ -50,7 +62,7 @@ const NewQuestionPortal: React.FC = () => {
     const handleAnswerDelete = (key: string) => {
         setAnswerChoices(prevAnswers => prevAnswers.filter(answer => answer.key !== key));
     }
-
+    
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -60,21 +72,14 @@ const NewQuestionPortal: React.FC = () => {
         });
 
         if (!result.canceled) {
-            const image: Hint = {
-                key: uuidv4(),
-                title: "",
-                content: "",
-                image: result.assets[0].uri,
-                delete: () => handleHintDelete(image.key)
-            }
-            setHints(prevHints => [...prevHints, image]);
+            setImageModalImage(result.assets[0].uri)
         }
     };
 
     const addHint = () => {
         const text = hintModalContent.trim();
         const title = hintModalTitle.trim();
-        if (text) {
+        if (text && title) {
             const newItem: Hint = {
                 key: uuidv4(),
                 title: title,
@@ -85,6 +90,9 @@ const NewQuestionPortal: React.FC = () => {
             setHintModalContent('');
             setHintModalTitle('');
             setHintModalVisible(false);
+        }
+        else{
+            console.error("Missing data");
         }
     }
 
@@ -98,13 +106,32 @@ const NewQuestionPortal: React.FC = () => {
         setAnswerChoices(prevAnswers => [...prevAnswers, newItem]);
     }
 
+    const addImage = () => {
+        const newItem: Hint = {
+            key: uuidv4(),
+            title: hintModalTitle,
+            content: "",
+            image: imageModalImage,
+            delete: () => handleHintDelete(newItem.key)
+        }
+        setHints(prevHints => [...prevHints, newItem]);
+        setHintModalTitle('');
+        setImageModalImage('');
+        setImageModalVisible(false);
+    }
+
     const updateHint = () => {
         const text = hintModalContent.trim();
         const title = hintModalTitle.trim();
         if (text && editingHint && title) {
             setHints(prevHints =>
                 prevHints.map(hint =>
-                    hint.key === editingHint.key ? { ...hint, content: text, title: title } : hint
+                    hint.key === editingHint.key ? { 
+                        ...hint, 
+                        content: text, 
+                        title: title, 
+                        image: hint.image ? imageModalImage : undefined 
+                    } : hint
                 )
             );
             swipeableRefs.current[editingHint.key]?.close();
@@ -114,22 +141,52 @@ const NewQuestionPortal: React.FC = () => {
             setHintModalVisible(false);
         }
     }
+    const updateImage = () => {
+        const title = hintModalTitle.trim();
+        if ( imageModalImage&& editingHint && title) {
+            setHints(prevHints =>
+                prevHints.map(hint =>
+                    hint.key === editingHint.key ? { 
+                        ...hint, 
+                        content: "", 
+                        title: title, 
+                        image: hint.image ? imageModalImage : undefined 
+                    } : hint
+                )
+            );
+            setHintModalTitle('');
+            setImageModalImage('');
+            setEditingHint(null);
+            setImageModalVisible(false);
+        }
+    }
 
     const handleCancelHint = () => {
         setHintModalVisible(false);
+        setImageModalVisible(false)
         setHintModalContent('');
         setHintModalTitle('');
+        setImageModalImage('');
         setEditingHint(null);
-        if (editingHint) {
+        if (editingHint && !imageModalVisible) {
             swipeableRefs.current[editingHint.key]?.close();
         }
     }
 
-    const openEditModal = (hint: Hint) => {
+    const openHintEditModal = (hint: Hint) => {
         setEditingHint(hint);
         setHintModalContent(hint.content);
         setHintModalTitle(hint.title);
         setHintModalVisible(true);
+    }
+
+    const openImageEditModal = (hint: Hint) => {
+        setEditingHint(hint);
+        setHintModalTitle(hint.title);
+        if (hint.image) {
+            setImageModalImage(hint.image);
+        }    
+        setImageModalVisible(true);
     }
 
     const toggleAnswer = (answerKey: string) => {
@@ -158,39 +215,54 @@ const NewQuestionPortal: React.FC = () => {
     const renderHint = ({ item, drag }: RenderItemParams<Hint>) => {
         const truncatedTitle = hintCharacterLimit(item, 7)[0] + "  ->  ";
         const truncatedContent = hintCharacterLimit(item, 85)[1];
-    
-        return (
-            <Swipeable
-                ref={ref => {
-                    if (ref && item.key) {
-                        swipeableRefs.current[item.key] = ref;
-                    }
-                }}
-                renderRightActions={() => (
-                    <View style={styles.swipeActionsContainer}>
-                        <Pressable onPress={() => openEditModal(item)} style={{ ...styles.swipeButton, backgroundColor: '#0D99FF' }}>
-                            <Text style={{ color: 'white' }}>Edit</Text>
-                        </Pressable>
-                        <Pressable onPress={item.delete} style={{ ...styles.swipeButton, backgroundColor: '#FF0D0D' }}>
-                            <Text style={{ color: 'white' }}>Delete</Text>
+        if(item.image){
+            return(
+                <Pressable onLongPress={drag}>
+                    <View style={styles.imageContainer}>
+                        <Pressable onPress={() => openImageEditModal(item)}>
+                            <Image
+                                source={{ uri: item.image }}
+                                style={styles.image}
+                                resizeMode="contain" 
+                            />
                         </Pressable>
                     </View>
-                )}
-            >
-                <Pressable
-                    style={styles.hint}
-                    onLongPress={() => {
-                        drag();
-                    }}
-                >
-                    <Text style={{ color: 'white' }}>{truncatedTitle}</Text>
-                    <Text style={styles.hintContent}>{truncatedContent}</Text>
-                    <AntDesign name="menufold" size={20} color="white" style={{ marginLeft: 'auto' }} />
                 </Pressable>
-            </Swipeable>
-        );
+            );
+        }
+        else{
+            return (
+                <Swipeable
+                    ref={ref => {
+                        if (ref && item.key) {
+                            swipeableRefs.current[item.key] = ref;
+                        }
+                    }}
+                    renderRightActions={() => (
+                        <View style={styles.swipeActionsContainer}>
+                            <Pressable onPress={() => openHintEditModal(item)} style={{ ...styles.swipeButton, backgroundColor: '#0D99FF' }}>
+                                <Text style={{ color: 'white' }}>Edit</Text>
+                            </Pressable>
+                            <Pressable onPress={item.delete} style={{ ...styles.swipeButton, backgroundColor: '#FF0D0D' }}>
+                                <Text style={{ color: 'white' }}>Delete</Text>
+                            </Pressable>
+                        </View>
+                    )}
+                >
+                    <Pressable
+                        style={styles.hint}
+                        onLongPress={() => {
+                            drag();
+                        }}
+                    >
+                        <Text style={{ color: 'white' }}>{truncatedTitle}</Text>
+                        <Text style={styles.hintContent}>{truncatedContent}</Text>
+                        <AntDesign name="menufold" size={20} color="white" style={{ marginLeft: 'auto' }} />
+                    </Pressable>
+                </Swipeable>
+            );
+        }
     }
-    
 
     const renderAnswer = ({ item, drag }: RenderItemParams<Answer>) => {
         const handleAnswerContent = (text: string) => {
@@ -245,17 +317,11 @@ const NewQuestionPortal: React.FC = () => {
             </Swipeable>
         );
     }    
-
-    const handleSubmit =  () => {
-        console.log(question);
-        console.log(hints);
-        console.log(answerChoices);
-    };
-
+    
     return (
         <SafeAreaView style={styles.safeview}>
             <View style={styles.container}>
-                <Pressable onPress={pickImage}>
+                <Pressable onPress={() => setImageModalVisible(true)}>
                     <Text style={styles.imageInsert}>Add Image</Text>
                 </Pressable>
                 <View style={styles.infoContainer}>
@@ -299,6 +365,7 @@ const NewQuestionPortal: React.FC = () => {
                     <Text>Submit</Text>
                 </Pressable>
             </View>
+
             <Modal
                 animationType="slide"
                 transparent={true}
@@ -335,7 +402,57 @@ const NewQuestionPortal: React.FC = () => {
                     </View>
                 </TouchableWithoutFeedback>
             </Modal>
-        </SafeAreaView>
+
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={imageModalVisible}
+                onRequestClose={handleCancelHint}
+            >
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                        <TextInput
+                            multiline
+                            style={styles.modalInput}
+                            onChangeText={text => setHintModalTitle(text)}
+                            value={hintModalTitle}
+                            placeholder="Add title"
+                        />
+                        {imageModalImage ? (
+                            <View style = {styles.imageContainer}>
+                                <Pressable onPress={() => console.log(imageModalImage)}>
+                                <Image
+                                    source={{ uri: imageModalImage}}
+                                    style={styles.image}
+                                    resizeMode="contain" 
+                                />
+                                </Pressable>
+                            </View>
+                            ) : (
+                                <Button title="Add image" onPress={pickImage} />
+                            )
+                        }
+                        <View style={styles.modalButtons}>
+                            {editingHint ? (
+                                <Button title="Update" onPress={updateImage} />
+                            ) : (
+                                <Button title="Save" onPress={addImage} />
+                            )}
+                            <Button title="Cancel" onPress={handleCancelHint} />
+                        </View>
+                    </View>
+                </View>
+            </TouchableWithoutFeedback>
+        </Modal>
+
+        {editingHint && (
+            <View>
+                <Button title="Delete" onPress={() => {editingHint.delete();handleCancelHint();}} />
+            </View>
+        )}
+
+    </SafeAreaView>
     );
 };
 
@@ -458,6 +575,18 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         width: '50%',
     },
+    imageContainer: {
+        width: 300, 
+        height: 200, 
+        justifyContent: 'center',
+        alignItems: 'center', 
+    },
+    image: {
+        flex: 1,
+        width: 200, 
+        height: 300, 
+    },
+
 });
 
 export default NewQuestionPortal;
