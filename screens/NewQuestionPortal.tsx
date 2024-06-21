@@ -16,7 +16,7 @@ import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
 import DraggableFlatList, { RenderItemParams } from "react-native-draggable-flatlist";
 import { Swipeable } from "react-native-gesture-handler";
-import { AntDesign } from "@expo/vector-icons";
+import { AntDesign, FontAwesome } from "@expo/vector-icons";
 
 interface Hint {
     key: string;
@@ -36,7 +36,7 @@ interface Answer {
 const NewQuestionPortal: React.FC = () => {
     const [question, setQuestion] = useState<string>('');
     const [hints, setHints] = useState<Hint[]>([]);
-    const [answerChoice, setAnswerChoices] = useState<Answer[]>([]);
+    const [answerChoices, setAnswerChoices] = useState<Answer[]>([]);
     const [hintModalVisible, setHintModalVisible] = useState(false);
     const [hintModalContent, setHintModalContent] = useState<string>('');
     const [hintModalTitle, setHintModalTitle] = useState<string>('');
@@ -89,7 +89,6 @@ const NewQuestionPortal: React.FC = () => {
     }
 
     const addAnswer = () => {
-        if (answerChoice.length != 0 && answerChoice[answerChoice.length - 1].content === "") return;
         const newItem: Answer = {
             key: uuidv4(),
             content: "",
@@ -133,13 +132,33 @@ const NewQuestionPortal: React.FC = () => {
         setHintModalVisible(true);
     }
 
+    const toggleAnswer = (answerKey: string) => {
+        setAnswerChoices(prevAnswers =>
+            prevAnswers.map(answer =>
+                answer.key === answerKey ? { ...answer, answer: !answer.answer } : answer
+            )
+        );
+        swipeableRefs.current[answerKey]?.close();
+    }
+
+    function hintCharacterLimit(hint: Hint, maxTitleLength: number): [string, string] {
+        const trimmedTitle = hint.title.length > maxTitleLength
+            ? hint.title.substring(0, maxTitleLength - 2).substring(0, hint.title.substring(0, maxTitleLength - 2).includes(' ')
+                ? hint.title.substring(0, maxTitleLength - 2).lastIndexOf(' ') : maxTitleLength - 2) + '...'
+            : hint.title;
+    
+        const trimmedContent = hint.content.length > maxTitleLength
+            ? hint.content.substring(0, maxTitleLength - 2).substring(0, hint.content.substring(0, maxTitleLength - 2).includes(' ')
+                ? hint.content.substring(0, maxTitleLength - 2).lastIndexOf(' ') : maxTitleLength - 2) + '...'
+            : hint.content;
+    
+        return [trimmedTitle, trimmedContent];
+    }
+    
     const renderHint = ({ item, drag }: RenderItemParams<Hint>) => {
-        const maxTitleLength = 7;
-
-        const trimmedTitle = item.title.length > maxTitleLength
-            ? item.title.substring(0, maxTitleLength - 2).substring(0, item.title.substring(0, maxTitleLength - 2).includes(' ') ? item.title.substring(0, maxTitleLength - 2).lastIndexOf(' ') : maxTitleLength - 2) + '...'
-            : item.title;
-
+        const truncatedTitle = hintCharacterLimit(item, 7)[0] + "  ->  ";
+        const truncatedContent = hintCharacterLimit(item, 85)[1];
+    
         return (
             <Swipeable
                 ref={ref => {
@@ -148,14 +167,14 @@ const NewQuestionPortal: React.FC = () => {
                     }
                 }}
                 renderRightActions={() => (
-                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', width: '40%', paddingBottom: '3%' }}>
-                        <Pressable onPress={() => openEditModal(item)} style={{ backgroundColor: '#0D99FF', justifyContent: 'center', alignItems: 'center', width: '50%' }}>
+                    <View style={styles.swipeActionsContainer}>
+                        <Pressable onPress={() => openEditModal(item)} style={{ ...styles.swipeButton, backgroundColor: '#0D99FF' }}>
                             <Text style={{ color: 'white' }}>Edit</Text>
                         </Pressable>
-                        <Pressable onPress={item.delete} style={{ backgroundColor: '#FF0D0D', justifyContent: 'center', alignItems: 'center', width: '50%' }}>
+                        <Pressable onPress={item.delete} style={{ ...styles.swipeButton, backgroundColor: '#FF0D0D' }}>
                             <Text style={{ color: 'white' }}>Delete</Text>
                         </Pressable>
-                    </View >
+                    </View>
                 )}
             >
                 <Pressable
@@ -164,32 +183,74 @@ const NewQuestionPortal: React.FC = () => {
                         drag();
                     }}
                 >
-                    <Text style={{ color: 'white', width: '15%', marginRight: '3%' }}>{trimmedTitle}</Text>
-                    <Text style={{ width: '76%', color: 'white' }}>{item.content}</Text>
-                    <AntDesign name="menufold" size={20} color="white" />
+                    <Text style={{ color: 'white' }}>{truncatedTitle}</Text>
+                    <Text style={styles.hintContent}>{truncatedContent}</Text>
+                    <AntDesign name="menufold" size={20} color="white" style={{ marginLeft: 'auto' }} />
                 </Pressable>
-            </Swipeable >
+            </Swipeable>
         );
     }
+    
 
     const renderAnswer = ({ item, drag }: RenderItemParams<Answer>) => {
-
         const handleAnswerContent = (text: string) => {
-            const updatedContent: Answer = {
-                ...item,
-                content: text
-            }
+            setAnswerChoices(prevAnswers =>
+                prevAnswers.map(answer =>
+                    answer.key === item.key ? { ...answer, content: text } : answer
+                )
+            );
         }
+    
         return (
-            <View>
-                <TextInput
-                    placeholder="tricky answer choice"
-                    onChangeText={handleAnswerContent}
-                />
-            </View>
-        )
+            <Swipeable
+                ref={ref => {
+                    if (ref && item.key) {
+                        swipeableRefs.current[item.key] = ref;
+                    }
+                }}
+                renderRightActions={() => (
+                    <View style={styles.swipeActionsContainer}>
+                        <Pressable onPress={() => toggleAnswer(item.key)} style={styles.swipeButton}>
+                            {item.answer ? (
+                                <FontAwesome name="times" size={20} color="red" />
+                            ) : (
+                                <FontAwesome name="check" size={20} color="green" />
+                            )}
+                        </Pressable>
+                        <Pressable onPress={item.delete} style={{...styles.swipeButton, backgroundColor: '#FF0D0D'}}>
+                            <Text style={{color: 'white'}}>Delete</Text>
+                        </Pressable>
+                    </View>
+                )}
+            >
+                <Pressable
+                    style={[
+                        styles.hint,
+                        item.answer && styles.correctAnswer,
+                        !item.answer && styles.incorrectAnswer
+                    ]}
+                    onLongPress={() => {
+                        drag();
+                    }}
+                >
+                    <TextInput
+                        multiline
+                        style={styles.answerInput}
+                        placeholder="Tricky answer choice"
+                        onChangeText={handleAnswerContent}
+                        value={item.content}
+                    />
+                    <AntDesign name="menufold" size={20} color="white" />
+                </Pressable>
+            </Swipeable>
+        );
+    }    
 
-    }
+    const handleSubmit =  () => {
+        console.log(question);
+        console.log(hints);
+        console.log(answerChoices);
+    };
 
     return (
         <SafeAreaView style={styles.safeview}>
@@ -197,7 +258,7 @@ const NewQuestionPortal: React.FC = () => {
                 <Pressable onPress={pickImage}>
                     <Text style={styles.imageInsert}>Add Image</Text>
                 </Pressable>
-                <View style={styles.questionContainer}>
+                <View style={styles.infoContainer}>
                     <Text style={styles.label}>Question</Text>
                     <TextInput
                         multiline
@@ -228,13 +289,15 @@ const NewQuestionPortal: React.FC = () => {
                         </Pressable>
                     </View>
                     <DraggableFlatList
-                        data={answerChoice}
+                        data={answerChoices}
                         renderItem={renderAnswer}
                         keyExtractor={(item) => item.key}
                         onDragEnd={({ data: newData }) => setAnswerChoices(newData)}
                     />
                 </View>
-                <Pressable style={styles.button}><Text>Submit</Text></Pressable>
+                <Pressable style={styles.button} onPress={handleSubmit}>
+                    <Text>Submit</Text>
+                </Pressable>
             </View>
             <Modal
                 animationType="slide"
@@ -258,6 +321,7 @@ const NewQuestionPortal: React.FC = () => {
                                 onChangeText={text => setHintModalContent(text)}
                                 value={hintModalContent}
                                 placeholder="Add content"
+                                placeholderTextColor="gray"
                             />
                             <View style={styles.modalButtons}>
                                 {editingHint ? (
@@ -300,10 +364,6 @@ const styles = StyleSheet.create({
     infoContainer: {
         width: '90%',
         marginBottom: 10,
-    },
-    questionContainer: {
-        width: '90%',
-        marginVertical: 10,
     },
     label: {
         color: 'white',
@@ -368,6 +428,35 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         flexDirection: 'row',
         alignItems: 'center',
+    },
+
+    hintContent: {
+        color: 'white',
+        paddingRight: 15,
+    },
+    correctAnswer: {
+        borderColor: 'green',
+        borderWidth: 2,
+    },
+    incorrectAnswer: {
+        borderColor: 'red',
+        borderWidth: 2,
+    },
+    answerInput: {
+        color: 'white',
+        flex: 1,
+        paddingRight: 15
+    },
+    swipeActionsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        width: '40%',
+        paddingBottom: '3%',
+    },
+    swipeButton: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        width: '50%',
     },
 });
 
