@@ -62,6 +62,11 @@ const NewQuestionPortal: React.FC = () => {
     const handleAnswerDelete = (key: string) => {
         setAnswerChoices(prevAnswers => prevAnswers.filter(answer => answer.key !== key));
     }
+
+    const handleDeleteImage = () => {
+        setHints(prevAnswers => prevAnswers.filter(answer => answer.key !== editingHint?.key));
+        setImageModalVisible(false);
+    }
     
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
@@ -441,16 +446,16 @@ const NewQuestionPortal: React.FC = () => {
                             )}
                             <Button title="Cancel" onPress={handleCancelHint} />
                         </View>
+                        {editingHint && (
+                            <Pressable onPress={handleDeleteImage}>
+                                <Text style={styles.imageDeleteButton}>Delete</Text>
+                            </Pressable>
+                        )}
                     </View>
                 </View>
             </TouchableWithoutFeedback>
         </Modal>
 
-        {editingHint && (
-            <View>
-                <Button title="Delete" onPress={() => {editingHint.delete();handleCancelHint();}} />
-            </View>
-        )}
 
     </SafeAreaView>
     );
@@ -533,7 +538,7 @@ const styles = StyleSheet.create({
         borderColor: "gray",
         borderWidth: 1,
         marginBottom: 20,
-        paddingHorizontal: 10,
+        padding: '3%',
         borderRadius: 5,
         width: '100%',
         color: 'white',
@@ -574,6 +579,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         width: '50%',
+    },
+    imageDeleteButton: {
+        marginTop: 30, 
+        color: 'white', 
+        backgroundColor: '#FF474C', 
+        textAlign: 'center', 
+        padding: 7,
     },
     imageContainer: {
         width: 300, 
