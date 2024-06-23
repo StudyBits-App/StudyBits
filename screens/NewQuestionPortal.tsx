@@ -223,21 +223,22 @@ const NewQuestionPortal: React.FC = () => {
                         drag();
                     }}
                 >
-                <View style={{flex: 1}}>
-                    <Text style={styles.contentTitle}>{truncatedTitle}</Text>
-                        {item.image ? (
-                            <View style = {styles.imageContainer}>
-                                <Image source={{ uri: item.image }} style={styles.image}  resizeMode='contain' />
-                            </View>
 
-                        ) : null}
-                    <Text style={styles.contentText}>{truncatedContent}</Text>
-                </View>
+                    <View style={{flex: 1}}>
+                    <Text style={[styles.contentTitle, item.image? styles.imageTitle : null]}>{truncatedTitle}</Text>
+                        {item.image ? (
+                                <View style = {styles.imageContainer}>
+                                    <Image source={{ uri: item.image }} style={styles.image}  resizeMode='contain' />
+                                </View>
+
+                            ) : null}
+                        <Text style={[styles.contentText, item.image ? styles.imageContent : null]}>{truncatedContent}</Text>
+
+                    </View>
                     <AntDesign name="menufold" size={20} color="white" style={{ marginLeft: 'auto' }} />
                 </Pressable>
             </Swipeable>
         );
-
     }
 
     const renderAnswer = ({ item, drag }: RenderItemParams<Answer>) => {
@@ -510,6 +511,15 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%'
     },
+    imageTitle: {
+        textAlign: 'center',
+        marginBottom:15
+    },
+    imageContent: {
+        textAlign: 'center',
+        marginTop:15 
+    }
+
 });
 
 export default NewQuestionPortal;
