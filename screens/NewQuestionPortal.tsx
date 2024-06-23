@@ -6,19 +6,16 @@ import {
     Text,
     TextInput,
     View,
-    Keyboard,
     Button,
-    TouchableWithoutFeedback,
     Image,
-    ScrollView
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from 'expo-image-picker';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
-import DraggableFlatList, { NestableDraggableFlatList, NestableScrollContainer, RenderItemParams } from "react-native-draggable-flatlist";
+import { NestableDraggableFlatList, NestableScrollContainer, RenderItemParams } from "react-native-draggable-flatlist";
 import { Swipeable } from "react-native-gesture-handler";
-import { AntDesign, FontAwesome } from "@expo/vector-icons";
+import { AntDesign, FontAwesome, Ionicons } from "@expo/vector-icons";
 import uploadImageToFirebase from "@/services/uploadImage";
 import firestore from '@react-native-firebase/firestore';
 
@@ -26,7 +23,7 @@ interface Hint {
     key: string;
     title: string;
     content: string;
-    image?: string;
+    image: string;
     delete: () => void;
 }
 
@@ -37,42 +34,33 @@ interface Answer {
     delete: () => void;
 }
 
-interface hintImage {
-    key: string;
-    title: string;
-    image: string;
-}
-
 const NewQuestionPortal: React.FC = () => {
     const [question, setQuestion] = useState<string>('');
 
     const [hints, setHints] = useState<Hint[]>([]);
     const [answerChoices, setAnswerChoices] = useState<Answer[]>([]);
-    const [images, setImages] = useState<hintImage[]>([]);
 
     const [hintModalVisible, setHintModalVisible] = useState(false);
     const [hintModalContent, setHintModalContent] = useState<string>('');
     const [hintModalTitle, setHintModalTitle] = useState<string>('');
-    const [editingHint, setEditingHint] = useState<Hint | hintImage | null>(null);
-
-    const [imageModalVisible, setImageModalVisible] = useState(false);
-    const [imageModalImage, setImageModalImage] = useState<string>('');
+    const [hintModalImage, setHintModalImage] = useState<string>('');
+    const [editingHint, setEditingHint] = useState<Hint | null>(null);
 
     const swipeableRefs = useRef<{ [key: string]: Swipeable | null }>({});
 
     const handleSubmit = async () => {
 
-        const updatedImages = Promise.all(images.map(async image => {
-            if (image.image) {
-                const imageRef = await uploadImageToFirebase(image.image, "questions");
+        const updatedImages = await Promise.all(hints.map(async hint => {
+            if (hint.image) {
+                const imageRef = await uploadImageToFirebase(hint.image, "questions");
                 if (imageRef) {
                     return {
-                        ...image,
+                        ...hint,
                         image: imageRef
                     };
                 }
             }
-            return image;
+            return hint;
         }));
 
         const filteredHints = hints.map(hint => {
@@ -85,7 +73,7 @@ const NewQuestionPortal: React.FC = () => {
             return filteredComponent;
         });
 
-        firestore().collection('questions').add({ question: question, images: updatedImages, hints: hints, answers: answerChoices });
+        firestore().collection('questions').add({ question: question, images: updatedImages, hints: filteredHints, answers: filteredAnswers });
     };
 
     const handleHintDelete = (key: string) => {
@@ -94,11 +82,6 @@ const NewQuestionPortal: React.FC = () => {
 
     const handleAnswerDelete = (key: string) => {
         setAnswerChoices(prevAnswers => prevAnswers.filter(answer => answer.key !== key));
-    }
-
-    const handleDeleteImage = () => {
-        setImages(prevImages => prevImages.filter(images => images.key !== editingHint?.key));
-        setImageModalVisible(false);
     }
 
     const pickImage = async () => {
@@ -110,7 +93,7 @@ const NewQuestionPortal: React.FC = () => {
         });
 
         if (!result.canceled) {
-            setImageModalImage(result.assets[0].uri)
+            setHintModalImage(result.assets[0].uri)
         }
     };
 
@@ -122,11 +105,13 @@ const NewQuestionPortal: React.FC = () => {
                 key: uuidv4(),
                 title: title,
                 content: text,
+                image: hintModalImage,
                 delete: () => handleHintDelete(newItem.key)
             };
             setHints(prevHints => [...prevHints, newItem]);
             setHintModalContent('');
             setHintModalTitle('');
+            setHintModalImage('');
             setHintModalVisible(false);
         }
         else {
@@ -144,18 +129,6 @@ const NewQuestionPortal: React.FC = () => {
         setAnswerChoices(prevAnswers => [...prevAnswers, newItem]);
     }
 
-    const addImage = () => {
-        const newItem: hintImage = {
-            key: uuidv4(),
-            title: hintModalTitle,
-            image: imageModalImage,
-        }
-        setImages(prevImages => [...prevImages, newItem]);
-        setHintModalTitle('');
-        setImageModalImage('');
-        setImageModalVisible(false);
-    }
-
     const updateHint = () => {
         const text = hintModalContent.trim();
         const title = hintModalTitle.trim();
@@ -166,62 +139,37 @@ const NewQuestionPortal: React.FC = () => {
                         ...hint,
                         content: text,
                         title: title,
-                        image: hint.image ? imageModalImage : undefined
+                        image: hintModalImage
                     } : hint
                 )
             );
             swipeableRefs.current[editingHint.key]?.close();
             setHintModalTitle('');
             setHintModalContent('');
+            setHintModalImage('');
             setEditingHint(null);
             setHintModalVisible(false);
         }
     }
-    const updateImage = () => {
-        const title = hintModalTitle.trim();
-        if (imageModalImage && editingHint && title) {
-            setImages(prevImages =>
-                prevImages.map(images =>
-                    images.key === editingHint.key ? {
-                        ...images,
-                        title: title,
-                        image: imageModalImage
-                    } : images
-                )
-            );
-            setHintModalTitle('');
-            setImageModalImage('');
-            setEditingHint(null);
-            setImageModalVisible(false);
-        }
-    }
 
     const handleCancelHint = () => {
-        if (editingHint && !imageModalVisible) {
+        if (editingHint) {
             swipeableRefs.current[editingHint.key]?.close();
         }
         setHintModalVisible(false);
-        setImageModalVisible(false)
         setHintModalContent('');
         setHintModalTitle('');
-        setImageModalImage('');
+        setHintModalImage('');
         setEditingHint(null);
+
     }
 
     const openHintEditModal = (hint: Hint) => {
         setEditingHint(hint);
         setHintModalContent(hint.content);
         setHintModalTitle(hint.title);
+        setHintModalImage(hint.image);
         setHintModalVisible(true);
-    }
-
-    const openImageEditModal = (image: hintImage) => {
-        setEditingHint(image);
-        setHintModalTitle(image.title);
-        if (image.image) {
-            setImageModalImage(image.image);
-        }
-        setImageModalVisible(true);
     }
 
     const toggleAnswer = (answerKey: string) => {
@@ -246,23 +194,9 @@ const NewQuestionPortal: React.FC = () => {
 
         return [trimmedTitle, trimmedContent];
     }
-    const renderImage = ({ item, drag }: RenderItemParams<hintImage>) => {
-        return (
-            <Pressable onLongPress={drag}>
-                <View style={styles.imageContainer}>
-                    <Pressable onPress={() => openImageEditModal(item)}>
-                        <Image
-                            source={{ uri: item.image }}
-                            style={styles.image}
-                            resizeMode="contain"
-                        />
-                    </Pressable>
-                </View>
-            </Pressable>
-        );
-    }
+
     const renderHint = ({ item, drag }: RenderItemParams<Hint>) => {
-        const truncatedTitle = hintCharacterLimit(item, 10)[0] + "  :  ";
+        const truncatedTitle = hintCharacterLimit(item, 10)[0];
         const truncatedContent = hintCharacterLimit(item, 85)[1];
 
         return (
@@ -284,13 +218,21 @@ const NewQuestionPortal: React.FC = () => {
                 )}
             >
                 <Pressable
-                    style={styles.hint}
+                    style={styles.contentContainer}
                     onLongPress={() => {
                         drag();
                     }}
                 >
-                    <Text style={{ color: 'white' }}>{truncatedTitle}</Text>
-                    <Text style={styles.hintContent}>{truncatedContent}</Text>
+                <View style={{flex: 1}}>
+                    <Text style={styles.contentTitle}>{truncatedTitle}</Text>
+                        {item.image ? (
+                            <View style = {styles.imageContainer}>
+                                <Image source={{ uri: item.image }} style={styles.image}  resizeMode='contain' />
+                            </View>
+
+                        ) : null}
+                    <Text style={styles.contentText}>{truncatedContent}</Text>
+                </View>
                     <AntDesign name="menufold" size={20} color="white" style={{ marginLeft: 'auto' }} />
                 </Pressable>
             </Swipeable>
@@ -331,7 +273,7 @@ const NewQuestionPortal: React.FC = () => {
             >
                 <Pressable
                     style={[
-                        styles.hint,
+                        styles.contentContainer,
                         item.answer && styles.correctAnswer,
                         !item.answer && styles.incorrectAnswer
                     ]}
@@ -341,7 +283,7 @@ const NewQuestionPortal: React.FC = () => {
                 >
                     <TextInput
                         multiline
-                        style={styles.answerInput}
+                        style={styles.contentText}
                         placeholder="Tricky answer choice"
                         onChangeText={handleAnswerContent}
                         value={item.content}
@@ -352,258 +294,194 @@ const NewQuestionPortal: React.FC = () => {
         );
     }
 
+
+
     return (
-        <SafeAreaView style={styles.safeview}>
-            <NestableScrollContainer contentContainerStyle={styles.container}>
-                <View style={styles.infoContainer}>
-                    <NestableDraggableFlatList
-                        data={images}
-                        renderItem={renderImage}
-                        keyExtractor={(item) => item.key}
-                        onDragEnd={({ data: newData }) => setImages(newData)}
-                    />
-                </View>
-                <Pressable onPress={() => setImageModalVisible(true)}>
-                    <Text style={styles.imageInsert}>Add Image</Text>
-                </Pressable>
-                <View style={styles.infoContainer}>
-                    <Text style={styles.label}>Question</Text>
-                    <TextInput
-                        multiline
-                        style={styles.input}
-                        onChangeText={text => setQuestion(text)}
-                        placeholder="Why is the sky blue?"
-                    />
-                </View>
-                <View style={styles.infoContainer}>
-                    <View style={styles.infoHeader}>
-                        <Text style={[styles.label, styles.safeview]}>Additional Information (optional)</Text>
+        <SafeAreaView style={styles.container}>
+            
+            <NestableScrollContainer>
+                
+                <Text style={styles.headerText}>Question</Text>
+
+                <TextInput
+                    placeholderTextColor={"rgba(255, 255, 255, 0.7)"}
+                    placeholder="Add Question Here"
+                    value={question}
+                    onChangeText={setQuestion}
+                    style={styles.questionInput}
+                    multiline
+                />
+
+                <View style={styles.sectionContainer}>
+                    <View style={styles.sectionHeaderContainer}>
+                        <Text style={styles.sectionTitle}>Additional Information</Text>
                         <Pressable onPress={() => setHintModalVisible(true)}>
-                            <Text style={styles.add}>+</Text>
+                            <Ionicons name="add-circle" size={40} color={'#3B9EBF'}/>
                         </Pressable>
                     </View>
+
                     <NestableDraggableFlatList
-                        data={hints}
-                        renderItem={renderHint}
-                        keyExtractor={(item) => item.key}
-                        onDragEnd={({ data: newData }) => setHints(newData)}
-                    />
+                            data={hints}
+                            renderItem={renderHint}
+                            keyExtractor={item => item.key}
+                            onDragEnd={({ data }) => setHints(data)}
+                     />
                 </View>
-                <View style={styles.infoContainer}>
-                    <View style={styles.infoHeader}>
-                        <Text style={[styles.label, styles.safeview]}>Answers</Text>
-                        <Pressable onPress={() => addAnswer()}>
-                            <Text style={styles.add}>+</Text>
+                    
+                <View style={styles.sectionContainer}>
+                    <View style={styles.sectionHeaderContainer}>
+                        <Text style={styles.sectionTitle}>Answer Choices</Text>
+                        <Pressable onPress={addAnswer}>
+                            <Ionicons name = "add-circle" size={40} color={'#3B9EBF'}/>
                         </Pressable>
                     </View>
-                    <NestableDraggableFlatList
-                        data={answerChoices}
-                        renderItem={renderAnswer}
-                        keyExtractor={(item) => item.key}
-                        onDragEnd={({ data: newData }) => setAnswerChoices(newData)}
-                    />
+                        <NestableDraggableFlatList
+                            data={answerChoices}
+                            renderItem={renderAnswer}
+                            keyExtractor={item => item.key}
+                            onDragEnd={({ data }) => setAnswerChoices(data)}
+                        />
                 </View>
                 <Pressable style={styles.button} onPress={handleSubmit}>
                     <Text>Submit</Text>
                 </Pressable>
             </NestableScrollContainer>
 
-            <Modal
-                animationType="slide"
-                transparent={true}
-                visible={hintModalVisible}
-                onRequestClose={handleCancelHint}
-            >
-                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                    <View style={styles.modalContainer}>
-                        <View style={styles.modalContent}>
-                            <TextInput
-                                multiline
-                                style={styles.modalInput}
-                                onChangeText={text => setHintModalTitle(text)}
-                                value={hintModalTitle}
-                                placeholder="Add title"
-                            />
-                            <TextInput
-                                multiline
-                                style={styles.modalInput}
-                                onChangeText={text => setHintModalContent(text)}
-                                value={hintModalContent}
-                                placeholder="Add content"
-                                placeholderTextColor="gray"
-                            />
-                            <View style={styles.modalButtons}>
-                                {editingHint ? (
-                                    <Button title="Update" onPress={updateHint} />
-                                ) : (
-                                    <Button title="Save" onPress={addHint} />
-                                )}
-                                <Button title="Cancel" onPress={handleCancelHint} />
-                            </View>
+            <Modal visible={hintModalVisible} animationType="slide">
+                <SafeAreaView style={styles.modalContainer}>
+                    <View style={styles.modalContentContainer}>
+                        <Text style={styles.modalTitle}>Additional Info</Text>
+                        <TextInput
+                            multiline
+                            placeholderTextColor={"rgba(255, 255, 255, 0.7)"}
+                            placeholder="Title"
+                            value={hintModalTitle}
+                            onChangeText={setHintModalTitle}
+                            style={styles.modalHintInputContent}
+                        />
+                        <Pressable style={styles.modalHintInputContent} onPress={pickImage}>
+                            <Text style={styles.modalImageButtonText}>Pick an image from camera roll</Text>
+                        </Pressable>
+                        <View style = {styles.imageContainer}>
+                        {hintModalImage ? (
+                            <Image source={{ uri: hintModalImage }} style={styles.image} resizeMode='contain'/>
+                        ) : null}
+                        </View>
+                        <TextInput
+                            placeholderTextColor={"rgba(255, 255, 255, 0.7)"}
+                            placeholder="Content"
+                            value={hintModalContent}
+                            onChangeText={setHintModalContent}
+                            style={styles.modalHintInputContent}
+                            multiline
+                        />
+                        <View style={styles.modalButtonContainer}>
+                            <Button title="Cancel" onPress={handleCancelHint} color="#FF0D0D" />
+                            <Button title={editingHint ? "Update Hint" : "Add Hint"} onPress={editingHint ? updateHint : addHint} color="#0D99FF" />
                         </View>
                     </View>
-                </TouchableWithoutFeedback>
+                </SafeAreaView>
             </Modal>
-
-            <Modal
-                animationType="slide"
-                transparent={true}
-                visible={imageModalVisible}
-                onRequestClose={handleCancelHint}
-            >
-                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                    <View style={styles.modalContainer}>
-                        <View style={styles.modalContent}>
-                            <TextInput
-                                multiline
-                                style={styles.modalInput}
-                                onChangeText={text => setHintModalTitle(text)}
-                                value={hintModalTitle}
-                                placeholder="Add caption"
-                            />
-                            {imageModalImage ? (
-                                <View style={styles.imageContainer}>
-                                    <Pressable onPress={() => console.log(imageModalImage)}>
-                                        <Image
-                                            source={{ uri: imageModalImage }}
-                                            style={styles.image}
-                                            resizeMode="contain"
-                                        />
-                                    </Pressable>
-                                </View>
-                            ) : (
-                                <Button title="Add image" onPress={pickImage} />
-                            )
-                            }
-                            <View style={styles.modalButtons}>
-                                {editingHint ? (
-                                    <Button title="Update" onPress={updateImage} />
-                                ) : (
-                                    <Button title="Save" onPress={addImage} />
-                                )}
-                                <Button title="Cancel" onPress={handleCancelHint} />
-                            </View>
-                            {editingHint && (
-                                <Pressable onPress={handleDeleteImage}>
-                                    <Text style={styles.imageDeleteButton}>Delete</Text>
-                                </Pressable>
-                            )}
-                        </View>
-                    </View>
-                </TouchableWithoutFeedback>
-            </Modal>
-
-
         </SafeAreaView>
-    );
+    )
 };
 
 const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: "#1E1E1E",
+        paddingHorizontal: 16,
+    },
+    headerText: {
+        padding: 10,
+        marginBottom: 10,
+        color: "#FFFFFF",
+        fontSize: 24,
+        fontWeight: "bold",
+    },
+    questionInput: {
+        backgroundColor: "#333333",
+        color: "#FFFFFF",
+        borderRadius: 8,
+        padding: 16,
+        fontSize: 16,
+        marginBottom: 20,
+    },
+    sectionTitle: {
+        flex: 1,
+        color: "#FFFFFF",
+        fontSize: 20,
+        fontWeight: "bold"
+    },
+    sectionContainer: {
+        marginBottom: 20
+    },
+    sectionHeaderContainer: {
+        marginBottom: 20,
+        flexDirection: 'row',
+        alignItems: 'center'
+    },
+    contentContainer: {
+        backgroundColor: "#333333",
+        borderRadius: 8,
+        padding: 16,
+        marginBottom: 10,
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    contentTitle: {
+        fontWeight: 'bold',
+        color: 'white',
+        fontSize: 16,
+    },
+    contentText: {
+        flex: 1,
+        color: 'white'
+    },
     button: {
         backgroundColor: "#ffffff",
         padding: '3%',
         alignItems: "center",
         borderRadius: 5,
-        width: '75%',
         marginVertical: '5%',
         flexDirection: 'row',
         justifyContent: 'center',
         paddingVertical: 12,
         paddingHorizontal: 32,
     },
-    add: {
-        color: '#00FF00',
-        fontWeight: 'medium',
-        fontSize: 20
-    },
-    infoHeader: {
-        flexDirection: 'row',
-        alignItems: 'baseline'
-    },
-    infoContainer: {
-        width: '90%',
-        marginBottom: '3%'
-    },
-    label: {
-        color: 'white',
-        fontWeight: 'bold',
-        fontSize: 15,
-        marginBottom: '3%'
-    },
-    input: {
-        backgroundColor: "#000000",
-        padding: 10,
-        borderRadius: 5,
-        borderColor: 'white',
-        borderWidth: 1,
-        color: 'white',
-        fontSize: 18,
-        textAlignVertical: 'top',
-    },
-    safeview: {
-        flex: 1,
-        justifyContent: 'flex-start'
-    },
-    container: {
-        alignItems: 'center'
-    },
-    imageInsert: {
-        color: '#0D99FF',
-        fontWeight: 'bold',
-        fontSize: 14,
-        marginVertical: 20,
-    },
     modalContainer: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: "#1E1E1E",
+        paddingHorizontal: 16,
     },
-    modalContent: {
-        backgroundColor: '#1f1e1e',
-        padding: 30,
-        borderRadius: 10,
-        width: '90%',
-    },
-    modalButtons: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        marginTop: 10,
-    },
-    modalInput: {
-        borderColor: "gray",
-        borderWidth: 1,
-        marginBottom: 20,
-        padding: '3%',
-        borderRadius: 5,
-        width: '100%',
-        color: 'white',
-    },
-    hint: {
-        backgroundColor: '#333333',
-        padding: '3%',
-        borderRadius: 5,
-        marginBottom: 10,
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-
-    hintContent: {
-        color: 'white',
-        paddingRight: 15,
-    },
-    correctAnswer: {
-        borderColor: 'green',
-        borderWidth: 2,
-    },
-    incorrectAnswer: {
-        borderColor: 'red',
-        borderWidth: 2,
-    },
-    answerInput: {
-        color: 'white',
+    modalContentContainer: {
         flex: 1,
-        paddingRight: 15
+        justifyContent: "center",
+    },
+    modalTitle: {
+        color: "#FFFFFF",
+        fontSize: 24,
+        fontWeight: "bold",
+        marginBottom: 20,
+        textAlign: "center",
+    },
+    modalHintInputContent: {
+        backgroundColor: "#333333",
+        color: "#FFFFFF",
+        borderRadius: 8,
+        padding: 16,
+        fontSize: 16,
+        marginBottom: 10,
+        marginTop: 10
+    },
+    modalImageButtonText: {
+        color: "#FFFFFF",
+        fontSize: 16,
+    },
+    modalButtonContainer: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        marginTop: 20,
     },
     swipeActionsContainer: {
         flexDirection: 'row',
@@ -616,25 +494,22 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         width: '50%',
     },
-    imageDeleteButton: {
-        marginTop: 30,
-        color: 'white',
-        backgroundColor: '#FF474C',
-        textAlign: 'center',
-        padding: 7,
+    correctAnswer: {
+        borderColor: 'green',
+        borderWidth: 2,
+    },
+    incorrectAnswer: {
+        borderColor: 'red',
+        borderWidth: 2,
     },
     imageContainer: {
-        width: 300,
-        height: 200,
-        justifyContent: 'center',
-        alignItems: 'center',
+        maxWidth: '100%',
+        maxHeight: 150
     },
     image: {
-        flex: 1,
-        width: 200,
-        height: 300,
+        width: '100%',
+        height: '100%'
     },
-
 });
 
 export default NewQuestionPortal;
