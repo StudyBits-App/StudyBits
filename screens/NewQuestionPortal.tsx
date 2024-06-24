@@ -8,6 +8,9 @@ import {
     View,
     Button,
     Image,
+    TouchableWithoutFeedback,
+    Keyboard,
+    Alert
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from 'expo-image-picker';
@@ -98,6 +101,24 @@ const NewQuestionPortal: React.FC = () => {
         }
     };
 
+    const clearImage = () => {
+        Alert.alert(
+          'Remove Image',
+          'Are you sure you want to remove this image?',
+          [
+            {
+              text: 'Cancel',
+              style: 'cancel',
+            },
+            {
+              text: 'Remove',
+              onPress: () => setHintModalImage(''),
+              style: 'destructive',
+            },
+          ],
+          { cancelable: true }
+        );
+    }
     const addHint = () => {
         const text = hintModalContent.trim();
         const title = hintModalTitle.trim();
@@ -252,8 +273,7 @@ const NewQuestionPortal: React.FC = () => {
                                     <Image source={{ uri: item.image }} style={styles.image}  resizeMode='contain' />
                                 </View>
                             ) : null}
-                            
-                            <Text style={[styles.contentText, item.image && item.content ? styles.imageContent : null]}>{truncatedContent}</Text>
+                        <Text style={[styles.contentText, item.image && item.content ? styles.imageContent : null]}>{truncatedContent}</Text>
                     </View>
                     <AntDesign name="menufold" size={20} color="white" style={{ marginLeft: 'auto' }} />
                 </Pressable>
@@ -319,9 +339,7 @@ const NewQuestionPortal: React.FC = () => {
 
     return (
         <SafeAreaView style={styles.container}>
-            
             <NestableScrollContainer>
-                
                 <Text style={styles.headerText}>Question</Text>
 
                 <TextInput
@@ -340,7 +358,6 @@ const NewQuestionPortal: React.FC = () => {
                             <Ionicons name="add-circle" size={40} color={'#3B9EBF'}/>
                         </Pressable>
                     </View>
-
                     <NestableDraggableFlatList
                             data={hints}
                             renderItem={renderHint}
@@ -356,13 +373,14 @@ const NewQuestionPortal: React.FC = () => {
                             <Ionicons name = "add-circle" size={40} color={'#3B9EBF'}/>
                         </Pressable>
                     </View>
-                        <NestableDraggableFlatList
-                            data={answerChoices}
-                            renderItem={renderAnswer}
-                            keyExtractor={item => item.key}
-                            onDragEnd={({ data }) => setAnswerChoices(data)}
-                        />
+                    <NestableDraggableFlatList
+                        data={answerChoices}
+                        renderItem={renderAnswer}
+                        keyExtractor={item => item.key}
+                        onDragEnd={({ data }) => setAnswerChoices(data)}
+                    />
                 </View>
+
                 <Pressable style={styles.button} onPress={handleSubmit}>
                     <Text>Submit</Text>
                 </Pressable>
@@ -370,48 +388,55 @@ const NewQuestionPortal: React.FC = () => {
 
             <Modal visible={hintModalVisible} animationType="slide">
                 <SafeAreaView style={styles.modalContainer}>
-                    <View style={styles.modalContentContainer}>
-                        <Text style={styles.modalTitle}>Additional Info</Text>
-                        <TextInput
-                            multiline
-                            placeholderTextColor={"rgba(255, 255, 255, 0.7)"}
-                            placeholder="Title"
-                            value={hintModalTitle}
-                            onChangeText={setHintModalTitle}
-                            style={styles.modalHintInputContent}
-                        />
-                        <Pressable style={styles.modalHintInputContent} onPress={pickImage}>
-                            <Text style={styles.modalImageButtonText}>Pick an image from camera roll</Text>
-                        </Pressable>
-                        <View style = {styles.imageContainer}>
-                        {hintModalImage ? (
-                            <Pressable onPress={() => setHintModalImage('')}>
-                                <Image source={{ uri: hintModalImage }} style={styles.image} resizeMode='contain'/>
-                            </Pressable>
-                        ) : null}
-                        </View>
-                        <TextInput
-                            placeholderTextColor={"rgba(255, 255, 255, 0.7)"}
-                            placeholder="Content"
-                            value={hintModalContent}
-                            onChangeText={setHintModalContent}
-                            style={styles.modalHintInputContent}
-                            multiline
-                        />
-                        {hintModalError ? (
-                            <View style={styles.modalHintErrorContainer}>
-                                <Text style={styles.modalHintError}>{hintModalError}</Text>
-                                <Pressable onPress={() => setHintModalError('')} style={styles.closeButton}>
-                                    <Text style={styles.modalHintError}>X</Text>
+                    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                        <View style={styles.modalContentContainer}>
+                            <Text style={styles.modalTitle}>Additional Info</Text>
+                            <TextInput
+                                multiline
+                                placeholderTextColor={"rgba(255, 255, 255, 0.7)"}
+                                placeholder="Title"
+                                value={hintModalTitle}
+                                onChangeText={setHintModalTitle}
+                                style={styles.modalHintInputContent}
+                            />
+                             {hintModalImage ? (
+                                <Pressable style={styles.modalHintInputContent} onPress={clearImage}>
+                                    <Text style={styles.modalImageButtonText}>Clear image</Text>
                                 </Pressable>
+                            ) : 
+                                <Pressable style={styles.modalHintInputContent} onPress={pickImage}>
+                                    <Text style={styles.modalImageButtonText}>Pick an image from camera roll</Text>
+                                </Pressable>
+                            }
+                            
+                            <View style = {styles.imageContainer}>
+                                {hintModalImage ? (
+                                    <Image source={{ uri: hintModalImage }} style={styles.image} resizeMode='contain'/>
+                                ) : null}
                             </View>
-                        ) : null}
+                            <TextInput
+                                placeholderTextColor={"rgba(255, 255, 255, 0.7)"}
+                                placeholder="Content"
+                                value={hintModalContent}
+                                onChangeText={setHintModalContent}
+                                style={styles.modalHintInputContent}
+                                multiline
+                            />
+                            {hintModalError ? (
+                                <View style={styles.modalHintErrorContainer}>
+                                    <Text style={styles.modalHintError}>{hintModalError}</Text>
+                                    <Pressable onPress={() => setHintModalError('')} style={styles.closeButton}>
+                                        <Text style={styles.modalHintError}>X</Text>
+                                    </Pressable>
+                                </View>
+                            ) : null}
 
-                        <View style={styles.modalButtonContainer}>
-                            <Button title="Cancel" onPress={handleCancelHint} color="#FF0D0D" />
-                            <Button title={editingHint ? "Update Hint" : "Add Hint"} onPress={editingHint ? updateHint : addHint} color="#0D99FF" />
+                            <View style={styles.modalButtonContainer}>
+                                <Button title="Cancel" onPress={handleCancelHint} color="#FF0D0D" />
+                                <Button title={editingHint ? "Update Hint" : "Add Hint"} onPress={editingHint ? updateHint : addHint} color="#0D99FF" />
+                            </View>
                         </View>
-                    </View>
+                    </TouchableWithoutFeedback>
                 </SafeAreaView>
             </Modal>
         </SafeAreaView>
