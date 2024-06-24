@@ -27,14 +27,12 @@ interface Hint {
     title: string;
     content: string;
     image: string;
-    delete: () => void;
 }
 
 interface Answer {
     key: string;
     content: string,
     answer: boolean,
-    delete: () => void;
 }
 
 const QuestionPortal: React.FC = () => {
@@ -67,17 +65,7 @@ const QuestionPortal: React.FC = () => {
             return hint;
         }));
 
-        const filteredHints = updatedHints.map(hint => {
-            const { delete: _, ...filteredComponent } = hint;
-            return filteredComponent;
-        });
-
-        const filteredAnswers = answerChoices.map(answerChoice => {
-            const { delete: _, ...filteredComponent } = answerChoice;
-            return filteredComponent;
-        });
-
-        firestore().collection('questions').add({ question: question, hints: filteredHints, answers: filteredAnswers });
+        firestore().collection('questions').add({ question: question, hints: hints, answers: answerChoices });
     };
 
     const handleHintDelete = (key: string) => {
@@ -119,6 +107,7 @@ const QuestionPortal: React.FC = () => {
           { cancelable: true }
         );
     }
+    
     const addHint = () => {
         const text = hintModalContent.trim();
         const title = hintModalTitle.trim();
@@ -133,7 +122,6 @@ const QuestionPortal: React.FC = () => {
             title: title,
             content: text,
             image: hintModalImage,
-            delete: () => handleHintDelete(newItem.key)
         };
         setHints(prevHints => [...prevHints, newItem]);
         setHintModalContent('');
@@ -148,7 +136,6 @@ const QuestionPortal: React.FC = () => {
             key: uuidv4(),
             content: "",
             answer: false,
-            delete: () => handleAnswerDelete(newItem.key)
         }
         setAnswerChoices(prevAnswers => [...prevAnswers, newItem]);
     }
@@ -254,7 +241,7 @@ const QuestionPortal: React.FC = () => {
                         <Pressable onPress={() => openHintEditModal(item)} style={{ ...styles.swipeButton, backgroundColor: '#0D99FF' }}>
                             <Text style={{ color: 'white' }}>Edit</Text>
                         </Pressable>
-                        <Pressable onPress={item.delete} style={{ ...styles.swipeButton, backgroundColor: '#FF0D0D' }}>
+                        <Pressable onPress={() => handleHintDelete(item.key)} style={{ ...styles.swipeButton, backgroundColor: '#FF0D0D' }}>
                             <Text style={{ color: 'white' }}>Delete</Text>
                         </Pressable>
                     </View>
@@ -306,7 +293,7 @@ const QuestionPortal: React.FC = () => {
                                 <FontAwesome name="check" size={20} color="green" />
                             )}
                         </Pressable>
-                        <Pressable onPress={item.delete} style={{ ...styles.swipeButton, backgroundColor: '#FF0D0D' }}>
+                        <Pressable onPress={() => handleAnswerDelete(item.key)} style={{ ...styles.swipeButton, backgroundColor: '#FF0D0D' }}>
                             <Text style={{ color: 'white' }}>Delete</Text>
                         </Pressable>
                     </View>
