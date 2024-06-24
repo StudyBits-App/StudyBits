@@ -45,12 +45,13 @@ const NewQuestionPortal: React.FC = () => {
     const [hintModalTitle, setHintModalTitle] = useState<string>('');
     const [hintModalImage, setHintModalImage] = useState<string>('');
     const [editingHint, setEditingHint] = useState<Hint | null>(null);
+    const [hintModalError, setHintModalError] = useState<string>('');
 
     const swipeableRefs = useRef<{ [key: string]: Swipeable | null }>({});
 
     const handleSubmit = async () => {
 
-        const updatedImages = await Promise.all(hints.map(async hint => {
+        const updatedHints = await Promise.all(hints.map(async hint => {
             if (hint.image) {
                 const imageRef = await uploadImageToFirebase(hint.image, "questions");
                 if (imageRef) {
@@ -63,7 +64,7 @@ const NewQuestionPortal: React.FC = () => {
             return hint;
         }));
 
-        const filteredHints = hints.map(hint => {
+        const filteredHints = updatedHints.map(hint => {
             const { delete: _, ...filteredComponent } = hint;
             return filteredComponent;
         });
@@ -73,7 +74,7 @@ const NewQuestionPortal: React.FC = () => {
             return filteredComponent;
         });
 
-        firestore().collection('questions').add({ question: question, images: updatedImages, hints: filteredHints, answers: filteredAnswers });
+        firestore().collection('questions').add({ question: question, hints: filteredHints, answers: filteredAnswers });
     };
 
     const handleHintDelete = (key: string) => {
@@ -100,23 +101,25 @@ const NewQuestionPortal: React.FC = () => {
     const addHint = () => {
         const text = hintModalContent.trim();
         const title = hintModalTitle.trim();
-        if (text && title) {
-            const newItem: Hint = {
-                key: uuidv4(),
-                title: title,
-                content: text,
-                image: hintModalImage,
-                delete: () => handleHintDelete(newItem.key)
-            };
-            setHints(prevHints => [...prevHints, newItem]);
-            setHintModalContent('');
-            setHintModalTitle('');
-            setHintModalImage('');
-            setHintModalVisible(false);
+
+        if(!(hintModalImage || text && title)){
+            setHintModalError("Missing information! Questions must have a title and content or an image.")
+            return
         }
-        else {
-            console.error("Missing data");
-        }
+
+        const newItem: Hint = {
+            key: uuidv4(),
+            title: title,
+            content: text,
+            image: hintModalImage,
+            delete: () => handleHintDelete(newItem.key)
+        };
+        setHints(prevHints => [...prevHints, newItem]);
+        setHintModalContent('');
+        setHintModalTitle('');
+        setHintModalImage('');
+        setHintModalError('');
+        setHintModalVisible(false);
     }
 
     const addAnswer = () => {
@@ -132,7 +135,12 @@ const NewQuestionPortal: React.FC = () => {
     const updateHint = () => {
         const text = hintModalContent.trim();
         const title = hintModalTitle.trim();
-        if (text && editingHint && title) {
+
+        if(!(hintModalImage  && editingHint || text && editingHint && title)){
+            setHintModalError("Missing information! Questions must have a title and content or an image.")
+            return
+        }
+        if(hintModalImage  && editingHint){
             setHints(prevHints =>
                 prevHints.map(hint =>
                     hint.key === editingHint.key ? {
@@ -143,14 +151,28 @@ const NewQuestionPortal: React.FC = () => {
                     } : hint
                 )
             );
-            swipeableRefs.current[editingHint.key]?.close();
-            setHintModalTitle('');
-            setHintModalContent('');
-            setHintModalImage('');
-            setEditingHint(null);
-            setHintModalVisible(false);
         }
+        else if (text && editingHint && title) {
+            setHints(prevHints =>
+                prevHints.map(hint =>
+                    hint.key === editingHint.key ? {
+                        ...hint,
+                        content: text,
+                        title: title,
+                        image: hintModalImage
+                    } : hint
+                )
+            );
+        }
+        swipeableRefs.current[editingHint.key]?.close();
+        setHintModalTitle('');
+        setHintModalContent('');
+        setHintModalImage('');
+        setHintModalError('');
+        setEditingHint(null);
+        setHintModalVisible(false);
     }
+    
 
     const handleCancelHint = () => {
         if (editingHint) {
@@ -160,6 +182,7 @@ const NewQuestionPortal: React.FC = () => {
         setHintModalContent('');
         setHintModalTitle('');
         setHintModalImage('');
+        setHintModalError('');
         setEditingHint(null);
 
     }
@@ -181,23 +204,22 @@ const NewQuestionPortal: React.FC = () => {
         swipeableRefs.current[answerKey]?.close();
     }
 
-    function hintCharacterLimit(hint: Hint, maxTitleLength: number): [string, string] {
-        const trimmedTitle = hint.title.length > maxTitleLength
-            ? hint.title.substring(0, maxTitleLength - 2).substring(0, hint.title.substring(0, maxTitleLength - 2).includes(' ')
-                ? hint.title.substring(0, maxTitleLength - 2).lastIndexOf(' ') : maxTitleLength - 2) + '...'
-            : hint.title;
+    const trimText = (text: string, maxTitleLength: number): string => {
+        if (text.length <= maxTitleLength) {
+            return text;
+        }
+        let trimmedText = text.substring(0, maxTitleLength - 2);
+        const lastSpaceIndex = trimmedText.lastIndexOf(' ');
 
-        const trimmedContent = hint.content.length > maxTitleLength
-            ? hint.content.substring(0, maxTitleLength - 2).substring(0, hint.content.substring(0, maxTitleLength - 2).includes(' ')
-                ? hint.content.substring(0, maxTitleLength - 2).lastIndexOf(' ') : maxTitleLength - 2) + '...'
-            : hint.content;
-
-        return [trimmedTitle, trimmedContent];
-    }
-
+        if (lastSpaceIndex !== -1) {
+            trimmedText = trimmedText.substring(0, lastSpaceIndex);
+        }
+        return trimmedText + '...';
+    };
+    
     const renderHint = ({ item, drag }: RenderItemParams<Hint>) => {
-        const truncatedTitle = hintCharacterLimit(item, 10)[0];
-        const truncatedContent = hintCharacterLimit(item, 85)[1];
+        const truncatedTitle = trimText(item.title, 10);
+        const truncatedContent = trimText(item.content, 85);
 
         return (
             <Swipeable
@@ -223,17 +245,15 @@ const NewQuestionPortal: React.FC = () => {
                         drag();
                     }}
                 >
-
                     <View style={{flex: 1}}>
-                    <Text style={[styles.contentTitle, item.image? styles.imageTitle : null]}>{truncatedTitle}</Text>
-                        {item.image ? (
+                        <Text style={[styles.contentTitle, item.image && item.title? styles.imageTitle : null]}>{truncatedTitle}</Text>
+                            {item.image ? (
                                 <View style = {styles.imageContainer}>
                                     <Image source={{ uri: item.image }} style={styles.image}  resizeMode='contain' />
                                 </View>
-
                             ) : null}
-                        <Text style={[styles.contentText, item.image ? styles.imageContent : null]}>{truncatedContent}</Text>
-
+                            
+                            <Text style={[styles.contentText, item.image && item.content ? styles.imageContent : null]}>{truncatedContent}</Text>
                     </View>
                     <AntDesign name="menufold" size={20} color="white" style={{ marginLeft: 'auto' }} />
                 </Pressable>
@@ -365,7 +385,9 @@ const NewQuestionPortal: React.FC = () => {
                         </Pressable>
                         <View style = {styles.imageContainer}>
                         {hintModalImage ? (
-                            <Image source={{ uri: hintModalImage }} style={styles.image} resizeMode='contain'/>
+                            <Pressable onPress={() => setHintModalImage('')}>
+                                <Image source={{ uri: hintModalImage }} style={styles.image} resizeMode='contain'/>
+                            </Pressable>
                         ) : null}
                         </View>
                         <TextInput
@@ -376,6 +398,15 @@ const NewQuestionPortal: React.FC = () => {
                             style={styles.modalHintInputContent}
                             multiline
                         />
+                        {hintModalError ? (
+                            <View style={styles.modalHintErrorContainer}>
+                                <Text style={styles.modalHintError}>{hintModalError}</Text>
+                                <Pressable onPress={() => setHintModalError('')} style={styles.closeButton}>
+                                    <Text style={styles.modalHintError}>X</Text>
+                                </Pressable>
+                            </View>
+                        ) : null}
+
                         <View style={styles.modalButtonContainer}>
                             <Button title="Cancel" onPress={handleCancelHint} color="#FF0D0D" />
                             <Button title={editingHint ? "Update Hint" : "Add Hint"} onPress={editingHint ? updateHint : addHint} color="#0D99FF" />
@@ -444,11 +475,6 @@ const styles = StyleSheet.create({
         padding: '3%',
         alignItems: "center",
         borderRadius: 5,
-        marginVertical: '5%',
-        flexDirection: 'row',
-        justifyContent: 'center',
-        paddingVertical: 12,
-        paddingHorizontal: 32,
     },
     modalContainer: {
         flex: 1,
@@ -478,6 +504,22 @@ const styles = StyleSheet.create({
     modalImageButtonText: {
         color: "#FFFFFF",
         fontSize: 16,
+    },
+    modalHintErrorContainer: {
+        backgroundColor: "#FF474C",
+        padding: 16,
+        marginTop: 10,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    modalHintError: {
+        color: "#FFFFFF",
+        fontSize: 16,
+        flex: 1,
+    },
+    closeButton: {
+        padding: 5,
     },
     modalButtonContainer: {
         flexDirection: "row",
