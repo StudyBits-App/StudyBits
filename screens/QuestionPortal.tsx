@@ -91,28 +91,28 @@ const QuestionPortal: React.FC = () => {
 
     const clearImage = () => {
         Alert.alert(
-          'Remove Image',
-          'Are you sure you want to remove this image?',
-          [
-            {
-              text: 'Cancel',
-              style: 'cancel',
-            },
-            {
-              text: 'Remove',
-              onPress: () => setHintModalImage(''),
-              style: 'destructive',
-            },
-          ],
-          { cancelable: true }
+            'Remove Image',
+            'Are you sure you want to remove this image?',
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                },
+                {
+                    text: 'Remove',
+                    onPress: () => setHintModalImage(''),
+                    style: 'destructive',
+                },
+            ],
+            { cancelable: true }
         );
     }
-    
+
     const addHint = () => {
         const text = hintModalContent.trim();
         const title = hintModalTitle.trim();
 
-        if(!(hintModalImage || text && title)){
+        if (!(hintModalImage || text && title)) {
             setHintModalError("Missing information! Additional info must have a title and content or an image.")
             return
         }
@@ -144,11 +144,11 @@ const QuestionPortal: React.FC = () => {
         const text = hintModalContent.trim();
         const title = hintModalTitle.trim();
 
-        if(!(hintModalImage  && editingHint || text && editingHint && title)){
+        if (!(hintModalImage && editingHint || text && editingHint && title)) {
             setHintModalError("Missing information! Additional info must have a title and content or an image.")
             return
         }
-        if(hintModalImage  && editingHint){
+        if (hintModalImage && editingHint) {
             setHints(prevHints =>
                 prevHints.map(hint =>
                     hint.key === editingHint.key ? {
@@ -180,7 +180,7 @@ const QuestionPortal: React.FC = () => {
         setEditingHint(null);
         setHintModalVisible(false);
     }
-    
+
 
     const handleCancelHint = () => {
         if (editingHint) {
@@ -224,7 +224,7 @@ const QuestionPortal: React.FC = () => {
         }
         return trimmedText + '...';
     };
-    
+
     const renderHint = ({ item, drag }: RenderItemParams<Hint>) => {
         const truncatedTitle = trimText(item.title, 10);
         const truncatedContent = trimText(item.content, 85);
@@ -253,13 +253,13 @@ const QuestionPortal: React.FC = () => {
                         drag();
                     }}
                 >
-                    <View style={{flex: 1}}>
-                        <Text style={[styles.contentTitle, item.image && item.title? styles.imageTitle : null]}>{truncatedTitle}</Text>
-                            {item.image ? (
-                                <View style = {styles.imageContainer}>
-                                    <Image source={{ uri: item.image }} style={styles.image}  resizeMode='contain' />
-                                </View>
-                            ) : null}
+                    <View style={{ flex: 1 }}>
+                        <Text style={[styles.contentTitle, item.image && item.title ? styles.imageTitle : null]}>{truncatedTitle}</Text>
+                        {item.image ? (
+                            <View style={styles.imageContainer}>
+                                <Image source={{ uri: item.image }} style={styles.image} resizeMode='contain' />
+                            </View>
+                        ) : null}
                         <Text style={[styles.contentText, item.image && item.content ? styles.imageContent : null]}>{truncatedContent}</Text>
                     </View>
                     <AntDesign name="menufold" size={20} color="white" style={{ marginLeft: 'auto' }} />
@@ -342,22 +342,22 @@ const QuestionPortal: React.FC = () => {
                     <View style={styles.sectionHeaderContainer}>
                         <Text style={styles.sectionTitle}>Additional Information</Text>
                         <Pressable onPress={() => setHintModalVisible(true)}>
-                            <Ionicons name="add-circle" size={40} color={'#3B9EBF'}/>
+                            <Ionicons name="add-circle" size={40} color={'#3B9EBF'} />
                         </Pressable>
                     </View>
                     <NestableDraggableFlatList
-                            data={hints}
-                            renderItem={renderHint}
-                            keyExtractor={item => item.key}
-                            onDragEnd={({ data }) => setHints(data)}
-                     />
+                        data={hints}
+                        renderItem={renderHint}
+                        keyExtractor={item => item.key}
+                        onDragEnd={({ data }) => setHints(data)}
+                    />
                 </View>
-                    
+
                 <View style={styles.sectionContainer}>
                     <View style={styles.sectionHeaderContainer}>
                         <Text style={styles.sectionTitle}>Answer Choices</Text>
                         <Pressable onPress={addAnswer}>
-                            <Ionicons name = "add-circle" size={40} color={'#3B9EBF'}/>
+                            <Ionicons name="add-circle" size={40} color={'#3B9EBF'} />
                         </Pressable>
                     </View>
                     <NestableDraggableFlatList
@@ -386,19 +386,19 @@ const QuestionPortal: React.FC = () => {
                                 onChangeText={setHintModalTitle}
                                 style={styles.modalHintInputContent}
                             />
-                             {hintModalImage ? (
+                            {hintModalImage ? (
                                 <Pressable style={styles.modalHintInputContent} onPress={clearImage}>
                                     <Text style={styles.modalImageButtonText}>Clear image</Text>
                                 </Pressable>
-                            ) : 
+                            ) :
                                 <Pressable style={styles.modalHintInputContent} onPress={pickImage}>
                                     <Text style={styles.modalImageButtonText}>Pick an image from camera roll</Text>
                                 </Pressable>
                             }
-                            
-                            <View style = {styles.imageContainer}>
+
+                            <View style={styles.imageContainer}>
                                 {hintModalImage ? (
-                                    <Image source={{ uri: hintModalImage }} style={styles.image} resizeMode='contain'/>
+                                    <Image source={{ uri: hintModalImage }} style={styles.image} resizeMode='contain' />
                                 ) : null}
                             </View>
                             <TextInput
@@ -565,11 +565,11 @@ const styles = StyleSheet.create({
     },
     imageTitle: {
         textAlign: 'center',
-        marginBottom:15
+        marginBottom: 15
     },
     imageContent: {
         textAlign: 'center',
-        marginTop:15 
+        marginTop: 15
     }
 
 });
