@@ -8,7 +8,7 @@ import { withLayoutContext } from 'expo-router';
 import { ParamListBase, TabNavigationState } from '@react-navigation/native';
 import { ActivityIndicator } from 'react-native';
 import { useUserChannel } from '@/context/userChannel';
-import CreateChannelPage from '@/screens/createChannel';
+import CreateChannelPage from '@/screens/CreateChannel';
 
 const { Navigator } = createMaterialTopTabNavigator();
 
@@ -32,6 +32,6 @@ export default function ChannelLayout() {
             <MaterialTopTabs.Screen name="createCourse" options={{ title: 'Create a Course' }} />
         </MaterialTopTabs>
     ) : (
-        <CreateChannelPage/>
+        <CreateChannelPage />
     );
 }
