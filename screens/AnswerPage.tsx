@@ -13,7 +13,7 @@ interface Answer {
     key: string;
     content: string;
     answer: boolean;
-    isSelected: false;
+    isSelected: boolean;
 }
 
 interface QuestionInfo {
@@ -34,6 +34,8 @@ const AnswerPage: React.FC = () => {
     const [hintModalTitle, setHintModalTitle] = useState<string>('');
     const [hintModalImage, setHintModalImage] = useState<string>('');
 
+    const [answersSubmitted, setAnswersSubmitted] = useState(false);
+
     const fetchQuestionInfo = async () => {
         try {
             const querySnapshot = await firestore().collection('questions').get();
@@ -44,22 +46,31 @@ const AnswerPage: React.FC = () => {
         }
     };
 
+    const nextQuestion = () => {
+        setQuestionInfo(null);
+        setAnswersSubmitted(false);
+        fetchQuestionInfo();
+    }
+
     useEffect(() => {
         fetchQuestionInfo();
     }, [])
 
     useEffect(() => {
         if (questionInfo) {
-            setAnswerChoices(questionInfo.answers);
+            setAnswerChoices(questionInfo.answers.map((item) => {
+                item.isSelected = false
+                return item
+            }));
             setHints(questionInfo.hints);
             setQuestion(questionInfo.question);
         }
     }, [questionInfo]);
 
-    const toggleSelectedAnswer = (answerKey: string) => {
+    const toggleSelectedAnswer = (inputAnswer: Answer) => {
         setAnswerChoices(prevAnswers =>
             prevAnswers.map(answer =>
-                answer.key === answerKey ? { ...answer, answer: !answer.isSelected } : answer
+                answer.key === inputAnswer.key ? { ...answer, isSelected: !inputAnswer.isSelected } : answer
             )
         );
     }
@@ -69,6 +80,14 @@ const AnswerPage: React.FC = () => {
         setHintModalContent('');
         setHintModalTitle('');
         setHintModalImage('');
+    }
+
+    const handleOpenViewHint = (item: Hint) => {
+        setHintModalContent(item.content);
+        setHintModalTitle(item.title);
+        setHintModalImage(item.image);
+        setHintModalVisible(true);
+
     }
 
     const trimText = (text: string, maxTitleLength: number): string => {
@@ -90,27 +109,36 @@ const AnswerPage: React.FC = () => {
 
         return (
             <View key={item.key} style={styles.hintContainer}>
-                <Pressable onPress={() => setHintModalVisible(true)}>
-                    <View style={styles.hint}>
-                        <Text style={[styles.text, styles.title, item.image && item.title ? styles.imageTitle : null]}>{truncatedTitle}</Text>
-                        {item.image ? (
-                            <View style={styles.imageContainer}>
-                                <Image source={{ uri: item.image }} style={styles.image} resizeMode='contain' />
-                            </View>
-                        ) : null}
-                        <Text style={[styles.text, item.image && item.content ? styles.imageContent : null]}>{truncatedContent}</Text>
-                    </View>
+                <Pressable style={styles.hint} onPress={() => handleOpenViewHint(item)}>
+                    <Text style={[styles.text, styles.title, item.image && item.title ? styles.imageTitle : null]}>{truncatedTitle}</Text>
+                    {item.image ? (
+                        <View style={styles.imageContainer}>
+                            <Image source={{ uri: item.image }} style={styles.image} resizeMode='contain' />
+                        </View>
+                    ) : null}
+                    <Text style={[styles.text, item.image && item.content ? styles.imageContent : null]}>{truncatedContent}</Text>
                 </Pressable>
             </View>
         )
     };
 
     const renderAnswer = ({ item }: { item: Answer }) => (
-        <View key={item.key} style={styles.sectionContainer}>
-            <Pressable onPress={() => toggleSelectedAnswer}>
+
+        <View key={item.key} style={[
+            styles.answerContainer,
+            item.isSelected ? styles.selectedAnswerContainer : {},
+            answersSubmitted && item.isSelected && item.answer
+                ? styles.correctAnswerContainer // Selected correct answer
+                : answersSubmitted && !item.isSelected && item.answer
+                    ? styles.correctButNotSelectedContainer // Correct but not selected
+                    : answersSubmitted && item.isSelected && !item.answer
+                        ? styles.incorrectAnswerContainer // Selected incorrect answer
+                        : {},
+        ]}>
+            <Pressable disabled={answersSubmitted} onPress={() => toggleSelectedAnswer(item)}>
                 <Text style={styles.text}>{item.content}</Text>
             </Pressable>
-        </View>
+        </View >
 
     );
 
@@ -120,9 +148,12 @@ const AnswerPage: React.FC = () => {
                 {
                     questionInfo ? (
                         <View>
-                            {question && <Text style={[styles.text, styles.question]}>{question}</Text>}
+                            <Text style={[styles.text, styles.question]}>{question}</Text>
                             {hints.map(hint => renderHint({ item: hint }))}
                             {answerChoices.map(answer => renderAnswer({ item: answer }))}
+                            <Pressable style={styles.button} onPress={() => answersSubmitted ? nextQuestion() : setAnswersSubmitted(true)}>
+                                <Text>{answersSubmitted ? "Next Question" : "Check"}</Text>
+                            </Pressable>
                         </View>
                     ) : (
                         <ActivityIndicator size="large" />
@@ -132,16 +163,16 @@ const AnswerPage: React.FC = () => {
 
             <Modal visible={hintModalVisible} animationType="slide">
                 <SafeAreaView style={styles.modalContainer}>
-                    <View style={styles.modalContentContainer}>
-                        <Text style={styles.text}>{hintModalTitle}</Text>
+                    <ScrollView contentContainerStyle={styles.modalContentContainer}>
+                        <Text style={[styles.text, styles.modalTitleText]}>{hintModalTitle}</Text>
                         <View style={styles.imageContainer}>
                             {hintModalImage ? (
                                 <Image source={{ uri: hintModalImage }} style={styles.image} resizeMode='contain' />
                             ) : null}
                         </View>
-                        <Text style={styles.text}>{hintModalContent}</Text>
+                        <Text style={[styles.text, styles.modalText]}>{hintModalContent}</Text>
                         <Button onPress={handleCancelViewHint} title="Cancel" color="#FF0D0D" />
-                    </View>
+                    </ScrollView>
                 </SafeAreaView>
             </Modal>
 
@@ -150,11 +181,26 @@ const AnswerPage: React.FC = () => {
 }
 
 const styles = StyleSheet.create({
+    modalText: {
+        paddingHorizontal: '10%',
+        marginVertical: '5%'
+    },
     title: {
         fontWeight: 'bold'
     },
     scrollview: {
         width: '75%'
+    },
+    button: {
+        backgroundColor: "#ffffff",
+        padding: 10,
+        alignItems: "center",
+        borderRadius: 5,
+        marginVertical: '5%',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 32,
     },
     hintContainer: {
         backgroundColor: "#333333",
@@ -176,7 +222,9 @@ const styles = StyleSheet.create({
     },
     question: {
         fontWeight: 'bold',
-        textAlign: 'center'
+        textAlign: 'center',
+        fontSize: 20,
+        marginBottom: '5%'
     },
     text: {
         color: "#FFF"
@@ -207,7 +255,53 @@ const styles = StyleSheet.create({
     },
     modalContentContainer: {
         flex: 1,
-        justifyContent: "center",
+        justifyContent: "center"
+    },
+    modalTitleText: {
+        padding: 10,
+        marginBottom: 10,
+        color: "#FFFFFF",
+        fontSize: 18,
+        fontWeight: "bold",
+        textAlign: 'center'
+    },
+    answerContainer: {
+        marginBottom: 10,
+        padding: 10,
+        borderRadius: 5,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        width: '100%',
+        alignItems: 'center',
+    },
+    selectedAnswerContainer: {
+        backgroundColor: '#00e3ff80',
+        color: "#FFFFFF",
+        fontSize: 18,
+        fontWeight: "bold",
+        textAlign: 'center'
+    },
+    answerContainer: {
+        marginBottom: 10,
+        padding: 10,
+        borderRadius: 5,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        width: '100%',
+        alignItems: 'center',
+    },
+    selectedAnswerContainer: {
+        backgroundColor: '#00e3ff80',
+    },
+    correctAnswerContainer: {
+        backgroundColor: '#8bc34a',
+    },
+    incorrectAnswerContainer: {
+        backgroundColor: '#e57373',
+    },
+    correctButNotSelectedContainer: {
+        borderColor: '#8bc34a',
+        borderWidth: 4,
     },
 });
 

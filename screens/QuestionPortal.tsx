@@ -65,7 +65,7 @@ const QuestionPortal: React.FC = () => {
             return hint;
         }));
 
-        firestore().collection('questions').add({ question: question, hints:updatedHints, answers: answerChoices });
+        firestore().collection('questions').add({ question: question, hints: updatedHints, answers: answerChoices });
     };
 
     const handleHintDelete = (key: string) => {
