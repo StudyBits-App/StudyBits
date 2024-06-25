@@ -7,36 +7,36 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		01CCC497BC6C413AB77F133B /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB3705B8022A408686367649 /* noop-file.swift */; };
 		13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB01A68108700A75B9A /* AppDelegate.mm */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
 		13B07FC11A68108700A75B9A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 13B07FB71A68108700A75B9A /* main.m */; };
-		2329532990934138B70458A1 /* noop-file.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7834C3CAABC4F9FA8FD4F2C /* noop-file.swift */; };
+		24FC15BF314C80991FCB3E68 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = BA57930E963D1953215EE39E /* PrivacyInfo.xcprivacy */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		9946B84C0707F19831FAF20D /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 1FA0F5C5BC8BD81870BBB440 /* PrivacyInfo.xcprivacy */; };
-		A401D5CF2D189EB5B94C216E /* Pods_StudyBits.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 135E392808E0F1A216B7818A /* Pods_StudyBits.framework */; };
+		ACCEC7BF37B96021AF5BF996 /* Pods_StudyBits.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4CDB294587040B4DB2F625AD /* Pods_StudyBits.framework */; };
 		B18059E884C0ABDD17F3DC3D /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */; };
+		B6123C1E572F4BC09537DC01 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = C4C4A0E17CB44C909797E1BB /* GoogleService-Info.plist */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		E181BC0FC5174ECE990A9C10 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = FF61B5A7E6EA4C899898F424 /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		135E392808E0F1A216B7818A /* Pods_StudyBits.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_StudyBits.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07F961A680F5B00A75B9A /* StudyBits.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StudyBits.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FAF1A68108700A75B9A /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = StudyBits/AppDelegate.h; sourceTree = "<group>"; };
 		13B07FB01A68108700A75B9A /* AppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AppDelegate.mm; path = StudyBits/AppDelegate.mm; sourceTree = "<group>"; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = StudyBits/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = StudyBits/Info.plist; sourceTree = "<group>"; };
 		13B07FB71A68108700A75B9A /* main.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = main.m; path = StudyBits/main.m; sourceTree = "<group>"; };
-		1FA0F5C5BC8BD81870BBB440 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = StudyBits/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		4CDB294587040B4DB2F625AD /* Pods_StudyBits.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_StudyBits.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6C2E3173556A471DD304B334 /* Pods-StudyBits.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-StudyBits.debug.xcconfig"; path = "Target Support Files/Pods-StudyBits/Pods-StudyBits.debug.xcconfig"; sourceTree = "<group>"; };
-		7682ECB96BF542D0BE8EE682 /* StudyBits-Bridging-Header.h */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.h; name = "StudyBits-Bridging-Header.h"; path = "StudyBits/StudyBits-Bridging-Header.h"; sourceTree = "<group>"; };
 		7A4D352CD337FB3A3BF06240 /* Pods-StudyBits.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-StudyBits.release.xcconfig"; path = "Target Support Files/Pods-StudyBits/Pods-StudyBits.release.xcconfig"; sourceTree = "<group>"; };
-		A7834C3CAABC4F9FA8FD4F2C /* noop-file.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = "noop-file.swift"; path = "StudyBits/noop-file.swift"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = StudyBits/SplashScreen.storyboard; sourceTree = "<group>"; };
+		BA57930E963D1953215EE39E /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = StudyBits/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
+		BB3705B8022A408686367649 /* noop-file.swift */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.swift; name = "noop-file.swift"; path = "StudyBits/noop-file.swift"; sourceTree = "<group>"; };
+		C4C4A0E17CB44C909797E1BB /* GoogleService-Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "StudyBits/GoogleService-Info.plist"; sourceTree = "<group>"; };
+		CDEE73337FAA4514B77EA02F /* StudyBits-Bridging-Header.h */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = sourcecode.c.h; name = "StudyBits-Bridging-Header.h"; path = "StudyBits/StudyBits-Bridging-Header.h"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		FAC715A2D49A985799AEE119 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-StudyBits/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		FF61B5A7E6EA4C899898F424 /* GoogleService-Info.plist */ = {isa = PBXFileReference; explicitFileType = undefined; fileEncoding = 4; includeInIndex = 0; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "StudyBits/GoogleService-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -44,7 +44,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A401D5CF2D189EB5B94C216E /* Pods_StudyBits.framework in Frameworks */,
+				ACCEC7BF37B96021AF5BF996 /* Pods_StudyBits.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -61,10 +61,10 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				13B07FB71A68108700A75B9A /* main.m */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				FF61B5A7E6EA4C899898F424 /* GoogleService-Info.plist */,
-				A7834C3CAABC4F9FA8FD4F2C /* noop-file.swift */,
-				7682ECB96BF542D0BE8EE682 /* StudyBits-Bridging-Header.h */,
-				1FA0F5C5BC8BD81870BBB440 /* PrivacyInfo.xcprivacy */,
+				C4C4A0E17CB44C909797E1BB /* GoogleService-Info.plist */,
+				BB3705B8022A408686367649 /* noop-file.swift */,
+				CDEE73337FAA4514B77EA02F /* StudyBits-Bridging-Header.h */,
+				BA57930E963D1953215EE39E /* PrivacyInfo.xcprivacy */,
 			);
 			name = StudyBits;
 			sourceTree = "<group>";
@@ -73,7 +73,7 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				135E392808E0F1A216B7818A /* Pods_StudyBits.framework */,
+				4CDB294587040B4DB2F625AD /* Pods_StudyBits.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -150,14 +150,14 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "StudyBits" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				ADD79F36464AB4A55468D1FE /* [Expo] Configure project */,
+				BAC5836E4A7EBB2EA8A2DBE5 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				FD466550533208DEAAFFEE18 /* [CP] Embed Pods Frameworks */,
-				2740F76B50FE7345F90DF9EE /* [CP-User] [RNFB] Core Configuration */,
+				A3BF058CAE4F34743BFE5C63 /* [CP] Embed Pods Frameworks */,
+				49F4D1BA59382BCE462C2D52 /* [CP-User] [RNFB] Core Configuration */,
 			);
 			buildRules = (
 			);
@@ -207,8 +207,8 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				E181BC0FC5174ECE990A9C10 /* GoogleService-Info.plist in Resources */,
-				9946B84C0707F19831FAF20D /* PrivacyInfo.xcprivacy in Resources */,
+				B6123C1E572F4BC09537DC01 /* GoogleService-Info.plist in Resources */,
+				24FC15BF314C80991FCB3E68 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -252,7 +252,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		2740F76B50FE7345F90DF9EE /* [CP-User] [RNFB] Core Configuration */ = {
+		49F4D1BA59382BCE462C2D52 /* [CP-User] [RNFB] Core Configuration */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -373,7 +373,25 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-StudyBits/Pods-StudyBits-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		ADD79F36464AB4A55468D1FE /* [Expo] Configure project */ = {
+		A3BF058CAE4F34743BFE5C63 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-StudyBits/Pods-StudyBits-frameworks.sh",
+				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-StudyBits/Pods-StudyBits-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		BAC5836E4A7EBB2EA8A2DBE5 /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -392,24 +410,6 @@
 			shellPath = /bin/sh;
 			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-StudyBits/expo-configure-project.sh\"\n";
 		};
-		FD466550533208DEAAFFEE18 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-StudyBits/Pods-StudyBits-frameworks.sh",
-				"${PODS_XCFRAMEWORKS_BUILD_DIR}/hermes-engine/Pre-built/hermes.framework/hermes",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/hermes.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-StudyBits/Pods-StudyBits-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -420,7 +420,7 @@
 				13B07FBC1A68108700A75B9A /* AppDelegate.mm in Sources */,
 				13B07FC11A68108700A75B9A /* main.m in Sources */,
 				B18059E884C0ABDD17F3DC3D /* ExpoModulesProvider.swift in Sources */,
-				2329532990934138B70458A1 /* noop-file.swift in Sources */,
+				01CCC497BC6C413AB77F133B /* noop-file.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

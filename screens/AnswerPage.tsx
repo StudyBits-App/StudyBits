@@ -123,22 +123,21 @@ const AnswerPage: React.FC = () => {
     };
 
     const renderAnswer = ({ item }: { item: Answer }) => (
-
-        <View key={item.key} style={[
-            styles.answerContainer,
-            item.isSelected ? styles.selectedAnswerContainer : {},
-            answersSubmitted && item.isSelected && item.answer
-                ? styles.correctAnswerContainer // Selected correct answer
-                : answersSubmitted && !item.isSelected && item.answer
-                    ? styles.correctButNotSelectedContainer // Correct but not selected
-                    : answersSubmitted && item.isSelected && !item.answer
-                        ? styles.incorrectAnswerContainer // Selected incorrect answer
-                        : {},
-        ]}>
-            <Pressable disabled={answersSubmitted} onPress={() => toggleSelectedAnswer(item)}>
+        <Pressable key={item.key} disabled={answersSubmitted} onPress={() => toggleSelectedAnswer(item)}>
+            <View style={[
+                styles.answerContainer,
+                item.isSelected ? styles.selectedAnswerContainer : {},
+                answersSubmitted && item.isSelected && item.answer
+                    ? styles.correctAnswerContainer // Selected correct answer
+                    : answersSubmitted && !item.isSelected && item.answer
+                        ? styles.correctButNotSelectedContainer // Correct but not selected
+                        : answersSubmitted && item.isSelected && !item.answer
+                            ? styles.incorrectAnswerContainer // Selected incorrect answer
+                            : {},
+            ]}>
                 <Text style={styles.text}>{item.content}</Text>
-            </Pressable>
-        </View >
+            </View >
+        </Pressable>
 
     );
 
