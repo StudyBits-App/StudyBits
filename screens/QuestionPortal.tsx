@@ -10,7 +10,8 @@ import {
     Image,
     TouchableWithoutFeedback,
     Keyboard,
-    Alert
+    Alert,
+    ScrollView
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from 'expo-image-picker';
@@ -376,7 +377,7 @@ const QuestionPortal: React.FC = () => {
             <Modal visible={hintModalVisible} animationType="slide">
                 <SafeAreaView style={styles.modalContainer}>
                     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                        <View style={styles.modalContentContainer}>
+                        <ScrollView contentContainerStyle={styles.modalContentContainer}>
                             <Text style={styles.modalTitle}>Additional Info</Text>
                             <TextInput
                                 multiline
@@ -422,7 +423,7 @@ const QuestionPortal: React.FC = () => {
                                 <Button title="Cancel" onPress={handleCancelHint} color="#FF0D0D" />
                                 <Button title={editingHint ? "Update Hint" : "Add Hint"} onPress={editingHint ? updateHint : addHint} color="#0D99FF" />
                             </View>
-                        </View>
+                        </ScrollView>
                     </TouchableWithoutFeedback>
                 </SafeAreaView>
             </Modal>
@@ -494,7 +495,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
     },
     modalContentContainer: {
-        flex: 1,
         justifyContent: "center",
     },
     modalTitle: {

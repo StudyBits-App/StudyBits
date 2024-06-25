@@ -276,22 +276,6 @@ const styles = StyleSheet.create({
     },
     selectedAnswerContainer: {
         backgroundColor: '#00e3ff80',
-        color: "#FFFFFF",
-        fontSize: 18,
-        fontWeight: "bold",
-        textAlign: 'center'
-    },
-    answerContainer: {
-        marginBottom: 10,
-        padding: 10,
-        borderRadius: 5,
-        borderWidth: 1,
-        borderColor: '#ccc',
-        width: '100%',
-        alignItems: 'center',
-    },
-    selectedAnswerContainer: {
-        backgroundColor: '#00e3ff80',
     },
     correctAnswerContainer: {
         backgroundColor: '#8bc34a',
