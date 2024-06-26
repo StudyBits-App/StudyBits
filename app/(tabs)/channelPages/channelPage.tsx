@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { StyleSheet, Text, View, Image, ScrollView, RefreshControl, useColorScheme } from 'react-native';
+import { StyleSheet, Text, View, Image, ScrollView, RefreshControl, useColorScheme, Pressable } from 'react-native';
 import { useSession } from '@/context/ctx';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { getChannelData } from '@/services/getUserData';
+import { Ionicons } from '@expo/vector-icons';
+import { Link } from 'expo-router';
 
 interface Channel {
   user: string;
@@ -18,6 +20,12 @@ const defaultChannel: Channel = {
   displayName: '',
 };
 
+interface Course {
+  picUrl: string;
+  name: string;
+  description: string;
+}
+
 const UserChannelPage = () => {
   const { user, isLoading } = useSession();
   const [channel, setChannel] = useState<Channel>(defaultChannel);
@@ -30,10 +38,10 @@ const UserChannelPage = () => {
       return;
     }
     try {
-        const channelData = (await getChannelData(user.uid)).docs[0].data() as Channel;
-        setChannel(channelData);
+      const channelData = (await getChannelData(user.uid)).docs[0].data() as Channel;
+      setChannel(channelData);
     } catch (error) {
-        console.error('Error fetching user channel: ', error);
+      console.error('Error fetching user channel: ', error);
     }
   };
 
@@ -45,7 +53,7 @@ const UserChannelPage = () => {
     setRefreshing(true);
     fetchUserChannel().finally(() => setRefreshing(false));
   }, [user]);
-  
+
   if (isLoading) {
     return (
       <View style={{ backgroundColor: isDarkMode ? '#222' : '#fff' }}>
@@ -54,7 +62,7 @@ const UserChannelPage = () => {
     );
   }
 
-  const ChannelComponent = ({ hasBanner }: {hasBanner: boolean }) => {
+  const ChannelComponent = ({ hasBanner }: { hasBanner: boolean }) => {
     return (
       <View style={{ marginTop: hasBanner ? 0 : 20 }}>
         <View style={styles.profileSection}>
@@ -72,6 +80,24 @@ const UserChannelPage = () => {
     );
   };
 
+  const CourseComponent = (course: Course) => {
+    return (
+      <Link asChild href="/channelPages/createCourse">
+        <Pressable style={styles.course}>
+          <Ionicons name="add-circle" size={70} color={'#3B9EBF'} />
+          <View style={styles.courseInfoBox}>
+            <Text style={[styles.courseName, { color: '#fff' }]}>
+              {course.name || 'Default Course Name'}
+            </Text>
+            <Text style={[styles.courseDescription, { color: '#fff' }]}>
+              {course.description || 'This course tells you about skibidi toilet and ohioans.'}
+            </Text>
+          </View>
+        </Pressable>
+      </Link>
+    );
+  }
+
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: isDarkMode ? '#111' : '#fff' }}
@@ -83,14 +109,15 @@ const UserChannelPage = () => {
           headerImage={<Image source={{ uri: channel.bannerURL }} style={styles.bannerImage} />}
         >
           <View>
-            <ChannelComponent hasBanner={true}/>
+            <ChannelComponent hasBanner={true} />
           </View>
         </ParallaxScrollView>
       ) : (
         <View>
-          <ChannelComponent hasBanner={false}/>
+          <ChannelComponent hasBanner={false} />
         </View>
       )}
+      <CourseComponent />
     </ScrollView>
   );
 };
@@ -99,6 +126,16 @@ const styles = StyleSheet.create({
   bannerImage: {
     height: 300,
     resizeMode: 'cover',
+  },
+  course: {
+    borderRadius: 10,
+    marginTop: '2%',
+    paddingVertical: '5%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+    backgroundColor: 'grey'
   },
   profileSection: {
     flexDirection: 'row',
@@ -118,6 +155,18 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
   },
+  courseName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    width: '90%'
+  },
+  courseDescription: {
+    width: '90%'
+  },
+  courseInfoBox: {
+    marginLeft: '2%',
+    width: '75%'
+  }
 });
 
 export default UserChannelPage;

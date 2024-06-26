@@ -1,37 +1,33 @@
 import React from 'react';
-import {
-    createMaterialTopTabNavigator,
-    MaterialTopTabNavigationOptions,
-    MaterialTopTabNavigationEventMap,
-} from '@react-navigation/material-top-tabs';
-import { withLayoutContext } from 'expo-router';
-import { ParamListBase, TabNavigationState } from '@react-navigation/native';
-import { ActivityIndicator } from 'react-native';
 import { useUserChannel } from '@/context/userChannel';
+import { Stack } from 'expo-router';
 import CreateChannelPage from '@/screens/CreateChannel';
+import { ActivityIndicator, SafeAreaView } from 'react-native';
+import LoadingScreen from '@/screens/LoadingScreen';
 
-const { Navigator } = createMaterialTopTabNavigator();
-
-export const MaterialTopTabs = withLayoutContext<
-    MaterialTopTabNavigationOptions,
-    typeof Navigator,
-    TabNavigationState<ParamListBase>,
-    MaterialTopTabNavigationEventMap
->(Navigator);
-
-export default function ChannelLayout() {
+export default function StackLayout() {
     const { hasChannel, loading } = useUserChannel();
 
     if (loading) {
-        return <ActivityIndicator />;
+        return <LoadingScreen />
     }
-
     return hasChannel ? (
-        <MaterialTopTabs>
-            <MaterialTopTabs.Screen name="channelPage" options={{ title: 'Channel' }} />
-            <MaterialTopTabs.Screen name="createCourse" options={{ title: 'Create a Course' }} />
-        </MaterialTopTabs>
+        <Stack>
+            <Stack.Screen
+                name="channelPage"
+                options={{
+                    headerShown: false
+                }}
+            />
+            <Stack.Screen
+                name="createCourse"
+                options={{
+                    headerShown: false
+                }}
+            />
+        </Stack>
     ) : (
         <CreateChannelPage />
-    );
+    )
+
 }

@@ -45,7 +45,6 @@ export default function TabLayout() {
         name="channelPages"
         options={{
           title: 'My Channel',
-          headerShown: true,
           tabBarIcon: ({ color, focused }) => (
             <TabBarIcon name={focused ? 'person-circle' : 'person-circle-sharp'} color={color} />
           ),
