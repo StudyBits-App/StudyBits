@@ -8,6 +8,9 @@ on:
 permissions:
   contents: write
 name: Expo Build
+env:
+  GOOGLE_SERVICES_PLIST: "/Users/runner/work/StudyBits/StudyBits/GoogleService-Info.plist"
+  GOOGLE_SERVICES_JSON: "/Users/runner/work/StudyBits/StudyBits/google-services.json"
 jobs:
   build:
     runs-on: macos-latest
