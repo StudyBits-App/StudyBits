@@ -30,6 +30,7 @@ const UserChannelPage = () => {
   const { user, isLoading } = useSession();
   const [channel, setChannel] = useState<Channel>(defaultChannel);
   const [refreshing, setRefreshing] = useState(false);
+  const [courses, setCourses] = useState<Course[]>([{ picUrl: 'https://firebasestorage.googleapis.com/v0/b/studybits-fc170.appspot.com/o/profilePics%2F796f4437-8213-454c-971d-7d1b42ede8bb-12125C68-2EB7-4E3A-AADA-339BB627739B.jpg?alt=media&token=5ff931af-b029-403e-96b5-38cfd1f48c75', name: 'How to Rizz like an ohian', description: 'skibidi rizzler' }]);
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
 
@@ -72,7 +73,7 @@ const UserChannelPage = () => {
           />
           <View style={styles.profileInfo}>
             <Text style={[styles.displayName, { color: isDarkMode ? '#fff' : '#000' }]}>
-              {channel.displayName || 'Default DisplayName'}
+              {channel.displayName || 'Default Display Name'}
             </Text>
           </View>
         </View>
@@ -80,17 +81,38 @@ const UserChannelPage = () => {
     );
   };
 
-  const CourseComponent = (course: Course) => {
+  const renderCourse = (course: Course) => {
+    return (
+      <Link asChild href="/channelPages/createCourse">
+        <Pressable style={styles.course}>
+          <Image
+            source={{ uri: course.picUrl || `https://robohash.org/${channel.user}` }}
+            style={[styles.coursePic, { borderColor: isDarkMode ? '#fff' : '#000' }]}
+          />
+          <View style={styles.courseInfoBox}>
+            <Text style={[styles.courseName, { color: '#fff' }]}>
+              {course.name || "Default Course Name"}
+            </Text>
+            <Text style={[styles.courseDescription, { color: '#fff' }]}>
+              {course.description || "A course about courses, if you will."}
+            </Text>
+          </View>
+        </Pressable>
+      </Link>
+    )
+  }
+
+  const AddCourse = () => {
     return (
       <Link asChild href="/channelPages/createCourse">
         <Pressable style={styles.course}>
           <Ionicons name="add-circle" size={70} color={'#3B9EBF'} />
           <View style={styles.courseInfoBox}>
             <Text style={[styles.courseName, { color: '#fff' }]}>
-              {course.name || 'Default Course Name'}
+              Add a Course
             </Text>
             <Text style={[styles.courseDescription, { color: '#fff' }]}>
-              {course.description || 'This course tells you about skibidi toilet and ohioans.'}
+              It can be about anything you'd like.
             </Text>
           </View>
         </Pressable>
@@ -100,24 +122,21 @@ const UserChannelPage = () => {
 
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: isDarkMode ? '#111' : '#fff' }}
+      style={{ flex: 1, backgroundColor: "#1E1E1E" }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
       {channel.bannerURL ? (
-        <ParallaxScrollView
-          headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-          headerImage={<Image source={{ uri: channel.bannerURL }} style={styles.bannerImage} />}
-        >
-          <View>
-            <ChannelComponent hasBanner={true} />
-          </View>
-        </ParallaxScrollView>
+        <View>
+          <Image source={{ uri: channel.bannerURL }} style={styles.bannerImage} />
+          <ChannelComponent hasBanner={true} />
+        </View>
       ) : (
         <View>
           <ChannelComponent hasBanner={false} />
         </View>
       )}
-      <CourseComponent />
+      {courses.map((course) => renderCourse(course))}
+      <AddCourse />
     </ScrollView>
   );
 };
@@ -138,6 +157,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'grey'
   },
   profileSection: {
+    shadowOpacity: 1,
+    borderBottomRightRadius: 10,
+    borderBottomLeftRadius: 10,
+    paddingVertical: '5%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -166,6 +189,12 @@ const styles = StyleSheet.create({
   courseInfoBox: {
     marginLeft: '2%',
     width: '75%'
+  },
+  coursePic: {
+    width: 70,
+    height: 70,
+    borderRadius: 50,
+    borderWidth: 1,
   }
 });
 
