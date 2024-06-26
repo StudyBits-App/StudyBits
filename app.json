@@ -54,7 +54,8 @@
       },
       "eas": {
         "projectId": "abf1e330-d154-4b84-b677-84e7d8f91da3"
-      }
+      },
+      "owner": "thescientist101"
     },
     "runtimeVersion": "1.0.0",
     "updates": {
