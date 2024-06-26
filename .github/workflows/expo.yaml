@@ -1,0 +1,52 @@
+on:
+  push:
+    tags:
+      - "v*.*.*"
+    paths:
+      - "apps/mobile/**"
+      - ".github/workflows/expo.yaml"
+permissions:
+  contents: write
+name: Expo Build
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: 🏗 Setup repo
+        uses: actions/checkout@v3
+
+      - name: 🏗 cd into mobile
+        run: cd apps/mobile
+
+      - name: 🏗 Setup bun
+        uses: oven-sh/setup-bun@v1
+
+      - name: 🏗 Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📦 Install dependencies
+        run: bun install
+
+      - name: Extract Secret Files
+        run: echo $GOOGLE_SERVICES_JSON > google-services.json; echo $GOOGLE_SERVICES_PLIST > GoogleService-Info.plist
+
+      - name: 🚀 Build app
+        run: mkdir builds; eas build -p ios --local --non-interactive --output builds/build.ipa
+
+      - name: 📦 Publish ipa to releases
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./builds/build.ipa
+          asset_name: "app.ipa"
+          tag: ${{ github.ref }}
+          overwrite: true
+
+      - name: 🏗 Install ios-uploader
+        run: bun install -g ios-uploader
+
+      - name: 📦 Upload ipa to TestFlight
+        run: ios-uploader upload -u ${{ secrets.APPLE_ID }} -p ${{ secrets.APPLE_PASSWORD }} -f ./builds/build.ipa
