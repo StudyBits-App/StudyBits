@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, Button, Image, StyleSheet, Alert, TouchableOpacity, Text, useColorScheme} from 'react-native';
+import { View, TextInput, Button, Image, StyleSheet, Alert, TouchableOpacity, Text, useColorScheme } from 'react-native';
 import uploadImageToFirebase from '@/services/uploadImage';
 import * as ImagePicker from 'expo-image-picker';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import firestore from '@react-native-firebase/firestore';
 import { useSession } from '@/context/ctx';
 
-const CreateChannelPage = () => {
+const CreateChannelPage: React.FC = () => {
   const [bannerImage, setBannerImage] = useState<string | null>(null);
   const [profilePicImage, setProfilePicImage] = useState<string | null>(null);
   const [defaultProfilePicUrl, setDefaultProfilePicUrl] = useState<string | null>(null);
@@ -69,16 +69,15 @@ const CreateChannelPage = () => {
 
       if (profilePicImage) {
         profilePicURL = await uploadImageToFirebase(profilePicImage, 'profilePics');
-      
+
       } else if (defaultProfilePicUrl) {
         profilePicURL = defaultProfilePicUrl;
       }
 
-      await firestore().collection('channels').add({
-        user: user?.uid,
+      await firestore().collection('channels').doc(user?.uid).set({
         displayName: displayName,
-        bannerURL: bannerURL || '', 
-        profilePicURL: profilePicURL || '',
+        bannerURL: bannerURL || '',
+        profilePicURL: profilePicURL || ''
       });
 
       console.log('Channel created successfully with:', { bannerURL, profilePicURL, displayName });
@@ -135,7 +134,7 @@ const CreateChannelPage = () => {
       headerImage={
         bannerImage ? (
           <TouchableOpacity onPress={handleRemoveBanner}>
-            <Image source={{ uri: bannerImage}} style={styles.bannerImage} />
+            <Image source={{ uri: bannerImage }} style={styles.bannerImage} />
           </TouchableOpacity>
         ) : (
           <TouchableOpacity onPress={handleBannerUpload} style={styles.uploadBannerButton}>
@@ -162,10 +161,10 @@ const CreateChannelPage = () => {
 
         {/* Display Name Input */}
         <TextInput
-        style={[
-          styles.input,
-          isDarkMode  && styles.darkInput
-        ]}
+          style={[
+            styles.input,
+            isDarkMode && styles.darkInput
+          ]}
           placeholder="Display Name"
           value={displayName}
           onChangeText={setDisplayName}

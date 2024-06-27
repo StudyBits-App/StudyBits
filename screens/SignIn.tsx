@@ -3,6 +3,7 @@ import { SafeAreaView, View, Text, StyleSheet, Pressable, TextInput, Image } fro
 import { LinearGradient } from "expo-linear-gradient";
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import auth from '@react-native-firebase/auth';
+import { Ionicons } from "@expo/vector-icons";
 
 GoogleSignin.configure({
     webClientId: '1098397225551-4fo48u8pni4nct9f1msj5n81nes8b3oe.apps.googleusercontent.com'
@@ -37,19 +38,20 @@ export default function SignIn() {
                 <Text style={styles.titleText}>StudyBits</Text>
                 <Text style={styles.headText}>Create an account</Text>
                 <Text style={styles.subText}>Get ready to be an intellectual</Text>
-                <TextInput
+                {/* <TextInput
                     style={styles.input}
                     onChangeText={onChangeEmail}
                     value={email}
                     placeholder="email@domain.com"
-                />
+                    placeholderTextColor={'#828282'}
+                /> */}
                 <Pressable
                     style={styles.button}
                     onPress={signInWithEmail}>
-                    <Text style={styles.signuptext}>Sign up with email</Text>
+                    <Text style={styles.signuptext}>Sign up/in with email</Text>
                 </Pressable>
 
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                {/* <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <View
                         style={styles.divider}
                     />
@@ -59,12 +61,12 @@ export default function SignIn() {
                     <View
                         style={styles.divider}
                     />
-                </View>
+                </View> */}
                 <Pressable
-                    style={styles.button}
+                    style={[styles.button]}
                     onPress={signInWithGoogle}
                 >
-                    <Image source={require('@/assets/images/google-logo.png')} style={styles.signInImage}></Image>
+                    <Ionicons name="logo-google" style={styles.signInImage} size={15} />
                     <Text style={styles.signuptext}>Google</Text>
                 </Pressable>
                 <Text style={[styles.text, styles.policies]}>By clicking continue, you agree to our Terms of Service and Privacy Policy</Text>
@@ -118,7 +120,7 @@ const styles = StyleSheet.create({
         textAlign: 'center'
     },
     input: {
-        backgroundColor: "#000000",
+        backgroundColor: "#000",
         padding: 10,
         alignItems: "center",
         borderRadius: 5,
@@ -138,21 +140,23 @@ const styles = StyleSheet.create({
         height: '100%',
         width: '100%'
     },
+    googleButton: {
+        backgroundColor: '#ea4335',
+        marginVertical: '5%'
+    },
     button: {
         backgroundColor: "#ffffff",
         padding: 10,
         alignItems: "center",
         borderRadius: 5,
         width: '75%',
-        marginVertical: '5%',
+        marginTop: '5%',
         flexDirection: 'row',
         justifyContent: 'center',
-        paddingVertical: 12,
+        paddingVertical: '3%',
         paddingHorizontal: 32,
     },
     signInImage: {
-        height: 20,
-        width: 20,
-        marginHorizontal: '2%'
+        marginHorizontal: '5%'
     },
 });

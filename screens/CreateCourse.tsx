@@ -3,6 +3,7 @@ import { StyleSheet, View, Pressable, Image, TextInput, Text, TouchableOpacity }
 import * as ImagePicker from 'expo-image-picker';
 import firestore from '@react-native-firebase/firestore';
 import { useRouter } from 'expo-router';
+import { useSession } from '@/context/ctx';
 
 interface Course {
   picUrl: string;
@@ -18,6 +19,7 @@ const defaultCourse: Course = {
 
 const CreateCourse: React.FC = () => {
   const [course, setCourse] = useState<Course>(defaultCourse);
+  const { user, isLoading } = useSession();
   const router = useRouter();
 
   const handleAddImage = async () => {
@@ -41,6 +43,8 @@ const CreateCourse: React.FC = () => {
     try {
       const courseRef = await firestore().collection('courses').add(course);
       const docId = courseRef.id;
+      const currentCourses = (await firestore().collection('channels').doc(user?.uid).get()).data()?.courses;
+      await firestore().collection('channels').doc(user?.uid).update({ courses: [...(currentCourses || []), docId] });
       router.replace(`/channelPages/manageCourse/${docId}`);
     } catch (error) {
       console.error('Error adding course: ', error);

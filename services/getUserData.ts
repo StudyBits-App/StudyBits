@@ -7,7 +7,7 @@ const getChannelData = async (userId: string | undefined) => {
     try {
         const channelsSnapshot = await firestore()
             .collection('channels')
-            .where('user', '==', userId)
+            .doc(userId)
             .get();
         return channelsSnapshot;
     } catch (error) {

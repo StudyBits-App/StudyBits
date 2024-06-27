@@ -2,9 +2,9 @@ import React from 'react';
 import { Stack } from 'expo-router';
 
 
-export default function channelDynamicLayout() {
+export default function manageCoursesLayout() {
 
-    return  (
+    return (
         <Stack>
             <Stack.Screen
                 name="[id]"

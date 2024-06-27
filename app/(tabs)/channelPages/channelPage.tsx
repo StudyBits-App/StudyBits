@@ -46,7 +46,7 @@ const UserChannelPage = () => {
       return;
     }
     try {
-      const channelData = (await getChannelData(user.uid)).docs[0].data() as Channel;
+      const channelData = (await getChannelData(user.uid)).data() as Channel;
       setChannel(channelData);
     } catch (error) {
       console.error('Error fetching user channel: ', error);

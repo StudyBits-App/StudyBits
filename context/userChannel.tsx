@@ -3,7 +3,7 @@ import { useSession } from './ctx';
 import firestore from '@react-native-firebase/firestore';
 
 export function useUserChannel() {
-  const { user} = useSession();
+  const { user } = useSession();
   const [hasChannel, setHasChannel] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -16,9 +16,9 @@ export function useUserChannel() {
 
     const unsubscribe = firestore()
       .collection('channels')
-      .where('user', '==', user.uid)
+      .doc(user?.uid)
       .onSnapshot(snapshot => {
-        if (!snapshot.empty) {
+        if (snapshot.exists) {
           setHasChannel(true);
         } else {
           setHasChannel(false);
