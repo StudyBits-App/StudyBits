@@ -496,6 +496,7 @@ const styles = StyleSheet.create({
     },
     modalContentContainer: {
         justifyContent: "center",
+        flex:1
     },
     modalTitle: {
         color: "#FFFFFF",

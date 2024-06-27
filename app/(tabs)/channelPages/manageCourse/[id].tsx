@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { StyleSheet, Text, View, Image, ScrollView, RefreshControl, useColorScheme, Pressable } from 'react-native';
 import { useSession } from '@/context/ctx';
+import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { getChannelData } from '@/services/getUserData';
 import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
@@ -20,7 +21,7 @@ const defaultChannel: Channel = {
 };
 
 interface Course {
-  key: string;
+  key: string
   picUrl: string;
   name: string;
   description: string;
@@ -30,14 +31,7 @@ const UserChannelPage = () => {
   const { user, isLoading } = useSession();
   const [channel, setChannel] = useState<Channel>(defaultChannel);
   const [refreshing, setRefreshing] = useState(false);
-  const [courses, setCourses] = useState<Course[]>([
-    {
-      key: 'bopb',
-      picUrl: 'https://firebasestorage.googleapis.com/v0/b/studybits-fc170.appspot.com/o/profilePics%2F796f4437-8213-454c-971d-7d1b42ede8bb-12125C68-2EB7-4E3A-AADA-339BB627739B.jpg?alt=media&token=5ff931af-b029-403e-96b5-38cfd1f48c75',
-      name: 'How to Rizz like an ohian',
-      description: 'skibidi rizzler'
-    }
-  ]);
+  const [courses, setCourses] = useState<Course[]>([{ key: 'dsds', picUrl: 'https://firebasestorage.googleapis.com/v0/b/studybits-fc170.appspot.com/o/profilePics%2F796f4437-8213-454c-971d-7d1b42ede8bb-12125C68-2EB7-4E3A-AADA-339BB627739B.jpg?alt=media&token=5ff931af-b029-403e-96b5-38cfd1f48c75', name: 'How to Rizz like an ohian', description: 'skibidi rizzler' }]);
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
 
@@ -90,7 +84,7 @@ const UserChannelPage = () => {
 
   const renderCourse = (course: Course) => {
     return (
-      <Link asChild href="/channelPages/createCourse" key={course.key}>
+      <Link asChild href="/channelPages/createCourse">
         <Pressable style={styles.course}>
           <Image
             source={{ uri: course.picUrl || `https://robohash.org/${channel.user}` }}
@@ -106,8 +100,8 @@ const UserChannelPage = () => {
           </View>
         </Pressable>
       </Link>
-    );
-  };
+    )
+  }
 
   const AddCourse = () => {
     return (
@@ -125,7 +119,7 @@ const UserChannelPage = () => {
         </Pressable>
       </Link>
     );
-  };
+  }
 
   return (
     <ScrollView

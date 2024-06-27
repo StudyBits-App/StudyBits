@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Pressable, Image, TextInput, Text, Modal } from 'react-native';
+import { StyleSheet, View, Pressable, Image, TextInput, Text, TouchableOpacity } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import firestore from '@react-native-firebase/firestore';
+import { useRouter } from 'expo-router';
 
 interface Course {
   picUrl: string;
@@ -16,7 +18,7 @@ const defaultCourse: Course = {
 
 const CreateCourse: React.FC = () => {
   const [course, setCourse] = useState<Course>(defaultCourse);
-  const [unitModalVisible, setUnitModalVisible] = useState(false);
+  const router = useRouter();
 
   const handleAddImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -35,9 +37,16 @@ const CreateCourse: React.FC = () => {
     setCourse({ ...course, picUrl: '' });
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    try {
+      const courseRef = await firestore().collection('courses').add(course);
+      const docId = courseRef.id;
+      router.replace(`/channelPages/manageCourse/${docId}`);
+    } catch (error) {
+      console.error('Error adding course: ', error);
+    }
+  };
 
-  }
 
   return (
     <View style={styles.container}>
@@ -68,14 +77,9 @@ const CreateCourse: React.FC = () => {
         value={course.description}
         onChangeText={(text) => setCourse({ ...course, description: text })}
       />
-      <Pressable style={styles.button} onPress={handleNext}>
-        <Text>Submit</Text>
-      </Pressable>
-
-      <Modal visible={unitModalVisible} animationType='slide'>
-
-
-      </Modal>
+      <TouchableOpacity style={styles.button} onPress={handleNext}>
+        <Text>Next</Text>
+      </TouchableOpacity>
     </View>
 
   );
@@ -132,7 +136,9 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: "#ffffff",
     padding: '3%',
+    width: '90%',
     alignItems: "center",
+    marginTop: 50,
     borderRadius: 5,
   },
 });

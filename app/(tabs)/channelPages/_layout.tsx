@@ -2,10 +2,9 @@ import React from 'react';
 import { useUserChannel } from '@/context/userChannel';
 import { Stack } from 'expo-router';
 import CreateChannelPage from '@/screens/CreateChannel';
-import { ActivityIndicator, SafeAreaView } from 'react-native';
 import LoadingScreen from '@/screens/LoadingScreen';
 
-export default function StackLayout() {
+export default function channelLayout() {
     const { hasChannel, loading } = useUserChannel();
 
     if (loading) {
@@ -22,7 +21,15 @@ export default function StackLayout() {
             <Stack.Screen
                 name="createCourse"
                 options={{
-                    headerShown: false
+                    title: 'Create a course',
+                    headerBackTitle: 'Back'
+                }}
+            />
+            <Stack.Screen
+                name="manageCourse"
+                options={{
+                    headerTitle: "Manage Course",
+                    headerBackTitle: 'Back'
                 }}
             />
         </Stack>
