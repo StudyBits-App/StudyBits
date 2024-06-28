@@ -22,14 +22,14 @@ export default function channelLayout() {
                 name="createCourse"
                 options={{
                     title: 'Create a course',
-                    headerBackTitle: 'Back'
+                    headerBackTitle: 'Channel'
                 }}
             />
             <Stack.Screen
                 name="manageCourse"
                 options={{
                     headerTitle: "Manage Course",
-                    headerBackTitle: 'Back'
+                    headerBackTitle: 'Channel'
                 }}
             />
         </Stack>

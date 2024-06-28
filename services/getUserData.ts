@@ -16,4 +16,17 @@ const getChannelData = async (userId: string | undefined) => {
     }
 }
 
-export {getChannelData};
+const getCourseData = async (courseId: string) => {
+    try {
+      const courseDoc = await firestore().collection('courses').doc(courseId).get();
+      if (!courseDoc.exists) {
+        throw new Error('Course not found');
+      }
+      return courseDoc;
+    } catch (error) {
+      console.error('Error fetching course data: ', error);
+      throw error;
+    }
+  };
+  
+export { getChannelData, getCourseData };
