@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Pressable, Image, TextInput, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Pressable, Image, TextInput, Text, TouchableOpacity, Dimensions } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import firestore from '@react-native-firebase/firestore';
 import { useRouter } from 'expo-router';
@@ -46,19 +46,17 @@ const CreateCourse: React.FC = () => {
     try {
       if (course.picUrl) {
         const uploadedImageUrl = await uploadImageToFirebase(course.picUrl, 'coursePics');
-        course.picUrl = uploadedImageUrl; // Update the picUrl with the uploaded image URL
+        course.picUrl = uploadedImageUrl;
       }
 
       const courseRef = await firestore().collection('courses').add(course);
       const docId = courseRef.id;
 
-      // Update the key with the document ID
       await courseRef.update({ key: docId });
 
       const currentCourses = (await firestore().collection('channels').doc(user?.uid).get()).data()?.courses;
       await firestore().collection('channels').doc(user?.uid).update({ courses: [...(currentCourses || []), docId] });
-
-      router.replace(`/channelPages/manageCourse/${docId}`);
+      router.push({ pathname: "/channelPages/manageCourse", params: { id: docId, isEditing: '1' } });
     } catch (error) {
       console.error('Error adding course: ', error);
     }
@@ -132,7 +130,7 @@ const styles = StyleSheet.create({
   image: {
     width: 100,
     height: 100,
-    borderRadius: 50,
+    borderRadius: Math.round((Dimensions.get('window').height + Dimensions.get('window').width) / 2),
     marginRight: 20,
     borderWidth: 2,
     borderColor: '#fff',

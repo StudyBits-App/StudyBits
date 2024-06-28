@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { SafeAreaView, ScrollView, StyleSheet, Text, View, ActivityIndicator, Image, Pressable, Modal, Button } from "react-native";
+import { ScrollView, StyleSheet, Text, View, ActivityIndicator, Image, Pressable, Modal, Button } from "react-native";
 import firestore from "@react-native-firebase/firestore";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface Hint {
     key: string;
@@ -170,7 +171,9 @@ const AnswerPage: React.FC = () => {
                             ) : null}
                         </View>
                         <Text style={[styles.text, styles.modalText]}>{hintModalContent}</Text>
-                        <Button onPress={handleCancelViewHint} title="Cancel" color="#FF0D0D" />
+                        <Pressable style={{ alignItems: 'center' }} onPress={handleCancelViewHint}>
+                            <Text style={{ color: '#FF0D0D', fontSize: 17 }} >Cancel</Text>
+                        </Pressable>
                     </ScrollView>
                 </SafeAreaView>
             </Modal>

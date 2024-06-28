@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { StyleSheet, Text, View, Image, ScrollView, RefreshControl, Pressable } from 'react-native';
+import { StyleSheet, Text, View, Image, ScrollView, RefreshControl, Pressable, Dimensions } from 'react-native';
 import { useSession } from '@/context/ctx';
 import { getChannelData, getCourseData } from '@/services/getUserData';
 import { Ionicons } from '@expo/vector-icons';
@@ -52,14 +52,14 @@ const UserChannelPage = () => {
     try {
       const channelDoc = await getChannelData(user.uid);
       const channelData = channelDoc.data() as Channel;
-      if(channelData.courses){
+      if (channelData.courses) {
         const coursePromises = channelData.courses.map(async (courseId: string) => {
-            const courseDoc = await getCourseData(courseId);
-            return courseDoc.data() as Course;
+          const courseDoc = await getCourseData(courseId);
+          return courseDoc.data() as Course;
         });
         const courses = await Promise.all(coursePromises);
         setCourses(courses);
-        }
+      }
     } catch (error) {
       console.error('Error fetching user courses: ', error);
     }
@@ -79,7 +79,7 @@ const UserChannelPage = () => {
 
   if (isLoading || channel === defaultChannel) {
     return (
-        <LoadingScreen/>
+      <LoadingScreen />
     );
   }
 
@@ -103,7 +103,15 @@ const UserChannelPage = () => {
 
   const renderCourse = (course: Course) => {
     return (
-      <Link asChild href={`channelPages/manageCourse/${course.key}`} key={course.key}>
+      <Link
+        asChild
+        href={{
+          pathname: "/channelPages/manageCourse",
+          params: { id: course.key, isEditing: '0' },
+        }}
+        key={course.key}
+      >
+
         <Pressable style={styles.course}>
           <Image
             source={{ uri: course.picUrl || `https://robohash.org/${user?.uid}` }}
@@ -164,7 +172,8 @@ const UserChannelPage = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#1E1E1E"
+    backgroundColor: "#1E1E1E",
+    paddingHorizontal: 15
   },
   bannerImage: {
     height: 300,
@@ -193,7 +202,7 @@ const styles = StyleSheet.create({
   profilePic: {
     width: 100,
     height: 100,
-    borderRadius: 50,
+    borderRadius: Math.round((Dimensions.get('window').height + Dimensions.get('window').width) / 2),
     borderWidth: 3,
     borderColor: '#fff'
   },
@@ -222,7 +231,7 @@ const styles = StyleSheet.create({
   coursePic: {
     width: 70,
     height: 70,
-    borderRadius: 50,
+    borderRadius: Math.round((Dimensions.get('window').height + Dimensions.get('window').width) / 2),
     borderWidth: 1,
     borderColor: '#fff'
   },

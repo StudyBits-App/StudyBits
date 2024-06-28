@@ -3,7 +3,6 @@ import { SafeAreaView, View, Text, StyleSheet, Pressable, TextInput, Image } fro
 import { LinearGradient } from "expo-linear-gradient";
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import auth from '@react-native-firebase/auth';
-import { Ionicons } from "@expo/vector-icons";
 
 GoogleSignin.configure({
     webClientId: '1098397225551-4fo48u8pni4nct9f1msj5n81nes8b3oe.apps.googleusercontent.com'
@@ -11,9 +10,15 @@ GoogleSignin.configure({
 
 export default function SignIn() {
     const [email, onChangeEmail] = React.useState('');
+    const [password, onChangePassword] = React.useState('');
+    const [enteredUsername, setEnteredUsername] = React.useState(false);
+    const [authError, setAuthError] = React.useState(false);
 
-    const signInWithEmail = () => {
-
+    const signInWithEmail = async () => {
+        setEnteredUsername(true);
+        if (!enteredUsername) return;
+        if (email === '' || password === '') return;
+        return auth().signInWithEmailAndPassword(email, password).catch(() => { setAuthError(true) });
     }
 
     const signInWithGoogle = async () => {
@@ -36,22 +41,30 @@ export default function SignIn() {
             />
             <View style={styles.container}>
                 <Text style={styles.titleText}>StudyBits</Text>
-                <Text style={styles.headText}>Create an account</Text>
+                <Text style={styles.headText}>Welcome</Text>
                 <Text style={styles.subText}>Get ready to be an intellectual</Text>
-                {/* <TextInput
-                    style={styles.input}
+                {authError && <Text style={styles.errorText}>Invalid username or password.</Text>}
+                <TextInput
+                    style={[styles.input, { marginBottom: 0 }]}
                     onChangeText={onChangeEmail}
                     value={email}
                     placeholder="email@domain.com"
-                    placeholderTextColor={'#828282'}
-                /> */}
+                    placeholderTextColor={'#868686'}
+                />
+                {enteredUsername && <TextInput
+                    style={styles.input}
+                    onChangeText={onChangePassword}
+                    value={password}
+                    placeholder="mysupersafepassword123"
+                    placeholderTextColor={'#868686'}
+                />}
                 <Pressable
                     style={styles.button}
                     onPress={signInWithEmail}>
-                    <Text style={styles.signuptext}>Sign up/in with email</Text>
+                    <Text style={styles.signuptext}>Sign up with email</Text>
                 </Pressable>
 
-                {/* <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                     <View
                         style={styles.divider}
                     />
@@ -61,15 +74,15 @@ export default function SignIn() {
                     <View
                         style={styles.divider}
                     />
-                </View> */}
+                </View>
                 <Pressable
-                    style={[styles.button]}
+                    style={styles.button}
                     onPress={signInWithGoogle}
                 >
-                    <Ionicons name="logo-google" style={styles.signInImage} size={15} />
+                    <Image source={require('@/assets/images/google-logo.png')} style={styles.signInImage}></Image>
                     <Text style={styles.signuptext}>Google</Text>
                 </Pressable>
-                <Text style={[styles.text, styles.policies]}>By clicking continue, you agree to our Terms of Service and Privacy Policy</Text>
+                <Text style={[styles.text, styles.policies]}>By continuing, you agree to our Terms of Service and Privacy Policy</Text>
             </View>
         </SafeAreaView >
     )
@@ -120,18 +133,19 @@ const styles = StyleSheet.create({
         textAlign: 'center'
     },
     input: {
-        backgroundColor: "#000",
-        padding: 10,
+        backgroundColor: "#000000",
+        color: 'white',
         alignItems: "center",
         borderRadius: 5,
         width: '75%',
         flexDirection: 'row',
         justifyContent: 'center',
-        paddingVertical: 12,
-        paddingHorizontal: 32,
+        paddingVertical: 10,
+        paddingHorizontal: '3%',
         borderColor: 'white',
         borderStyle: 'solid',
-        borderWidth: 1
+        borderWidth: 1,
+        marginTop: '5%'
     },
     background: {
         alignItems: 'center',
@@ -140,23 +154,31 @@ const styles = StyleSheet.create({
         height: '100%',
         width: '100%'
     },
-    googleButton: {
-        backgroundColor: '#ea4335',
-        marginVertical: '5%'
-    },
     button: {
         backgroundColor: "#ffffff",
         padding: 10,
         alignItems: "center",
         borderRadius: 5,
         width: '75%',
-        marginTop: '5%',
+        marginVertical: '5%',
         flexDirection: 'row',
         justifyContent: 'center',
-        paddingVertical: '3%',
+        paddingVertical: 12,
         paddingHorizontal: 32,
     },
     signInImage: {
-        marginHorizontal: '5%'
+        height: 20,
+        width: 20,
+        marginHorizontal: '2%'
     },
+    errorText: {
+        fontWeight: 'bold',
+        color: 'red',
+        shadowColor: 'black',
+        shadowOffset: {
+            width: 0,
+            height: 0
+        },
+        shadowOpacity: 1
+    }
 });

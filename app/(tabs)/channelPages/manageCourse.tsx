@@ -1,6 +1,6 @@
-import { useGlobalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, Image, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, Image, ScrollView, Pressable } from 'react-native';
 import { useSession } from '@/context/ctx';
 import LoadingScreen from '@/screens/LoadingScreen';
 import { getCourseData, getUnitData } from '@/services/getUserData';
@@ -17,10 +17,12 @@ interface Unit {
 }
 
 const ManageCoursesPage: React.FC = () => {
-  const { id } = useGlobalSearchParams();
-  const {user} = useSession()
+  const { id } = useLocalSearchParams();
+  const { isEditing } = useLocalSearchParams();
+  const { user } = useSession()
   const [course, setCourse] = useState<Course | null>(null);
   const [units, setUnits] = useState<Unit[] | null>(null);
+  const [editing, setIsEditing] = useState(false)
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -40,14 +42,14 @@ const ManageCoursesPage: React.FC = () => {
           const unitDocs = await getUnitData(id);
           if (unitDocs) {
             const unitData: Unit[] = [];
-            if(!unitDocs.empty){
+            if (!unitDocs.empty) {
               unitDocs.forEach((doc) => {
                 const unit = doc.data() as Unit;
                 unitData.push(unit);
               });
               setUnits(unitData);
             }
-          } 
+          }
         }
       } catch (error) {
         console.error('Error fetching units: ', error);
@@ -55,13 +57,17 @@ const ManageCoursesPage: React.FC = () => {
     };
 
 
+    if (isEditing === '1') {
+      setIsEditing(true)
+    }
+
     fetchCourse();
     fetchUnits();
   }, [id]);
 
   if (!course) {
     return (
-        <LoadingScreen/>
+      <LoadingScreen />
     );
   }
   const renderUnit = (unit: Unit) => {
@@ -74,19 +80,22 @@ const ManageCoursesPage: React.FC = () => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.courseCard}>
-        <Image source={{ uri: course.picUrl || `https://robohash.org/${user?.uid}`}} style={styles.coursePic} />
+      {isEditing &&
+        <Text style={styles.courseName}>You are editing</Text>
+      }
+      <Pressable style={styles.courseCard} disabled={!isEditing}>
+        <Image source={{ uri: course.picUrl || `https://robohash.org/${user?.uid}` }} style={styles.coursePic} />
         <View style={styles.courseInfoBox}>
           <Text style={styles.courseName}>{course.name}</Text>
           <Text style={styles.courseDescription}>{course.description}</Text>
         </View>
-      </View>
+      </Pressable>
       <View>
         <Text style={styles.courseName}>Units</Text>
         {units ? (
           units.map((unit) => renderUnit(unit))
         ) : (
-          <Text style = {styles.courseName}>No units. Edit this course to add units</Text>
+          <Text style={styles.courseName}>No units. Edit this course to add units</Text>
         )}
       </View>
     </ScrollView>
@@ -113,8 +122,10 @@ const styles = StyleSheet.create({
   coursePic: {
     width: 100,
     height: 100,
-    borderRadius: 10,
+    borderRadius: 50,
     marginRight: 20,
+    borderColor: 'white',
+    borderWidth: 1
   },
   courseInfoBox: {
     flex: 1,

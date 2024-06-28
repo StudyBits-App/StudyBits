@@ -7,12 +7,12 @@ import 'react-native-reanimated';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { SessionProvider } from '@/context/ctx';
 import AuthCheck from '@/components/AuthCheck';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
@@ -28,10 +28,12 @@ export default function RootLayout() {
   }
 
   return (
-    <SessionProvider>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <AuthCheck />
-      </ThemeProvider>
-    </SessionProvider>
+    <SafeAreaProvider>
+      <SessionProvider>
+        <ThemeProvider value={DarkTheme}>
+          <AuthCheck />
+        </ThemeProvider>
+      </SessionProvider>
+    </SafeAreaProvider>
   );
 }
