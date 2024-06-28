@@ -52,21 +52,24 @@ const UserChannelPage = () => {
     try {
       const channelDoc = await getChannelData(user.uid);
       const channelData = channelDoc.data() as Channel;
-      const coursePromises = channelData.courses.map(async (courseId: string) => {
-        const courseDoc = await getCourseData(courseId);
-        return courseDoc.data() as Course;
-      });
-      const courses = await Promise.all(coursePromises);
-      setCourses(courses);
+      if(channelData.courses){
+        const coursePromises = channelData.courses.map(async (courseId: string) => {
+            const courseDoc = await getCourseData(courseId);
+            return courseDoc.data() as Course;
+        });
+        const courses = await Promise.all(coursePromises);
+        setCourses(courses);
+        }
     } catch (error) {
       console.error('Error fetching user courses: ', error);
     }
   };
 
   useEffect(() => {
+    setChannel(defaultChannel)
     fetchUserChannel();
     fetchUserCourses();
-  }, [user]);
+  }, []);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -74,7 +77,7 @@ const UserChannelPage = () => {
     fetchUserCourses().finally(() => setRefreshing(false));
   }, [user]);
 
-  if (isLoading) {
+  if (isLoading || channel === defaultChannel) {
     return (
         <LoadingScreen/>
     );
@@ -176,7 +179,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flex: 1,
     borderColor: 'white',
-    borderWidth: 1
+    borderWidth: 1,
+    backgroundColor: '#2E2E2E'
   },
   profileSection: {
     borderBottomRightRadius: 10,

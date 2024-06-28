@@ -27,6 +27,17 @@ const getCourseData = async (courseId: string) => {
       console.error('Error fetching course data: ', error);
       throw error;
     }
-  };
+};
+
+async function getUnitData(courseId: string) {
+    try {
+      const unitDocs = firestore().collection('courses').doc(courseId).collection('units').get();
+      return unitDocs
+    } catch (error) {
+      console.error('Error checking units collection:', error);
+      return false;
+    }
+  }
   
-export { getChannelData, getCourseData };
+
+export { getChannelData, getCourseData, getUnitData};

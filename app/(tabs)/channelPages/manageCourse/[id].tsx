@@ -1,7 +1,9 @@
 import { useGlobalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, Image, ScrollView, ActivityIndicator, Pressable } from 'react-native';
-import firestore from '@react-native-firebase/firestore';
+import { StyleSheet, Text, View, Image, ScrollView } from 'react-native';
+import { useSession } from '@/context/ctx';
+import LoadingScreen from '@/screens/LoadingScreen';
+import { getCourseData, getUnitData } from '@/services/getUserData';
 
 interface Course {
   picUrl: string;
@@ -9,91 +11,124 @@ interface Course {
   description: string;
 }
 
+interface Unit {
+  name: string;
+  description: string;
+}
+
 const ManageCoursesPage: React.FC = () => {
   const { id } = useGlobalSearchParams();
+  const {user} = useSession()
   const [course, setCourse] = useState<Course | null>(null);
+  const [units, setUnits] = useState<Unit[] | null>(null);
 
   useEffect(() => {
     const fetchCourse = async () => {
       if (typeof id === 'string') {
         try {
-          const courseDoc = await firestore().collection('courses').doc(id).get();
-          if (courseDoc.exists) {
-            setCourse(courseDoc.data() as Course);
-          }
+          const courseData = (await getCourseData(id)).data() as Course;
+          setCourse(courseData);
         } catch (error) {
           console.error('Error fetching course: ', error);
         }
       }
     };
 
+    const fetchUnits = async () => {
+      try {
+        if (typeof id === 'string') {
+          const unitDocs = await getUnitData(id);
+          if (unitDocs) {
+            const unitData: Unit[] = [];
+            if(!unitDocs.empty){
+              unitDocs.forEach((doc) => {
+                const unit = doc.data() as Unit;
+                unitData.push(unit);
+              });
+              setUnits(unitData);
+            }
+          } 
+        }
+      } catch (error) {
+        console.error('Error fetching units: ', error);
+      }
+    };
+
+
     fetchCourse();
+    fetchUnits();
   }, [id]);
 
   if (!course) {
     return (
-      <ActivityIndicator/>
+        <LoadingScreen/>
     );
   }
+  const renderUnit = (unit: Unit) => {
+    return (
+      <View>
+        <Text>hi</Text>
+      </View>
+    );
+  };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>        
-      <Text style={styles.headerText}>Manage Course</Text>
-      {course.picUrl ? (
-        <Image source={{ uri: course.picUrl }} style={styles.image} />
-      ) : (
-        null
-      )}
-      <Text style={styles.courseName}>{course.name}</Text>
-      <Text style={styles.courseDescription}>{course.description}</Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      <View style={styles.courseCard}>
+        <Image source={{ uri: course.picUrl || `https://robohash.org/${user?.uid}`}} style={styles.coursePic} />
+        <View style={styles.courseInfoBox}>
+          <Text style={styles.courseName}>{course.name}</Text>
+          <Text style={styles.courseDescription}>{course.description}</Text>
+        </View>
+      </View>
+      <View>
+        <Text style={styles.courseName}>Units</Text>
+        {units ? (
+          units.map((unit) => renderUnit(unit))
+        ) : (
+          <Text style = {styles.courseName}>No units. Edit this course to add units</Text>
+        )}
+      </View>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow:1,
-    justifyContent: 'center',
+    flexGrow: 1,
+    justifyContent: 'flex-start',
     alignItems: 'center',
     backgroundColor: '#1E1E1E',
     padding: 20,
   },
-  headerText: {
-    padding: 10,
-    marginBottom: 20,
-    color: '#FFFFFF',
-    fontSize: 28,
-    fontWeight: 'bold',
-    textAlign: 'center',
+  courseCard: {
+    borderRadius: 10,
+    marginTop: '2%',
+    flexDirection: 'row',
+    borderColor: 'white',
+    borderWidth: 1,
+    backgroundColor: '#2E2E2E',
+    padding: 20,
   },
-  circle: {
+  coursePic: {
     width: 100,
     height: 100,
-    borderRadius: 50,
-    backgroundColor: '#666',
+    borderRadius: 10,
+    marginRight: 20,
+  },
+  courseInfoBox: {
+    flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  image: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 20,
-    borderWidth: 2,
-    borderColor: '#fff',
   },
   courseName: {
-    color: '#FFFFFF',
     fontSize: 24,
     fontWeight: 'bold',
-    textAlign: 'center',
+    color: '#fff',
     marginBottom: 10,
   },
   courseDescription: {
-    color: '#FFFFFF',
+    color: '#fff',
     fontSize: 16,
-    textAlign: 'center',
   },
 });
 
