@@ -5,9 +5,10 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { SessionProvider } from '@/context/ctx';
+import { SessionProvider, useSession } from '@/context/ctx';
 import AuthCheck from '@/components/AuthCheck';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Stack } from 'expo-router';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -31,7 +32,11 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <SessionProvider>
         <ThemeProvider value={DarkTheme}>
-          <AuthCheck />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name='authentication/signIn' />
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="+not-found" />
+          </Stack>
         </ThemeProvider>
       </SessionProvider>
     </SafeAreaProvider>

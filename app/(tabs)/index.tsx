@@ -7,6 +7,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import auth from '@react-native-firebase/auth';
 import { useSession } from '@/context/ctx';
+import { router } from 'expo-router';
 
 GoogleSignin.configure({
   webClientId: '1098397225551-ibat99410nloiruc9g7aecrkvb83ptpf.apps.googleusercontent.com'
@@ -14,6 +15,7 @@ GoogleSignin.configure({
 
 export default function HomeScreen() {
   const { user, isLoading } = useSession();
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}

@@ -3,16 +3,19 @@ import { SafeAreaView, View, Text, StyleSheet, Pressable, TextInput, Image } fro
 import { LinearGradient } from "expo-linear-gradient";
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import auth from '@react-native-firebase/auth';
+import { Link, Redirect, router } from "expo-router";
+import { useSession } from "@/context/ctx";
 
 GoogleSignin.configure({
     webClientId: '1098397225551-4fo48u8pni4nct9f1msj5n81nes8b3oe.apps.googleusercontent.com'
 });
 
-export default function SignIn() {
+export default function SignInScreen() {
     const [email, onChangeEmail] = React.useState('');
     const [password, onChangePassword] = React.useState('');
     const [enteredUsername, setEnteredUsername] = React.useState(false);
     const [authError, setAuthError] = React.useState(false);
+    const { user, isLoading } = useSession();
 
     const signInWithEmail = async () => {
         setEnteredUsername(true);
@@ -35,6 +38,7 @@ export default function SignIn() {
 
     return (
         <SafeAreaView style={styles.safeview}>
+            {user && <Redirect href={'(tabs)'} />}
             <LinearGradient
                 colors={['#510083', '#8D39AB', '#EE7200']}
                 style={styles.background}
@@ -61,7 +65,7 @@ export default function SignIn() {
                 <Pressable
                     style={styles.button}
                     onPress={signInWithEmail}>
-                    <Text style={styles.signuptext}>Sign up with email</Text>
+                    <Text style={styles.signuptext}>Sign in with email</Text>
                 </Pressable>
 
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -82,13 +86,19 @@ export default function SignIn() {
                     <Image source={require('@/assets/images/google-logo.png')} style={styles.signInImage}></Image>
                     <Text style={styles.signuptext}>Google</Text>
                 </Pressable>
-                <Text style={[styles.text, styles.policies]}>By continuing, you agree to our Terms of Service and Privacy Policy</Text>
+                <View style={{ flexDirection: "row", justifyContent: 'center', alignItems: 'center' }}>
+                    <Text style={[styles.text, styles.policies]}>Already have an account?</Text>
+                    <Link href={'/signup'} style={[styles.text, styles.link]}>Sign Up</Link>
+                </View>
             </View>
         </SafeAreaView >
     )
 }
 
 const styles = StyleSheet.create({
+    link: {
+        fontWeight: 'bold'
+    },
     divider: {
         width: '21%',
         marginHorizontal: '2%',
@@ -126,7 +136,7 @@ const styles = StyleSheet.create({
         width: '100%'
     },
     policies: {
-        paddingHorizontal: '10%'
+        marginRight: '2%'
     },
     text: {
         color: 'white',

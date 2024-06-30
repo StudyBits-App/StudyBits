@@ -1,12 +1,16 @@
-import { Tabs } from 'expo-router';
+import { Redirect, Tabs, router } from 'expo-router';
 import React from 'react';
 
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { useSession } from '@/context/ctx';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const { user, isLoading } = useSession();
+
+  if (!user) router.replace('authentication/signIn')
 
   return (
     <Tabs

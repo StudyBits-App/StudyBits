@@ -20,7 +20,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { NestableDraggableFlatList, NestableScrollContainer, RenderItemParams } from "react-native-draggable-flatlist";
 import { Swipeable } from "react-native-gesture-handler";
 import { AntDesign, FontAwesome, Ionicons } from "@expo/vector-icons";
-import uploadImageToFirebase from "@/services/uploadImage";
+import { uploadImageToFirebase } from "@/services/uploadImage";
 import firestore from '@react-native-firebase/firestore';
 
 interface Hint {
@@ -496,7 +496,7 @@ const styles = StyleSheet.create({
     },
     modalContentContainer: {
         justifyContent: "center",
-        flex:1
+        flex: 1
     },
     modalTitle: {
         color: "#FFFFFF",

@@ -1,9 +1,12 @@
-import { useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { router, useLocalSearchParams } from 'expo-router';
+import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View, Image, ScrollView, Pressable } from 'react-native';
 import { useSession } from '@/context/ctx';
 import LoadingScreen from '@/screens/LoadingScreen';
 import { getCourseData, getUnitData } from '@/services/getUserData';
+import { AntDesign } from '@expo/vector-icons';
+import { NestableDraggableFlatList, RenderItemParams, NestableScrollContainer } from 'react-native-draggable-flatlist';
+import { Swipeable } from 'react-native-gesture-handler';
 
 interface Course {
   picUrl: string;
@@ -12,6 +15,7 @@ interface Course {
 }
 
 interface Unit {
+  key: string;
   name: string;
   description: string;
 }
@@ -23,6 +27,12 @@ const ManageCoursesPage: React.FC = () => {
   const [course, setCourse] = useState<Course | null>(null);
   const [units, setUnits] = useState<Unit[] | null>(null);
   const [editing, setIsEditing] = useState(false)
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [unitName, setUnitName] = useState<string>('');
+  const [unitDescription, setUnitDescription] = useState<string>('');
+  const [editingUnit, setEditintUnit] = useState<Unit | null>(null);
+  const swipeableRefs = useRef<{ [key: string]: Swipeable | null }>({});
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -56,7 +66,6 @@ const ManageCoursesPage: React.FC = () => {
       }
     };
 
-
     if (isEditing === '1') {
       setIsEditing(true)
     }
@@ -70,16 +79,58 @@ const ManageCoursesPage: React.FC = () => {
       <LoadingScreen />
     );
   }
-  const renderUnit = (unit: Unit) => {
+
+  const editCourse = () => {
+    router.push({ pathname: "/channelPages/createCourse", params: { id: id } });
+  }
+
+  const openUnitEditModal = (unit: Unit) => {
+    setEditintUnit(unit);
+    setUnitName(unit.name);
+    setUnitDescription(unit.description);
+    setModalVisible(true);
+  }
+
+  const renderUnit = ({ item, drag }: RenderItemParams<Unit>) => {
     return (
-      <View>
-        <Text>hi</Text>
-      </View>
+      <Swipeable
+        ref={ref => {
+          if (ref && item.key) {
+            swipeableRefs.current[item.key] = ref;
+          }
+        }}
+        renderRightActions={() => (
+          <View style={styles.swipeActionsContainer}>
+            <Pressable onPress={() => openUnitEditModal(item)} style={{ ...styles.swipeButton, backgroundColor: '#0D99FF' }}>
+              <Text style={{ color: 'white' }}>Edit</Text>
+            </Pressable>
+            <Pressable onPress={() => console.log('delete')} style={{ ...styles.swipeButton, backgroundColor: '#FF0D0D' }}>
+              <Text style={{ color: 'white' }}>Delete</Text>
+            </Pressable>
+          </View>
+        )}
+      >
+        <Pressable
+          style={styles.contentContainer}
+          onLongPress={() => {
+            drag();
+          }}
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={styles.contentTitle}>{item.name}</Text>
+
+            <Text style={styles.contentText}>{item.description}</Text>
+          </View>
+          <AntDesign name="menufold" size={20} color="white" style={{ marginLeft: 'auto' }} />
+        </Pressable>
+      </Swipeable>
     );
-  };
+  }
+
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <NestableScrollContainer contentContainerStyle={styles.container}>
+      <AntDesign name={'edit'} size={30} onPress={editCourse} />
       {isEditing &&
         <Text style={styles.courseName}>You are editing</Text>
       }
@@ -93,14 +144,24 @@ const ManageCoursesPage: React.FC = () => {
       <View>
         <Text style={styles.courseName}>Units</Text>
         {units ? (
-          units.map((unit) => renderUnit(unit))
+
+          <NestableDraggableFlatList
+            data={units}
+            renderItem={renderUnit}
+            keyExtractor={item => item.key}
+            onDragEnd={({ data }) => setUnits(data)}
+          />
         ) : (
           <Text style={styles.courseName}>No units. Edit this course to add units</Text>
         )}
       </View>
-    </ScrollView>
+    </NestableScrollContainer>
   );
 };
+
+const redirectToEdit = () => {
+
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -140,6 +201,33 @@ const styles = StyleSheet.create({
   courseDescription: {
     color: '#fff',
     fontSize: 16,
+  },
+  swipeActionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    width: '40%',
+    paddingBottom: '3%',
+  },
+  swipeButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '50%',
+  },
+  contentContainer: {
+    backgroundColor: "#333333",
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 10,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  contentTitle: {
+    fontWeight: 'bold',
+    color: 'white',
+    fontSize: 16,
+  },
+  contentText: {
+    color: 'white'
   },
 });
 

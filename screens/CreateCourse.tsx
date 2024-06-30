@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Pressable, Image, TextInput, Text, TouchableOpacity, Dimensions } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import firestore from '@react-native-firebase/firestore';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSession } from '@/context/ctx';
-import uploadImageToFirebase from '@/services/uploadImage';
+import { uploadImageToFirebase, deleteImageFromFirebase } from '@/services/uploadImage';
+import { getCourseData } from '@/services/getUserData';
 
 interface Course {
   key: string;
@@ -22,8 +23,27 @@ const defaultCourse: Course = {
 
 const CreateCourse: React.FC = () => {
   const [course, setCourse] = useState<Course>(defaultCourse);
+  const [editingURL, setEditingURL] = useState<string>('')
   const { user } = useSession();
+  const { id } = useLocalSearchParams();
+
   const router = useRouter();
+
+  useEffect(() => {
+    const fetchCourse = async () => {
+      if (typeof id === 'string') {
+        try {
+          const courseData = (await getCourseData(id)).data() as Course;
+          setCourse(courseData);
+          setEditingURL(courseData.picUrl);
+
+        } catch (error) {
+          console.error('Error fetching course: ', error);
+        }
+      }
+    };
+    fetchCourse();
+  }, [id]);
 
   const handleAddImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -53,7 +73,6 @@ const CreateCourse: React.FC = () => {
       const docId = courseRef.id;
 
       await courseRef.update({ key: docId });
-
       const currentCourses = (await firestore().collection('channels').doc(user?.uid).get()).data()?.courses;
       await firestore().collection('channels').doc(user?.uid).update({ courses: [...(currentCourses || []), docId] });
       router.push({ pathname: "/channelPages/manageCourse", params: { id: docId, isEditing: '1' } });
@@ -61,6 +80,18 @@ const CreateCourse: React.FC = () => {
       console.error('Error adding course: ', error);
     }
   };
+
+  const handleSave = async () => {
+    if (editingURL) {
+      deleteImageFromFirebase(editingURL);
+      if (course.picUrl) {
+        const uploadedImageUrl = await uploadImageToFirebase(course.picUrl, 'coursePics');
+        course.picUrl = uploadedImageUrl;
+      }
+    }
+    firestore().collection('fourses').doc(user?.uid).update(course);
+    router.push({ pathname: "/channelPages/manageCourse", params: { id: id, isEditing: '1' } });
+  }
 
   return (
     <View style={styles.container}>
@@ -93,9 +124,15 @@ const CreateCourse: React.FC = () => {
         value={course.description}
         onChangeText={(text) => setCourse({ ...course, description: text })}
       />
-      <TouchableOpacity style={styles.button} onPress={handleNext}>
-        <Text style={styles.buttonText}>Next</Text>
-      </TouchableOpacity>
+      {id ? (
+        <TouchableOpacity style={styles.button} onPress={handleSave}>
+          <Text style={styles.buttonText}>Save</Text>
+        </TouchableOpacity>
+      ) :
+        <TouchableOpacity style={styles.button} onPress={handleNext}>
+          <Text style={styles.buttonText}>Next</Text>
+        </TouchableOpacity>
+      }
     </View>
   );
 };

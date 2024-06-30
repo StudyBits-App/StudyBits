@@ -1,10 +1,10 @@
 import { useSession } from "@/context/ctx";
-import SignInScreen from "@/screens/SignIn";
-import { Stack } from "expo-router";
+import { Redirect, Stack } from "expo-router";
 import { Text } from "react-native";
 
 export default function AuthCheck() {
     const { user, isLoading } = useSession();
+
     if (isLoading)
         return <Text>Loading...</Text>
 
@@ -14,5 +14,4 @@ export default function AuthCheck() {
             <Stack.Screen name="+not-found" />
         </Stack>
     )
-    else return <SignInScreen />
 }
