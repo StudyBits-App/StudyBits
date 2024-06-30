@@ -21,8 +21,8 @@ export default function channelLayout() {
             <Stack.Screen
                 name="createCourse"
                 options={{
-                    title: 'Create a course',
-                    headerBackTitle: 'Channel'
+                    title: 'Course',
+                    headerBackTitle: 'Back'
                 }}
             />
             <Stack.Screen
