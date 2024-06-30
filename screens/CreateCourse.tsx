@@ -4,7 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 import firestore from '@react-native-firebase/firestore';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSession } from '@/context/ctx';
-import { uploadImageToFirebase, deleteImageFromFirebase } from '@/services/uploadImage';
+import { uploadImageToFirebase, deleteImageFromFirebase } from '@/services/handleImages';
 import { getCourseData } from '@/services/getUserData';
 
 interface Course {
@@ -82,14 +82,17 @@ const CreateCourse: React.FC = () => {
   };
 
   const handleSave = async () => {
-    if (editingURL) {
+    if (!(editingURL && editingURL === course.picUrl)) {
+      console.log('Here')
       deleteImageFromFirebase(editingURL);
       if (course.picUrl) {
         const uploadedImageUrl = await uploadImageToFirebase(course.picUrl, 'coursePics');
         course.picUrl = uploadedImageUrl;
       }
     }
-    firestore().collection('fourses').doc(user?.uid).update(course);
+    if(typeof id === 'string'){
+      firestore().collection('courses').doc(id).update(course);
+    }
     router.push({ pathname: "/channelPages/manageCourse", params: { id: id, isEditing: '1' } });
   }
 

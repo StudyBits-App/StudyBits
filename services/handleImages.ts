@@ -1,6 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
 import storage from '@react-native-firebase/storage';
-import firestore from '@react-native-firebase/firestore';
 
 
 const uploadImageToFirebase = async (uri: string, folder: string) => {
@@ -15,16 +14,21 @@ const uploadImageToFirebase = async (uri: string, folder: string) => {
     return downloadURL;
   };
 
-
-
-const deleteImageFromFirebase = async (imageUrl: string) => {
-  try {
-    const filePath = imageUrl.split('/').slice(-1)[0].split('?')[0];
-    await storage().ref(filePath).delete();
-  } catch (error) {
-    console.error('Error deleting image: ', error);
-  }
-};
+  const deleteImageFromFirebase = async (imageUrl: string) => {
+    try {
+      console.log(imageUrl);
+      const decodedUrl = decodeURIComponent(imageUrl);
+      const startIndex = decodedUrl.indexOf('/o/') + 3;
+      const endIndex = decodedUrl.indexOf('?');
+      const filePath = decodedUrl.substring(startIndex, endIndex);
+  
+      await storage().ref(filePath).delete();
+      console.log('Image deleted successfully');
+    } catch (error) {
+      console.error('Error deleting image: ', error);
+    }
+  };
+  
 
 
 export {uploadImageToFirebase, deleteImageFromFirebase}

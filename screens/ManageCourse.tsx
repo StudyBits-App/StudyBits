@@ -4,6 +4,7 @@ import { StyleSheet, Text, View, Image, Pressable, Modal, TextInput, Button, Tou
 import { useSession } from '@/context/ctx';
 import LoadingScreen from '@/screens/LoadingScreen';
 import { getCourseData, getUnitData } from '@/services/getUserData';
+import { deleteExistingUnits, saveUnit } from '@/services/handleUserData';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
 import { NestableDraggableFlatList, RenderItemParams, NestableScrollContainer } from 'react-native-draggable-flatlist';
 import { Swipeable } from 'react-native-gesture-handler';
@@ -25,8 +26,7 @@ interface Unit {
 const ManageCoursesPage: React.FC = () => {
   const { id } = useLocalSearchParams();
   const { isEditing } = useLocalSearchParams();
-  const { user } = useSession();
-
+  
   const [course, setCourse] = useState<Course | null>(null);
   const [units, setUnits] = useState<Unit[]>([]);
   
@@ -60,7 +60,7 @@ const ManageCoursesPage: React.FC = () => {
             if (!unitDocs.empty) {
               unitDocs.forEach((doc) => {
                 const unit = doc.data() as Unit;
-                unitData.push({ ...unit, key: doc.id });
+                unitData.push(unit);
               });
               setUnits(unitData);
             }
@@ -82,6 +82,19 @@ const ManageCoursesPage: React.FC = () => {
   if (!course) {
     return <LoadingScreen />;
   }
+
+  const handleSave = async () => {
+    if (typeof id === 'string' && units.length > 0) {
+      try {
+        await deleteExistingUnits(id);
+        const saveUnitPromises = units.map((unit) => saveUnit(id, unit));
+        await Promise.all(saveUnitPromises);
+        console.log('Units saved successfully!');
+      } catch (error) {
+        console.error('Error saving units: ', error);
+      }
+    }
+  };
 
   const editCourse = () => {
     router.push({ pathname: "/channelPages/createCourse", params: { id: id } });
@@ -131,6 +144,13 @@ const ManageCoursesPage: React.FC = () => {
     setUnits(prevUnits => prevUnits.filter(unit => unit.key !== key));
   };
 
+  const handleToggleEdit = () => {
+    units.forEach(unit => {
+      swipeableRefs.current[unit.key]?.close();
+    });
+    setIsEditing(!editing)
+  };
+
   const renderUnit = ({ item, drag }: RenderItemParams<Unit>) => {
     return (
       <Swipeable
@@ -139,6 +159,7 @@ const ManageCoursesPage: React.FC = () => {
             swipeableRefs.current[item.key] = ref;
           }
         }}
+        enabled = {editing}
         renderRightActions={() => (
           <View style={styles.swipeActionsContainer}>
             <Pressable onPress={() => openUnitEditModal(item)} style={{ ...styles.swipeButton, backgroundColor: '#0D99FF' }}>
@@ -150,12 +171,12 @@ const ManageCoursesPage: React.FC = () => {
           </View>
         )}
       >
-        <Pressable style={styles.contentContainer} onLongPress={drag}>
+        <Pressable style={styles.contentContainer} onLongPress={drag} disabled = {!editing}>
           <View style={{ flex: 1 }}>
             <Text style={styles.contentTitle}>{item.name}</Text>
             <Text style={styles.contentText}>{item.description}</Text>
           </View>
-          <AntDesign name="menufold" size={20} color="white" style={{ marginLeft: 'auto' }} />
+          {editing && <AntDesign name="menufold" size={20} color="white" style={{ marginLeft: 'auto' }} />}
         </Pressable>
       </Swipeable>
     );
@@ -172,13 +193,13 @@ const ManageCoursesPage: React.FC = () => {
                 style={styles.linearGradient}
             >
                 <View style={styles.headerContainer}>
-                    <AntDesign name={'edit'} size={25} color={'white'} onPress={() => setIsEditing(!editing)} />
-                    {editing && <Text style={styles.editingText}>You are editing</Text>}
+                    <AntDesign name={'edit'} size={25} color={'white'} onPress={handleToggleEdit} />
+                    {editing && <Text style={styles.editingText}>Editing</Text>}
                 </View>
             </LinearGradient>
         </View>
         <Pressable style={styles.courseCard} disabled={!editing} onPress={editCourse}>
-          <Image source={{ uri: course.picUrl || `https://robohash.org/${user?.uid}` }} style={styles.coursePic} />
+          {course.picUrl && <Image source={{ uri: course.picUrl }} style={styles.coursePic} />}
           <View style={styles.courseInfoBox}>
             <Text style={styles.courseName}>{course.name}</Text>
             <Text style={styles.courseDescription}>{course.description}</Text>
@@ -187,7 +208,7 @@ const ManageCoursesPage: React.FC = () => {
     
         <View>
           <View style={styles.unitHeaderContainer}>
-            <Text style={styles.unitText}>Units</Text>
+            <Text style={styles.unitHeaderText}>Units</Text>
             {editing &&
             <Pressable onPress={() => setModalVisible(true)}>
                 <Ionicons name="add-circle" size={40} color={'#3B9EBF'} />
@@ -204,11 +225,12 @@ const ManageCoursesPage: React.FC = () => {
                     />
                 </View>
             ) : (
-                <Text style={styles.courseName}>No units</Text>
+                <Text style={styles.courseDescription}>No units</Text>
             )}
-            <Pressable style={styles.button}>
+            {editing &&<Pressable style={styles.button} onPress={handleSave}>
                 <Text>Save Units</Text>
             </Pressable>
+            }
         </View>
     
         <Modal
@@ -328,11 +350,11 @@ const styles = StyleSheet.create({
         backgroundColor: '#2E2E2E',
         padding: 10,
     } ,
-    unitText: {
+    unitHeaderText: {
         flex: 1,
         color: "#FFFFFF",
-        fontSize: 20,
-        fontWeight: "bold"
+        fontSize: 25,
+        fontWeight: "bold",
     },
     unitHeaderContainer: {
         marginTop: 20,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, TextInput, Button, Image, StyleSheet, Alert, TouchableOpacity, Text, useColorScheme } from 'react-native';
-import uploadImageToFirebase from '@/services/uploadImage';
+import { uploadImageToFirebase } from '@/services/handleImages';
 import * as ImagePicker from 'expo-image-picker';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import firestore from '@react-native-firebase/firestore';

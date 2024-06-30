@@ -113,11 +113,8 @@ const UserChannelPage = () => {
       >
 
         <Pressable style={styles.course}>
-          <Image
-            source={{ uri: course.picUrl || `https://robohash.org/${user?.uid}` }}
-            style={styles.coursePic}
-          />
-          <View style={styles.courseInfoBox}>
+          {course.picUrl && <Image source={{ uri: course.picUrl }} style={styles.coursePic}/>}
+          <View style={[styles.courseInfoBox, course.picUrl ? {marginLeft: '5%'}: null]}>
             <Text style={styles.courseName}>
               {course.name || "Default Course Name"}
             </Text>
@@ -135,7 +132,7 @@ const UserChannelPage = () => {
       <Link asChild href="/channelPages/createCourse">
         <Pressable style={styles.course}>
           <Ionicons name="add-circle" size={70} color={'#3B9EBF'} />
-          <View style={styles.courseInfoBox}>
+          <View style={{...styles.courseInfoBox, marginLeft: '3%'}}>
             <Text style={styles.courseName}>
               Add a Course
             </Text>
@@ -182,14 +179,11 @@ const styles = StyleSheet.create({
   course: {
     borderRadius: 10,
     marginTop: '2%',
-    paddingVertical: '5%',
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
     borderColor: 'white',
     borderWidth: 1,
-    backgroundColor: '#2E2E2E'
+    backgroundColor: '#2E2E2E',
+    padding: 20,
   },
   profileSection: {
     borderBottomRightRadius: 10,
@@ -225,8 +219,8 @@ const styles = StyleSheet.create({
     color: '#fff'
   },
   courseInfoBox: {
-    marginLeft: '2%',
-    width: '75%'
+    width: '75%',
+    justifyContent:'center'
   },
   coursePic: {
     width: 70,
