@@ -4,36 +4,27 @@ import { LinearGradient } from "expo-linear-gradient";
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import auth from '@react-native-firebase/auth';
 import { Link, Redirect, router } from "expo-router";
+import RNDateTimePicker from '@react-native-community/datetimepicker';
 import { useSession } from "@/context/ctx";
 
 GoogleSignin.configure({
     webClientId: '1098397225551-4fo48u8pni4nct9f1msj5n81nes8b3oe.apps.googleusercontent.com'
 });
 
-export default function SignInScreen() {
+export default function SignUpScreen() {
     const [email, onChangeEmail] = React.useState('');
     const [password, onChangePassword] = React.useState('');
+    const [confirmPassword, onChangeConfirmPassword] = React.useState('');
     const [enteredUsername, setEnteredUsername] = React.useState(false);
     const [authError, setAuthError] = React.useState(false);
+    const [birthday, setBirthday] = React.useState<Date | undefined>(new Date())
     const { user, isLoading } = useSession();
 
-    const signInWithEmail = async () => {
+    const signUp = async () => {
         setEnteredUsername(true);
         if (!enteredUsername) return;
         if (email === '' || password === '') return;
-        return auth().signInWithEmailAndPassword(email, password).catch(() => { setAuthError(true) });
-    }
-
-    const signInWithGoogle = async () => {
-        await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-        // Get the users ID token
-        const { idToken } = await GoogleSignin.signIn();
-
-        // Create a Google credential with the token
-        const googleCredential = auth.GoogleAuthProvider.credential(idToken);
-
-        // Sign-in the user with the credential
-        return auth().signInWithCredential(googleCredential);
+        return auth().createUserWithEmailAndPassword(email, password);
     }
 
     return (
@@ -48,48 +39,50 @@ export default function SignInScreen() {
                 <Text style={styles.headText}>Welcome</Text>
                 <Text style={styles.subText}>Get ready to be an intellectual</Text>
                 {authError && <Text style={styles.errorText}>Invalid username or password.</Text>}
-                <TextInput
-                    style={[styles.input, { marginBottom: 0 }]}
-                    onChangeText={onChangeEmail}
-                    value={email}
-                    placeholder="email@domain.com"
-                    placeholderTextColor={'#868686'}
-                />
-                {enteredUsername && <TextInput
-                    style={styles.input}
-                    onChangeText={onChangePassword}
-                    secureTextEntry
-                    value={password}
-                    placeholder="mysupersafepassword123"
-                    placeholderTextColor={'#868686'}
-                />}
-                <Pressable
-                    style={styles.button}
-                    onPress={signInWithEmail}>
-                    <Text style={styles.signuptext}>Sign in with email</Text>
-                </Pressable>
-
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <View
-                        style={styles.divider}
+                <View style={styles.labelContainer}>
+                    <Text style={styles.label}>Email</Text>
+                    <TextInput
+                        style={[styles.input, { marginBottom: 0 }]}
+                        onChangeText={onChangeEmail}
+                        value={email}
+                        placeholder="email@domain.com"
+                        placeholderTextColor={'#868686'}
                     />
-                    <View>
-                        <Text style={styles.text}>or continue with</Text>
-                    </View>
-                    <View
-                        style={styles.divider}
+                </View>
+                <View style={styles.labelContainer}>
+                    <Text style={styles.label}>Password</Text>
+                    <TextInput
+                        style={styles.input}
+                        onChangeText={onChangePassword}
+                        secureTextEntry
+                        value={password}
+                        placeholder="mysupersafepassword123"
+                        placeholderTextColor={'#868686'}
                     />
+                </View>
+                <View style={styles.labelContainer}>
+                    <Text style={styles.label}>Confirm Password</Text>
+                    <TextInput
+                        style={styles.input}
+                        onChangeText={onChangeConfirmPassword}
+                        secureTextEntry
+                        value={confirmPassword}
+                        placeholder="mysupersafepassword123"
+                        placeholderTextColor={'#868686'}
+                    />
+                </View>
+                <View style={styles.labelContainer}>
+                    <Text style={styles.label}>Birthday</Text>
+                    <RNDateTimePicker value={birthday} onChange={(event, date) => setBirthday(date)} />
                 </View>
                 <Pressable
                     style={styles.button}
-                    onPress={signInWithGoogle}
-                >
-                    <Image source={require('@/assets/images/google-logo.png')} style={styles.signInImage}></Image>
-                    <Text style={styles.signuptext}>Google</Text>
+                    onPress={signUp}>
+                    <Text style={styles.signuptext}>Sign Up</Text>
                 </Pressable>
                 <View style={{ flexDirection: "row", justifyContent: 'center', alignItems: 'center' }}>
-                    <Text style={[styles.text, styles.policies]}>Don't have an account?</Text>
-                    <Link href={'authentication/signUp'} style={[styles.text, styles.link]}>Sign Up</Link>
+                    <Text style={[styles.text, styles.policies]}>Already have an account?</Text>
+                    <Link href={'authentication/signIn'} style={[styles.text, styles.link]}>Sign In</Link>
                 </View>
             </View>
         </SafeAreaView >
@@ -97,6 +90,19 @@ export default function SignInScreen() {
 }
 
 const styles = StyleSheet.create({
+    labelContainer: {
+        width: '75%',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    label: {
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: 15,
+        marginBottom: 0,
+        alignSelf: 'flex-start',
+        marginTop: '3%'
+    },
     link: {
         fontWeight: 'bold'
     },
@@ -148,15 +154,15 @@ const styles = StyleSheet.create({
         color: 'white',
         alignItems: "center",
         borderRadius: 5,
-        width: '75%',
+        width: '100%',
         flexDirection: 'row',
         justifyContent: 'center',
-        paddingVertical: 10,
+        paddingVertical: '3%',
         paddingHorizontal: '3%',
         borderColor: 'white',
         borderStyle: 'solid',
         borderWidth: 1,
-        marginTop: '5%'
+        marginTop: '2%'
     },
     background: {
         alignItems: 'center',
