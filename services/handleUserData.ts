@@ -18,14 +18,18 @@ const deleteExistingUnits = async (courseId: string) => {
     }
 };
 
-const saveUnit = async (courseId: string, unit: Unit) => {
-    try {
-      const unitsCollectionRef = firestore().collection('courses').doc(courseId).collection('units');
-      await unitsCollectionRef.add(unit);
-    } catch (error) {
-      console.error('Error saving unit: ', error);
-      throw error;
-    }
-  };
+const saveUnit = async (courseId: string, unit: Unit): Promise<Unit> => {
+  try {
+    const unitsCollectionRef = firestore().collection('courses').doc(courseId).collection('units');
+    const docRef = unitsCollectionRef.doc(); 
+    const unitWithKey = { ...unit, key: docRef.id }; 
+    await docRef.set(unitWithKey);
+    return unitWithKey;
+  } catch (error) {
+    console.error('Error saving unit: ', error);
+    throw error;
+  }
+};
+
 export {deleteExistingUnits, saveUnit}
 

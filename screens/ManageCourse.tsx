@@ -9,6 +9,7 @@ import { Swipeable } from 'react-native-gesture-handler';
 import { v4 as uuidv4 } from 'uuid';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
+import { useToast } from "react-native-toast-notifications";
 
 interface Course {
   picUrl: string;
@@ -23,8 +24,7 @@ interface Unit {
 }
 
 const ManageCoursesPage: React.FC = () => {
-  const { id } = useLocalSearchParams();
-  const { isEditing } = useLocalSearchParams();
+  const { id, isEditing} = useLocalSearchParams();
   const[errorVisable, setErrorVisable] = useState(false)
 
   const [course, setCourse] = useState<Course | null>(null);
@@ -40,11 +40,12 @@ const ManageCoursesPage: React.FC = () => {
   const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
   
   const swipeableRefs = useRef<{ [key: string]: Swipeable | null }>({});
+  const toast = useToast();
 
   const editingAnimation = useRef(new Animated.Value(-100)).current; 
   const editingOpacity = useRef(new Animated.Value(0)).current; 
-  const warningAnimation = useRef(new Animated.Value(0)).current; 
-  const warningOpacity = useRef(new Animated.Value(0)).current; 
+  const iconAnimation = useRef(new Animated.Value(0)).current; 
+  const iconOpacity = useRef(new Animated.Value(0)).current; 
   
   useEffect(() => {
     const fetchCourse = async () => {
@@ -124,13 +125,13 @@ const ManageCoursesPage: React.FC = () => {
   useEffect(() => {
     if (unsavedChanges) {
       Animated.parallel([
-        Animated.timing(warningAnimation, {
+        Animated.timing(iconAnimation, {
           toValue: 1, 
           duration: 500,
           useNativeDriver: true,
           easing: Easing.out(Easing.ease),
         }),
-        Animated.timing(warningOpacity, {
+        Animated.timing(iconOpacity, {
           toValue: 1,
           duration: 500,
           useNativeDriver: true,
@@ -139,20 +140,20 @@ const ManageCoursesPage: React.FC = () => {
       ]).start();
     } else {
       Animated.parallel([
-        Animated.timing(warningAnimation, {
+        Animated.timing(iconAnimation, {
           toValue: 0, 
           duration: 500,
           useNativeDriver: true,
           easing: Easing.in(Easing.ease),
         }),
-        Animated.timing(warningOpacity, {
+        Animated.timing(iconOpacity, {
           toValue: 0, 
           duration: 500,
           useNativeDriver: true,
           easing: Easing.in(Easing.ease),
         }),
       ]).start();
-      setErrorVisable(false)
+      setErrorVisable(false);
     }
   }, [unsavedChanges]);
   
@@ -169,8 +170,9 @@ const ManageCoursesPage: React.FC = () => {
       try {
         await deleteExistingUnits(id);
         const saveUnitPromises = units.map((unit) => saveUnit(id, unit));
-        await Promise.all(saveUnitPromises);
-        setFirebaseUnits(units);
+        const savedUnits = await Promise.all(saveUnitPromises);
+        setFirebaseUnits(savedUnits);
+        setUnits(savedUnits);
         console.log('Units saved successfully!');
       } catch (error) {
         console.error('Error saving units: ', error);
@@ -178,9 +180,22 @@ const ManageCoursesPage: React.FC = () => {
     }
   };
 
+  const unsavedChangesToast = () => {
+    toast.show("Please save your changes before performing this action", {
+      type: "custom",
+      placement: 'bottom',
+      duration: 4000,
+      animationType: "slide-in",
+    });
+  }
+
   const editCourse = () => {
     router.push({ pathname: "/channelPages/createCourse", params: { id: id } });
   };
+
+  const createQuestionForUnit = (unit:Unit) => {
+    router.push({ pathname: "/question", params: { courseId: id, unitId: unit.key} });
+  }
 
   const openUnitEditModal = (unit: Unit) => {
     setEditingUnit(unit);
@@ -232,11 +247,11 @@ const ManageCoursesPage: React.FC = () => {
     });
     if(editing){
       if(unsavedChanges){
-        setErrorVisable(true)
+        setErrorVisable(true);
       }
     }
     else{
-      setErrorVisable(false)
+      setErrorVisable(false);
     }
     setIsEditing(!editing);
   };
@@ -276,11 +291,20 @@ const ManageCoursesPage: React.FC = () => {
         <Pressable
           style={[
             styles.contentContainer,
+            !editing && styles.viewUnits,
+            (editing && !(hasExistingChanges || hasExistingChanges)) && styles.editingUnits,
             editing && hasNewChanges ? styles.unsavedUnit : null,
             editing && hasExistingChanges ? styles.editedUnit : null,
           ]}
-          onLongPress={drag}
-          disabled={!editing}
+          onLongPress={editing ? drag: null}
+          onPress={() => {
+            if(!editing && unsavedChanges){
+              unsavedChangesToast()
+            }
+            else if(!editing){
+              createQuestionForUnit(item)
+            }
+          }}
         >
           <View style={{ flex: 1 }}>
             <Text style={styles.contentTitle}>{item.name}</Text>
@@ -296,19 +320,19 @@ const ManageCoursesPage: React.FC = () => {
   return (
     <View style={{ flex: 1 }}>
       <NestableScrollContainer contentContainerStyle={styles.container}>
-        <View style={styles.headerWrapper}>
+        <View style={styles.topBar}>
           <LinearGradient
             colors={['#bb52aa', '#63ff85']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.linearGradient}
           >
-            <View style={styles.headerContainer}>
+            <View style={styles.topBarContainer}>
               <AntDesign name={'edit'} size={25} color={'white'} onPress={handleToggleEdit} />
               <Animated.View style={{ transform: [{ translateX: editingAnimation }], opacity: editingOpacity }}>
                 <Text style={styles.editingText}>Editing</Text>
               </Animated.View>
-              <Animated.View style={{ opacity: warningOpacity, transform: [{ scale: warningAnimation }] }}>
+              <Animated.View style={{ opacity: iconOpacity, transform: [{ scale: iconAnimation }] }}>
                 <MaterialIcons name="warning" size={25} color="yellow" />
               </Animated.View>
             </View>
@@ -318,16 +342,10 @@ const ManageCoursesPage: React.FC = () => {
         {errorVisable &&
           <View style={styles.errorContainer}>
             <Text style = {styles.errorText}>You have unsaved changes. Go back in editing mode and save them!</Text>
-              <Pressable onPress={()=> setErrorVisable(false)} style={styles.iconContainer}>
+              <Pressable onPress={()=> setErrorVisable(false)} style={styles.errorIconContainer}>
                 <Ionicons name="close-circle" size={20} color="#888" />
               </Pressable>
           </View>
-        }
-
-        {(editing && unsavedChanges) &&
-          <Pressable style={styles.revertChangesContainer} onPress={() => setUnits(firebaseUnits)}>
-            <Text style = {styles.revertChangesText}>Revert your changes</Text>
-          </Pressable>
         }
         
         <Pressable style={styles.courseCard} disabled={!editing} onPress={editCourse}>
@@ -341,12 +359,19 @@ const ManageCoursesPage: React.FC = () => {
         <View>
           <View style={styles.unitHeaderContainer}>
             <Text style={styles.unitHeaderText}>Units</Text>
-            {editing && (
-              <Pressable onPress={() => setModalVisible(true)}>
-                <Ionicons name="add-circle" size={40} color={'#3B9EBF'} />
-              </Pressable>
-            )}
-          </View>
+              {editing && (
+                <Animated.View style={{ opacity: iconOpacity, transform: [{ scale: iconAnimation }] }}>
+                  <Pressable onPress={() => setUnits(firebaseUnits)} style={styles.resetIconSpace}>
+                    <MaterialIcons name="refresh" size={30} color="#ADD8E6" />
+                  </Pressable>
+                </Animated.View>
+              )}
+              {editing && (
+                <Pressable onPress={() => setModalVisible(true)}>
+                  <Ionicons name="add-circle" size={40} color={'#3B9EBF'} />
+                </Pressable>
+              )}
+        </View>
           {units.length > 0 ? (
             <View style={styles.unitsContainer}>
               <NestableDraggableFlatList
@@ -360,12 +385,11 @@ const ManageCoursesPage: React.FC = () => {
             <Text style={styles.courseDescription}>No units</Text>
           )}
           {editing && (
-            <Pressable style={styles.button} onPress={handleSave}>
+            <Pressable style={styles.saveButton} onPress={handleSave}>
               <Text>Save Units</Text>
             </Pressable>
           )}
         </View>
-
         <Modal
           animationType="slide"
           transparent={true}
@@ -411,15 +435,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#1E1E1E',
     padding: 20,
   },
-  headerWrapper: {
-    marginTop: 15,
-    marginBottom: 15,
+  topBar: {
+    marginVertical:15
   },
   linearGradient: {
     borderRadius: 15,
     padding: 2,
   },
-  headerContainer: {
+  topBarContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -445,19 +468,7 @@ const styles = StyleSheet.create({
     color: '#EED202',
     fontSize: 16,
   },
-  revertChangesContainer: {
-    backgroundColor: 'transparent',
-    borderRadius: 25,
-    padding: 15,
-    borderColor: '#ADD8E6',
-    borderWidth: 1,
-    marginVertical: 20,
-  },
-  revertChangesText: {
-    color: '#ADD8E6',
-    fontSize: 16,
-  },
-  iconContainer: {
+  errorIconContainer: {
     marginLeft: 10,
   },
   courseCard: {
@@ -510,17 +521,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#2E2E2E',
     padding: 10,
   },
+  unitHeaderContainer: {
+    marginTop: 20,
+    marginBottom: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   unitHeaderText: {
     flex: 1,
     color: "#FFFFFF",
     fontSize: 25,
     fontWeight: "bold",
   },
-  unitHeaderContainer: {
-    marginTop: 20,
-    marginBottom: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
+  resetIconSpace: {
+    marginRight: 30,
   },
   unsavedUnit: {
     borderColor: 'green', 
@@ -529,6 +543,14 @@ const styles = StyleSheet.create({
   editedUnit: {
     borderColor: '#EED202', 
     borderWidth: 2,
+  },
+  editingUnits: {
+    borderColor: 'grey', 
+    borderWidth: 1,
+  },
+  viewUnits: {
+    borderBottomColor: 'white',
+    borderBottomWidth: 1,  
   },
   swipeActionsContainer: {
     flexDirection: 'row',
@@ -566,7 +588,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 15,
   },
-  button: {
+  saveButton: {
     marginTop: 30,
     backgroundColor: "#ffffff",
     padding: '3%',
