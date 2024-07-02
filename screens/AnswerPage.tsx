@@ -2,30 +2,11 @@ import React, { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, View, ActivityIndicator, Image, Pressable, Modal, Button } from "react-native";
 import firestore from "@react-native-firebase/firestore";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-interface Hint {
-    key: string;
-    title: string;
-    content: string;
-    image: string;
-}
-
-interface Answer {
-    key: string;
-    content: string;
-    answer: boolean;
-    isSelected: boolean;
-}
-
-interface QuestionInfo {
-    question: string;
-    hints: Hint[];
-    answers: Answer[];
-}
+import { Hint, QuestionAnswer, QuestionInfo } from "@/utils/interfaces";
 
 const AnswerPage: React.FC = () => {
     const [hints, setHints] = useState<Hint[]>([]);
-    const [answerChoices, setAnswerChoices] = useState<Answer[]>([]);
+    const [answerChoices, setAnswerChoices] = useState<QuestionAnswer[]>([]);
 
     const [question, setQuestion] = useState<string>();
     const [questionInfo, setQuestionInfo] = useState<QuestionInfo | null>(null);
@@ -68,7 +49,7 @@ const AnswerPage: React.FC = () => {
         }
     }, [questionInfo]);
 
-    const toggleSelectedAnswer = (inputAnswer: Answer) => {
+    const toggleSelectedAnswer = (inputAnswer: QuestionAnswer) => {
         setAnswerChoices(prevAnswers =>
             prevAnswers.map(answer =>
                 answer.key === inputAnswer.key ? { ...answer, isSelected: !inputAnswer.isSelected } : answer
@@ -123,7 +104,7 @@ const AnswerPage: React.FC = () => {
         )
     };
 
-    const renderAnswer = ({ item }: { item: Answer }) => (
+    const renderAnswer = ({ item }: { item: QuestionAnswer }) => (
         <Pressable key={item.key} disabled={answersSubmitted} onPress={() => toggleSelectedAnswer(item)}>
             <View style={[
                 styles.answerContainer,

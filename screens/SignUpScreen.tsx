@@ -3,7 +3,7 @@ import { SafeAreaView, View, Text, StyleSheet, Pressable, TextInput, Image } fro
 import { LinearGradient } from "expo-linear-gradient";
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import auth from '@react-native-firebase/auth';
-import { Link, Redirect, router } from "expo-router";
+import { Link, Redirect} from "expo-router";
 import RNDateTimePicker from '@react-native-community/datetimepicker';
 import { useSession } from "@/context/ctx";
 
@@ -16,9 +16,8 @@ export default function SignUpScreen() {
     const [password, onChangePassword] = React.useState('');
     const [confirmPassword, onChangeConfirmPassword] = React.useState('');
     const [enteredUsername, setEnteredUsername] = React.useState(false);
-    const [authError, setAuthError] = React.useState(false);
-    const [birthday, setBirthday] = React.useState<Date | undefined>(new Date())
-    const { user, isLoading } = useSession();
+    const [birthday, setBirthday] = React.useState<Date>(new Date());
+    const { user } = useSession();
 
     const signUp = async () => {
         setEnteredUsername(true);
@@ -38,7 +37,6 @@ export default function SignUpScreen() {
                 <Text style={styles.titleText}>StudyBits</Text>
                 <Text style={styles.headText}>Welcome</Text>
                 <Text style={styles.subText}>Get ready to be an intellectual</Text>
-                {authError && <Text style={styles.errorText}>Invalid username or password.</Text>}
                 <View style={styles.labelContainer}>
                     <Text style={styles.label}>Email</Text>
                     <TextInput
@@ -73,7 +71,7 @@ export default function SignUpScreen() {
                 </View>
                 <View style={styles.labelContainer}>
                     <Text style={styles.label}>Birthday</Text>
-                    <RNDateTimePicker value={birthday} onChange={(event, date) => setBirthday(date)} />
+                    <RNDateTimePicker value={birthday || new Date()} onChange={(event, date) => setBirthday(date || new Date())} />
                 </View>
                 <Pressable
                     style={styles.button}

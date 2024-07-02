@@ -6,20 +6,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSession } from '@/context/ctx';
 import { uploadImageToFirebase, deleteImageFromFirebase } from '@/services/handleImages';
 import { getCourseData } from '@/services/getUserData';
-
-interface Course {
-  key: string;
-  picUrl: string;
-  name: string;
-  description: string;
-}
-
-const defaultCourse: Course = {
-  key: '',
-  picUrl: '',
-  name: '',
-  description: '',
-};
+import { Course, defaultCourse } from '@/utils/interfaces';
 
 const CreateCourse: React.FC = () => {
   const [course, setCourse] = useState<Course>(defaultCourse);

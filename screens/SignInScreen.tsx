@@ -3,7 +3,7 @@ import { SafeAreaView, View, Text, StyleSheet, Pressable, TextInput, Image } fro
 import { LinearGradient } from "expo-linear-gradient";
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import auth from '@react-native-firebase/auth';
-import { Link, Redirect, router } from "expo-router";
+import { Link, Redirect } from "expo-router";
 import { useSession } from "@/context/ctx";
 
 GoogleSignin.configure({

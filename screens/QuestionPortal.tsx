@@ -21,20 +21,9 @@ import { NestableDraggableFlatList, NestableScrollContainer, RenderItemParams } 
 import { Swipeable } from "react-native-gesture-handler";
 import { AntDesign, FontAwesome, Ionicons } from "@expo/vector-icons";
 import { uploadImageToFirebase } from "@/services/handleImages";
+import { trimText } from "@/utils/utils";
 import firestore from '@react-native-firebase/firestore';
-
-interface Hint {
-    key: string;
-    title: string;
-    content: string;
-    image: string;
-}
-
-interface Answer {
-    key: string;
-    content: string,
-    answer: boolean,
-}
+import { Answer, Hint } from "@/utils/interfaces";
 
 const QuestionPortal: React.FC = () => {
     const [question, setQuestion] = useState<string>('');
@@ -149,19 +138,7 @@ const QuestionPortal: React.FC = () => {
             setHintModalError("Missing information! Additional info must have a title and content or an image.")
             return
         }
-        if (hintModalImage && editingHint) {
-            setHints(prevHints =>
-                prevHints.map(hint =>
-                    hint.key === editingHint.key ? {
-                        ...hint,
-                        content: text,
-                        title: title,
-                        image: hintModalImage
-                    } : hint
-                )
-            );
-        }
-        else if (text && editingHint && title) {
+        if ((hintModalImage && editingHint) || (text && editingHint && title)) {
             setHints(prevHints =>
                 prevHints.map(hint =>
                     hint.key === editingHint.key ? {
@@ -212,19 +189,6 @@ const QuestionPortal: React.FC = () => {
         );
         swipeableRefs.current[answerKey]?.close();
     }
-
-    const trimText = (text: string, maxTitleLength: number): string => {
-        if (text.length <= maxTitleLength) {
-            return text;
-        }
-        let trimmedText = text.substring(0, maxTitleLength - 2);
-        const lastSpaceIndex = trimmedText.lastIndexOf(' ');
-
-        if (lastSpaceIndex !== -1) {
-            trimmedText = trimmedText.substring(0, lastSpaceIndex);
-        }
-        return trimmedText + '...';
-    };
 
     const renderHint = ({ item, drag }: RenderItemParams<Hint>) => {
         const truncatedTitle = trimText(item.title, 10);

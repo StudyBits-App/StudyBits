@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet, Text, View, Image, Pressable, Modal, TextInput, Button, TouchableWithoutFeedback, Keyboard, Animated, Easing } from 'react-native';
+import { StyleSheet, Text, View, Pressable, Modal, TextInput, Button, TouchableWithoutFeedback, Keyboard, Animated, Easing } from 'react-native';
 import LoadingScreen from '@/screens/LoadingScreen';
-import { getCourseData, getUnitData } from '@/services/getUserData';
+import { getUnitData } from '@/services/getUserData';
 import { deleteExistingUnits, saveUnit } from '@/services/handleUserData';
 import { AntDesign, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { NestableDraggableFlatList, RenderItemParams, NestableScrollContainer } from 'react-native-draggable-flatlist';
@@ -10,24 +10,13 @@ import { v4 as uuidv4 } from 'uuid';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useToast } from "react-native-toast-notifications";
-
-interface Course {
-  picUrl: string;
-  name: string;
-  description: string;
-}
-
-interface Unit {
-  key: string;
-  name: string;
-  description: string;
-}
+import { Unit } from '@/utils/interfaces';
+import CourseCard from './CourseCard';
 
 const ManageCoursesPage: React.FC = () => {
   const { id, isEditing} = useLocalSearchParams();
   const[errorVisable, setErrorVisable] = useState(false)
 
-  const [course, setCourse] = useState<Course | null>(null);
   const [units, setUnits] = useState<Unit[]>([]);
   const [firebaseUnits, setFirebaseUnits] = useState<Unit[]>([]);
   
@@ -48,16 +37,6 @@ const ManageCoursesPage: React.FC = () => {
   const iconOpacity = useRef(new Animated.Value(0)).current; 
   
   useEffect(() => {
-    const fetchCourse = async () => {
-      if (typeof id === 'string') {
-        try {
-          const courseData = (await getCourseData(id)).data() as Course;
-          setCourse(courseData);
-        } catch (error) {
-          console.error('Error fetching course: ', error);
-        }
-      }
-    };
 
     const fetchUnits = async () => {
       try {
@@ -84,7 +63,6 @@ const ManageCoursesPage: React.FC = () => {
       setIsEditing(true);
     }
 
-    fetchCourse();
     fetchUnits();
   }, [id]);
 
@@ -161,7 +139,7 @@ const ManageCoursesPage: React.FC = () => {
     setUnsavedChanges(JSON.stringify(units) !== JSON.stringify(firebaseUnits));
   }, [units, firebaseUnits]);
 
-  if (!course) {
+  if (!units) {
     return <LoadingScreen />;
   }
 
@@ -188,10 +166,6 @@ const ManageCoursesPage: React.FC = () => {
       animationType: "slide-in",
     });
   }
-
-  const editCourse = () => {
-    router.push({ pathname: "/channelPages/createCourse", params: { id: id } });
-  };
 
   const createQuestionForUnit = (unit:Unit) => {
     router.push({ pathname: "/question", params: { courseId: id, unitId: unit.key} });
@@ -308,7 +282,7 @@ const ManageCoursesPage: React.FC = () => {
         >
           <View style={{ flex: 1 }}>
             <Text style={styles.contentTitle}>{item.name}</Text>
-            <Text style={styles.contentText}>{item.description}</Text>
+            <Text style={styles.subText}>{item.description}</Text>
           </View>
           {editing && <AntDesign name="menufold" size={20} color="white" style={{ marginLeft: 'auto' }} />}
         </Pressable>
@@ -330,7 +304,7 @@ const ManageCoursesPage: React.FC = () => {
             <View style={styles.topBarContainer}>
               <AntDesign name={'edit'} size={25} color={'white'} onPress={handleToggleEdit} />
               <Animated.View style={{ transform: [{ translateX: editingAnimation }], opacity: editingOpacity }}>
-                <Text style={styles.editingText}>Editing</Text>
+                <Text style={styles.subText}>Editing</Text>
               </Animated.View>
               <Animated.View style={{ opacity: iconOpacity, transform: [{ scale: iconAnimation }] }}>
                 <MaterialIcons name="warning" size={25} color="yellow" />
@@ -347,14 +321,8 @@ const ManageCoursesPage: React.FC = () => {
               </Pressable>
           </View>
         }
-        
-        <Pressable style={styles.courseCard} disabled={!editing} onPress={editCourse}>
-          {course.picUrl && <Image source={{ uri: course.picUrl }} style={styles.coursePic} />}
-          <View style={styles.courseInfoBox}>
-            <Text style={styles.courseName}>{course.name}</Text>
-            <Text style={styles.courseDescription}>{course.description}</Text>
-          </View>
-        </Pressable>
+
+        <CourseCard id={id as string} editing={editing}/>
 
         <View>
           <View style={styles.unitHeaderContainer}>
@@ -382,7 +350,7 @@ const ManageCoursesPage: React.FC = () => {
               />
             </View>
           ) : (
-            <Text style={styles.courseDescription}>No units</Text>
+            <Text style={styles.subText}>No units</Text>
           )}
           {editing && (
             <Pressable style={styles.saveButton} onPress={handleSave}>
@@ -450,10 +418,6 @@ const styles = StyleSheet.create({
     borderRadius: 13,
     padding: 10,
   },
-  editingText: {
-    color: 'white',
-    fontSize: 16,
-  },
   errorContainer: {
     flexDirection: 'row',
     backgroundColor: 'transparent',
@@ -471,32 +435,7 @@ const styles = StyleSheet.create({
   errorIconContainer: {
     marginLeft: 10,
   },
-  courseCard: {
-    borderRadius: 10,
-    marginTop: '2%',
-    flexDirection: 'row',
-    borderColor: 'white',
-    borderWidth: 1,
-    backgroundColor: '#2E2E2E',
-    padding: 20,
-  },
-  coursePic: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginRight: 20,
-    borderColor: 'white',
-    borderWidth: 1,
-  },
-  courseInfoBox: {
-    justifyContent: 'center',
-  },
-  courseName: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  courseDescription: {
+  subText: {
     fontSize: 16,
     color: 'white',
   },
@@ -510,10 +449,6 @@ const styles = StyleSheet.create({
   },
   contentTitle: {
     fontSize: 20,
-    color: 'white',
-  },
-  contentText: {
-    fontSize: 16,
     color: 'white',
   },
   unitsContainer: {

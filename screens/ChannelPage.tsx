@@ -5,27 +5,7 @@ import { getChannelData, getCourseData } from '@/services/getUserData';
 import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
 import LoadingScreen from './LoadingScreen';
-
-interface Channel {
-  courses: string[];
-  bannerURL: string;
-  profilePicURL: string;
-  displayName: string;
-}
-
-const defaultChannel: Channel = {
-  courses: [],
-  bannerURL: '',
-  profilePicURL: '',
-  displayName: '',
-};
-
-interface Course {
-  key: string;
-  picUrl: string;
-  name: string;
-  description: string;
-}
+import { Channel, Course, defaultChannel } from '@/utils/interfaces';
 
 const UserChannelPage = () => {
   const { user, isLoading } = useSession();
