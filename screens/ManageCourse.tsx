@@ -359,7 +359,10 @@ const ManageCoursesPage: React.FC = () => {
                 data={units}
                 renderItem={renderUnit}
                 keyExtractor={item => item.key}
-                onDragEnd={({ data }) => setUnits(data)}
+                onDragEnd={({ data }) => {
+                  const updatedData = data.map((unit, index) => ({ ...unit, order: index }));
+                  setUnits(updatedData);
+                }}
               />
             </View>
           ) : (
