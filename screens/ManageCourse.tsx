@@ -49,8 +49,9 @@ const ManageCoursesPage: React.FC = () => {
                 const unit = doc.data() as Unit;
                 unitData.push(unit);
               });
-              setUnits(unitData);
-              setFirebaseUnits(unitData);
+              const sortedUnits = unitData.sort((a, b) => a.order - b.order);
+              setUnits(sortedUnits);
+              setFirebaseUnits(sortedUnits);
             }
           }
         }
@@ -183,6 +184,7 @@ const ManageCoursesPage: React.FC = () => {
       key: uuidv4(),
       name: unitName,
       description: unitDescription,
+      order: units.length,
     };
     setUnits(prevUnits => [...prevUnits, newUnit]);
     setModalVisible(false);
@@ -192,7 +194,11 @@ const ManageCoursesPage: React.FC = () => {
 
   const updateUnit = () => {
     if (editingUnit) {
-      setUnits(prevUnits => prevUnits.map(unit => (unit.key === editingUnit.key ? { ...unit, name: unitName, description: unitDescription } : unit)));
+      setUnits(prevUnits => prevUnits.map(unit => 
+        unit.key === editingUnit.key 
+          ? { ...unit, name: unitName, description: unitDescription } 
+          : unit
+      ));
       setEditingUnit(null);
       setModalVisible(false);
       setUnitName('');
@@ -200,6 +206,7 @@ const ManageCoursesPage: React.FC = () => {
       swipeableRefs.current[editingUnit.key]?.close();
     }
   };
+
 
   const cancelModal = () => {
     if (editingUnit) {
@@ -212,7 +219,13 @@ const ManageCoursesPage: React.FC = () => {
   }
 
   const handleDeleteUnit = (key: string) => {
-    setUnits(prevUnits => prevUnits.filter(unit => unit.key !== key));
+    setUnits(prevUnits => {
+      const updatedUnits = prevUnits.filter(unit => unit.key !== key);
+      return updatedUnits.map((unit, index) => ({
+        ...unit,
+        order: index
+      }));
+    });
   };
 
   const handleToggleEdit = () => {

@@ -8,13 +8,16 @@ import {
   Dimensions,
 } from "react-native";
 import { router } from "expo-router";
-import {
-  Course,
-  CourseCardShortProps,
-  defaultCourse,
-} from "@/utils/interfaces";
+import { Course, defaultCourse } from "@/utils/interfaces";
 import { trimText } from "@/utils/utils";
 import { getCourseData } from "@/services/getUserData";
+
+interface CourseCardShortProps {
+  action: boolean;
+  id: string
+  selected?: boolean;
+  onPress?: () => void;
+}
 
 //A component for short course cards for list display
 const CourseCardShort: React.FC<CourseCardShortProps> = ({

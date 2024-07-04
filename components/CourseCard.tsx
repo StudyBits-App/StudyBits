@@ -2,7 +2,12 @@ import React, { useEffect, useState } from "react";
 import { View, Text, Image, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { getCourseData } from "@/services/getUserData";
-import { Course, CourseCardProps, defaultCourse } from "@/utils/interfaces";
+import { Course, defaultCourse } from "@/utils/interfaces";
+
+interface CourseCardProps {
+  id: string;
+  editing: boolean;
+}  
 
 // Component for fill size course cards when managing courses
 const CourseCard: React.FC<CourseCardProps> = ({ id, editing }) => {

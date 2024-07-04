@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
-import { Unit, UnitCardProps, defaultUnit } from "@/utils/interfaces";
+import { Unit, defaultUnit } from "@/utils/interfaces";
 import { getUnit } from "@/services/getUserData";
+
+interface UnitCardProps {
+  id: string;
+  courseId: string;
+  selected: boolean;
+  onPress?: () => void;
+}
 
 //component for unit seperate unit card display
 const UnitCard: React.FC<UnitCardProps> = ({

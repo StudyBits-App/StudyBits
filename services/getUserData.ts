@@ -30,12 +30,12 @@ const getCourseData = async (courseId: string) => {
 };
 
 async function getUnitData(courseId: string) {
-    try {
-      const unitDocs = firestore().collection('courses').doc(courseId).collection('units').get();
-      return unitDocs
-    } catch (error) {
-      console.error('Error checking units collection:', error);
-      return false;
+  try {
+    const unitDocs = await firestore().collection('courses').doc(courseId).collection('units').get();
+    return unitDocs;
+  } catch (error) {
+    console.error('Error fetching units:', error);
+    throw error;
   }
 }
 

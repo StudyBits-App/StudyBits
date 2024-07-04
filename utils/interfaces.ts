@@ -26,44 +26,19 @@ export const defaultCourse: Course = {
     description: '',
 };
 
-export interface CourseCardProps {
-    id: string;
-    editing: boolean;
-}  
-
-export interface CourseCardShortProps {
-    action: boolean;
-    id: string
-    selected?: boolean;
-    onPress?: () => void;
-  }
-
 export interface Unit {
     key: string;
     name: string;
     description: string;
-}
-
-export interface UnitCardProps {
-    id: string;
-    courseId: string;
-    selected: boolean;
-    onPress?: () => void;
+    order: number;
 }
 
 export const defaultUnit: Unit = {
     key: ';',
     name: '',
     description: '',
+    order: 1
 };
-
-export interface CoursesAndUnitsPageProps {
-    isVisible: boolean;
-    onClose: () => void;
-    onSelect: (courseKey: string | null, unitKey: string | null) => void;
-    initialCourseKey?: string | null;
-    initialUnitKey?: string | null;
-  }
   
 export interface Hint {
     key: string;

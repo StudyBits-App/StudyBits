@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Pressable, Image, TextInput, Text, TouchableOpacity, Dimensions } from 'react-native';
+import { StyleSheet, View, Pressable, Image, TextInput, Text, TouchableOpacity, Dimensions, Keyboard } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import firestore from '@react-native-firebase/firestore';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -70,7 +70,6 @@ const CreateCourse: React.FC = () => {
 
   const handleSave = async () => {
     if (!(editingURL && editingURL === course.picUrl)) {
-      console.log('Here')
       deleteImageFromFirebase(editingURL);
       if (course.picUrl) {
         const uploadedImageUrl = await uploadImageToFirebase(course.picUrl, 'coursePics');
@@ -84,7 +83,7 @@ const CreateCourse: React.FC = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <Pressable style={styles.container} onPress={Keyboard.dismiss}>
       <Text style={styles.headerText}>Create a Course</Text>
       <View style={styles.row}>
         <Pressable onPress={course.picUrl ? removeImage : handleAddImage}>
@@ -123,7 +122,7 @@ const CreateCourse: React.FC = () => {
           <Text style={styles.buttonText}>Next</Text>
         </TouchableOpacity>
       }
-    </View>
+    </Pressable>
   );
 };
 

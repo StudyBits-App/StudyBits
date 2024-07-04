@@ -1,10 +1,5 @@
+import { Unit } from '@/utils/interfaces';
 import firestore from '@react-native-firebase/firestore';
-
-interface Unit {
-    key: string;
-    name: string;
-    description: string;
-  }
 
 const deleteExistingUnits = async (courseId: string) => {
     try {

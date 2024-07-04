@@ -7,12 +7,25 @@ import {
   Pressable,
   Modal,
 } from "react-native";
-import { CoursesAndUnitsPageProps } from "@/utils/interfaces";
 import CourseCardShort from "@/components/CourseCardShort";
 import UnitCard from "@/components/UnitCard";
 import { getUnitData } from "@/services/getUserData";
 import { AntDesign } from "@expo/vector-icons";
 import { useUserCourses } from "@/context/userCourses";
+
+interface UnitCardData {
+  id: string;
+  courseId: string;
+  order: number;
+}
+
+interface CoursesAndUnitsPageProps {
+  isVisible: boolean;
+  onClose: () => void;
+  onSelect: (courseKey: string | null, unitKey: string | null) => void;
+  initialCourseKey?: string | null;
+  initialUnitKey?: string | null;
+}
 
 const CoursesAndUnitsPage: React.FC<CoursesAndUnitsPageProps> = ({
   isVisible,
@@ -27,25 +40,32 @@ const CoursesAndUnitsPage: React.FC<CoursesAndUnitsPageProps> = ({
   const [selectedUnitKey, setSelectedUnitKey] = useState<string | null>(
     initialUnitKey
   );
-  const [units, setUnits] = useState<{ id: string; courseId: string }[]>([]);
+  const [units, setUnits] = useState<UnitCardData[]>([]);
   const [showCourses, setShowCourses] = useState(true);
-  const {courses} = useUserCourses();
+  const { courses } = useUserCourses();
 
   useEffect(() => {
     setSelectedCourseKey(initialCourseKey);
     setSelectedUnitKey(initialUnitKey);
   }, [initialCourseKey, initialUnitKey]);
+ 
 
   const fetchUnits = async (courseId: string) => {
     try {
       const unitDocs = await getUnitData(courseId);
       if (unitDocs) {
-        const unitData: { id: string; courseId: string }[] = [];
+        const unitDataArray: UnitCardData[] = [];
         if (!unitDocs.empty) {
           unitDocs.forEach((doc) => {
-            unitData.push({ id: doc.id, courseId: courseId });
+            const unitData = doc.data();
+            unitDataArray.push({
+              id: doc.id,
+              courseId: courseId,
+              order: unitData.order,
+            });
           });
-          setUnits(unitData);
+          unitDataArray.sort((a, b) => a.order - b.order);
+          setUnits(unitDataArray);
         } else {
           setUnits([]);
         }
@@ -61,7 +81,7 @@ const CoursesAndUnitsPage: React.FC<CoursesAndUnitsPageProps> = ({
     } else {
       setUnits([]);
     }
-  }, [selectedCourseKey]);
+  }, [selectedCourseKey, courses]);
 
   const handleCourseSelect = (courseKey: string) => {
     const newCourseKey = courseKey === selectedCourseKey ? null : courseKey;

@@ -17,6 +17,7 @@ import { useLocalSearchParams } from 'expo-router';
 import HintModal from "@/components/QuestionComponents/QuestionHintModal";
 import { renderAnswer, renderHint } from "@/components/QuestionComponents/QuestionRenderFunctions";
 import { styles } from "@/components/QuestionComponents/QuestionStyles";
+import { useUserCourses } from "@/context/userCourses";
 
 const QuestionPortal: React.FC = () => {
     const [question, setQuestion] = useState<string>('');
@@ -40,7 +41,17 @@ const QuestionPortal: React.FC = () => {
     const {courseId, unitId} = useLocalSearchParams();
     const [isOpen, setIsOpen] = useState(false);
     const animationController = useRef(new Animated.Value(0)).current;
+    const { courses } = useUserCourses();
 
+    useEffect(() => {
+        if(selectedCourseKey){
+            if(!courses.includes(selectedCourseKey)){
+                setSelectedCourseKey(null);
+                setSelectedUnitKey(null)
+            }
+        }
+    }, [courses]);
+    
     useEffect(() => {
         if(typeof courseId === 'string'){
             setSelectedCourseKey(courseId);
