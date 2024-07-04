@@ -15,9 +15,11 @@ import { Link } from "expo-router";
 import LoadingScreen from "./LoadingScreen";
 import { Channel, defaultChannel } from "@/utils/interfaces";
 import CourseCardShort from "@/components/CourseCardShort";
+import { useUserCourses } from "@/context/userCourses";
 
 const UserChannelPage = () => {
   const { user, isLoading } = useSession();
+  const { courses } = useUserCourses()
   const [channel, setChannel] = useState<Channel>(defaultChannel);
 
   const fetchUserChannel = async () => {
@@ -92,7 +94,7 @@ const UserChannelPage = () => {
           <ChannelComponent hasBanner={false} />
         </View>
       )}
-      {channel.courses.map((course) => (
+      {courses?.map((course) => (
         <CourseCardShort action={true} id={course} key={course} />
       ))}
       <AddCourse />

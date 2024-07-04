@@ -7,12 +7,12 @@ import {
   Pressable,
   Modal,
 } from "react-native";
-import { Channel, CoursesAndUnitsPageProps } from "@/utils/interfaces";
+import { CoursesAndUnitsPageProps } from "@/utils/interfaces";
 import CourseCardShort from "@/components/CourseCardShort";
 import UnitCard from "@/components/UnitCard";
-import { useSession } from "@/context/ctx";
-import { getChannelData, getUnitData } from "@/services/getUserData";
+import { getUnitData } from "@/services/getUserData";
 import { AntDesign } from "@expo/vector-icons";
+import { useUserCourses } from "@/context/userCourses";
 
 const CoursesAndUnitsPage: React.FC<CoursesAndUnitsPageProps> = ({
   isVisible,
@@ -27,32 +27,14 @@ const CoursesAndUnitsPage: React.FC<CoursesAndUnitsPageProps> = ({
   const [selectedUnitKey, setSelectedUnitKey] = useState<string | null>(
     initialUnitKey
   );
-  const [courses, setCourses] = useState<string[]>([]);
   const [units, setUnits] = useState<{ id: string; courseId: string }[]>([]);
   const [showCourses, setShowCourses] = useState(true);
-  const { user } = useSession();
+  const {courses} = useUserCourses();
 
   useEffect(() => {
     setSelectedCourseKey(initialCourseKey);
     setSelectedUnitKey(initialUnitKey);
   }, [initialCourseKey, initialUnitKey]);
-
-  const fetchUserCourses = async () => {
-    if (!user) {
-      return;
-    }
-    try {
-      const channelDoc = await getChannelData(user.uid);
-      const channelData = channelDoc.data() as Channel;
-      setCourses(channelData.courses);
-    } catch (error) {
-      console.error("Error fetching user courses: ", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchUserCourses();
-  }, [selectedUnitKey]);
 
   const fetchUnits = async (courseId: string) => {
     try {

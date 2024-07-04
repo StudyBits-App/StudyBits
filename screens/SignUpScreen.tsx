@@ -1,5 +1,5 @@
 import React from "react";
-import { SafeAreaView, View, Text, StyleSheet, Pressable, TextInput, Image } from "react-native";
+import { SafeAreaView, View, Text, StyleSheet, Pressable, TextInput } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import auth from '@react-native-firebase/auth';
