@@ -11,7 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useToast } from "react-native-toast-notifications";
 import { Unit } from '@/utils/interfaces';
-import CourseCard from './CourseCard';
+import CourseCard from '../components/CourseCard';
 
 const ManageCoursesPage: React.FC = () => {
   const { id, isEditing} = useLocalSearchParams();
@@ -280,7 +280,7 @@ const ManageCoursesPage: React.FC = () => {
             }
           }}
         >
-          <View style={{ flex: 1 }}>
+          <View>
             <Text style={styles.contentTitle}>{item.name}</Text>
             <Text style={styles.subText}>{item.description}</Text>
           </View>

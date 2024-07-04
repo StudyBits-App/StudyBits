@@ -1,19 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { View, TextInput, Button, Image, StyleSheet, Alert, TouchableOpacity, Text, useColorScheme } from 'react-native';
-import { uploadImageToFirebase } from '@/services/handleImages';
-import * as ImagePicker from 'expo-image-picker';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import firestore from '@react-native-firebase/firestore';
-import { useSession } from '@/context/ctx';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  TextInput,
+  Button,
+  Image,
+  StyleSheet,
+  Alert,
+  TouchableOpacity,
+  Text,
+  useColorScheme,
+} from "react-native";
+import { uploadImageToFirebase } from "@/services/handleImages";
+import * as ImagePicker from "expo-image-picker";
+import ParallaxScrollView from "@/components/ParallaxScrollView";
+import firestore from "@react-native-firebase/firestore";
+import { useSession } from "@/context/ctx";
 
 const CreateChannelPage: React.FC = () => {
   const [bannerImage, setBannerImage] = useState<string | null>(null);
   const [profilePicImage, setProfilePicImage] = useState<string | null>(null);
-  const [defaultProfilePicUrl, setDefaultProfilePicUrl] = useState<string | null>(null);
-  const [displayName, setDisplayName] = useState<string>('');
+  const [defaultProfilePicUrl, setDefaultProfilePicUrl] = useState<
+    string | null
+  >(null);
+  const [displayName, setDisplayName] = useState<string>("");
   const { user } = useSession();
-  const colorScheme = useColorScheme()
-  const isDarkMode = colorScheme === 'dark';
+  const colorScheme = useColorScheme();
+  const isDarkMode = colorScheme === "dark";
 
   useEffect(() => {
     const fetchProfilePicUrl = async () => {
@@ -55,7 +67,7 @@ const CreateChannelPage: React.FC = () => {
   const handleCreateChannel = async () => {
     //Make this a toast in the future
     if (!displayName.trim()) {
-      Alert.alert('Error', 'You must provide a display name!');
+      Alert.alert("Error", "You must provide a display name!");
       return;
     }
 
@@ -64,43 +76,51 @@ const CreateChannelPage: React.FC = () => {
       let profilePicURL = null;
 
       if (bannerImage) {
-        bannerURL = await uploadImageToFirebase(bannerImage, 'banners');
+        bannerURL = await uploadImageToFirebase(bannerImage, "banners");
       }
 
       if (profilePicImage) {
-        profilePicURL = await uploadImageToFirebase(profilePicImage, 'profilePics');
-
+        profilePicURL = await uploadImageToFirebase(
+          profilePicImage,
+          "profilePics"
+        );
       } else if (defaultProfilePicUrl) {
         profilePicURL = defaultProfilePicUrl;
       }
 
-      await firestore().collection('channels').doc(user?.uid).set({
-        displayName: displayName,
-        bannerURL: bannerURL || '',
-        profilePicURL: profilePicURL || ''
+      await firestore()
+        .collection("channels")
+        .doc(user?.uid)
+        .set({
+          displayName: displayName,
+          bannerURL: bannerURL || "",
+          profilePicURL: profilePicURL || "",
+        });
+
+      console.log("Channel created successfully with:", {
+        bannerURL,
+        profilePicURL,
+        displayName,
       });
-
-      console.log('Channel created successfully with:', { bannerURL, profilePicURL, displayName });
-
     } catch (error) {
-      console.error('Error uploading images or saving to Firestore: ', error);
-      Alert.alert('Error', 'Failed to save images. Please try again.');
+      console.error("Error uploading images or saving to Firestore: ", error);
+      Alert.alert("Error", "Failed to save images. Please try again.");
     }
   };
 
   const handleRemoveBanner = () => {
     Alert.alert(
-      'Remove Banner Image',
-      'Are you sure you want to remove the banner image?',
+      "Remove Banner Image",
+      "Are you sure you want to remove the banner image?",
       [
         {
-          text: 'Cancel',
-          style: 'cancel',
+          text: "Cancel",
+          style: "cancel",
         },
         {
-          text: 'Remove',
+          text: "Remove",
           onPress: () => setBannerImage(null),
-          style: 'destructive',
+          style: "destructive",
         },
       ],
       { cancelable: true }
@@ -110,17 +130,17 @@ const CreateChannelPage: React.FC = () => {
   const handleRemoveProfilePic = () => {
     if (profilePicImage) {
       Alert.alert(
-        'Remove Profile Picture',
-        'Are you sure you want to remove the profile picture?',
+        "Remove Profile Picture",
+        "Are you sure you want to remove the profile picture?",
         [
           {
-            text: 'Cancel',
-            style: 'cancel',
+            text: "Cancel",
+            style: "cancel",
           },
           {
-            text: 'Remove',
+            text: "Remove",
             onPress: () => setProfilePicImage(null),
-            style: 'destructive',
+            style: "destructive",
           },
         ],
         { cancelable: true }
@@ -130,14 +150,17 @@ const CreateChannelPage: React.FC = () => {
 
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
+      headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
       headerImage={
         bannerImage ? (
           <TouchableOpacity onPress={handleRemoveBanner}>
             <Image source={{ uri: bannerImage }} style={styles.bannerImage} />
           </TouchableOpacity>
         ) : (
-          <TouchableOpacity onPress={handleBannerUpload} style={styles.uploadBannerButton}>
+          <TouchableOpacity
+            onPress={handleBannerUpload}
+            style={styles.uploadBannerButton}
+          >
             <Text style={styles.uploadBannerText}>Upload Banner Image</Text>
           </TouchableOpacity>
         )
@@ -148,23 +171,29 @@ const CreateChannelPage: React.FC = () => {
           {/* Profile Picture */}
           <TouchableOpacity onPress={handleRemoveProfilePic}>
             {profilePicImage ? (
-              <Image source={{ uri: profilePicImage || undefined }} style={styles.profilePic} />
+              <Image
+                source={{ uri: profilePicImage || undefined }}
+                style={styles.profilePic}
+              />
             ) : (
-              <Image source={{ uri: defaultProfilePicUrl || undefined }} style={styles.profilePic} />
+              <Image
+                source={{ uri: defaultProfilePicUrl || undefined }}
+                style={styles.profilePic}
+              />
             )}
           </TouchableOpacity>
           {/* Upload Profile Picture Button */}
           <View>
-            <Button title="Upload a profile pic" onPress={handleProfilePicUpload} />
+            <Button
+              title="Upload a profile pic"
+              onPress={handleProfilePicUpload}
+            />
           </View>
         </View>
 
         {/* Display Name Input */}
         <TextInput
-          style={[
-            styles.input,
-            isDarkMode && styles.darkInput
-          ]}
+          style={[styles.input, isDarkMode && styles.darkInput]}
           placeholder="Display Name"
           value={displayName}
           onChangeText={setDisplayName}
@@ -183,29 +212,29 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     padding: 10,
     marginBottom: 10,
   },
   darkInput: {
-    color: 'white',
+    color: "white",
   },
   bannerImage: {
     height: 300,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
   uploadBannerButton: {
     height: 300,
-    backgroundColor: '#e1e1e1',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#e1e1e1",
+    justifyContent: "center",
+    alignItems: "center",
   },
   uploadBannerText: {
-    color: '#888',
+    color: "#888",
   },
   profileSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 20,
   },
   profilePic: {

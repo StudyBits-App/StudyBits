@@ -1,29 +1,22 @@
-import React, { useRef, useState } from "react";
-import {
-    Modal,
-    Pressable,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
-    Button,
-    Image,
-    TouchableWithoutFeedback,
-    Keyboard,
-    Alert,
-    ScrollView
-} from "react-native";
+import React, { useEffect, useRef, useState } from "react";
+import { Pressable, Text, TextInput, View, Alert, Animated} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from 'expo-image-picker';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
-import { NestableDraggableFlatList, NestableScrollContainer, RenderItemParams } from "react-native-draggable-flatlist";
+import { NestableDraggableFlatList, NestableScrollContainer } from "react-native-draggable-flatlist";
 import { Swipeable } from "react-native-gesture-handler";
-import { AntDesign, FontAwesome, Ionicons } from "@expo/vector-icons";
+import { AntDesign, Ionicons } from "@expo/vector-icons";
 import { uploadImageToFirebase } from "@/services/handleImages";
-import { trimText } from "@/utils/utils";
 import firestore from '@react-native-firebase/firestore';
 import { Answer, Hint } from "@/utils/interfaces";
+import CoursesAndUnitsPage from "@/components/QuestionComponents/CourseUnitSelect";
+import CourseCardShort from "@/components/CourseCardShort";
+import UnitCard from "@/components/UnitCard";
+import { useLocalSearchParams } from 'expo-router';
+import HintModal from "@/components/QuestionComponents/QuestionHintModal";
+import { renderAnswer, renderHint } from "@/components/QuestionComponents/QuestionRenderFunctions";
+import { styles } from "@/components/QuestionComponents/QuestionStyles";
 
 const QuestionPortal: React.FC = () => {
     const [question, setQuestion] = useState<string>('');
@@ -38,24 +31,67 @@ const QuestionPortal: React.FC = () => {
     const [editingHint, setEditingHint] = useState<Hint | null>(null);
     const [hintModalError, setHintModalError] = useState<string>('');
 
+    const [modalVisible, setModalVisible] = useState(false);
+    const [selectedCourseKey, setSelectedCourseKey] = useState<string | null>(null);
+    const [selectedUnitKey, setSelectedUnitKey] = useState<string | null>(null);
+
     const swipeableRefs = useRef<{ [key: string]: Swipeable | null }>({});
 
-    const handleSubmit = async () => {
+    const {courseId, unitId} = useLocalSearchParams();
+    const [isOpen, setIsOpen] = useState(false);
+    const animationController = useRef(new Animated.Value(0)).current;
 
-        const updatedHints = await Promise.all(hints.map(async hint => {
-            if (hint.image) {
-                const imageRef = await uploadImageToFirebase(hint.image, "questions");
-                if (imageRef) {
-                    return {
-                        ...hint,
-                        image: imageRef
-                    };
-                }
+    useEffect(() => {
+        if(typeof courseId === 'string'){
+            setSelectedCourseKey(courseId);
+            if(typeof unitId ==='string'){
+                setSelectedUnitKey(unitId)
             }
-            return hint;
-        }));
+        }
+        openDropdown();
+    }, [courseId, unitId]);
+    
+    const toggleDropdown = () => {
+        const toValue = isOpen ? 0 : 1;
+        Animated.timing(animationController, {
+            toValue,
+            duration: 300,
+            useNativeDriver: false,
+        }).start();
+        setIsOpen(!isOpen);
+    };
 
-        firestore().collection('questions').add({ question: question, hints: updatedHints, answers: answerChoices });
+    const openDropdown = () => {
+        if(!isOpen){
+            toggleDropdown();
+        }
+    }
+
+    const dropdownHeight = animationController.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, 220],
+    });
+
+    const handleSubmit = async () => {
+        if((selectedCourseKey && selectedUnitKey) && (typeof selectedCourseKey ==='string' && typeof selectedUnitKey === 'string')){
+            const updatedHints = await Promise.all(hints.map(async hint => {
+                if (hint.image) {
+                    const imageRef = await uploadImageToFirebase(hint.image, "questions");
+                    if (imageRef) {
+                        return {
+                            ...hint,
+                            image: imageRef
+                        };
+                    }
+                }
+                return hint;
+            }));
+
+            firestore().collection('courses').doc(selectedCourseKey).collection('units').doc(selectedUnitKey).collection('questions').add({ question: question, hints: updatedHints, answers: answerChoices })
+        }
+        else{
+            console.error('something went wrong')
+        }
     };
 
     const handleHintDelete = (key: string) => {
@@ -102,7 +138,7 @@ const QuestionPortal: React.FC = () => {
         const text = hintModalContent.trim();
         const title = hintModalTitle.trim();
 
-        if (!(hintModalImage || text && title)) {
+        if (!(hintModalImage || (text && title))) {
             setHintModalError("Missing information! Additional info must have a title and content or an image.")
             return
         }
@@ -190,104 +226,15 @@ const QuestionPortal: React.FC = () => {
         swipeableRefs.current[answerKey]?.close();
     }
 
-    const renderHint = ({ item, drag }: RenderItemParams<Hint>) => {
-        const truncatedTitle = trimText(item.title, 10);
-        const truncatedContent = trimText(item.content, 85);
+    const handleSelect = (courseKey: string | null, unitKey: string | null) => {
+        setSelectedCourseKey(courseKey);
+        setSelectedUnitKey(unitKey);
+    };
 
-        return (
-            <Swipeable
-                ref={ref => {
-                    if (ref && item.key) {
-                        swipeableRefs.current[item.key] = ref;
-                    }
-                }}
-                renderRightActions={() => (
-                    <View style={styles.swipeActionsContainer}>
-                        <Pressable onPress={() => openHintEditModal(item)} style={{ ...styles.swipeButton, backgroundColor: '#0D99FF' }}>
-                            <Text style={{ color: 'white' }}>Edit</Text>
-                        </Pressable>
-                        <Pressable onPress={() => handleHintDelete(item.key)} style={{ ...styles.swipeButton, backgroundColor: '#FF0D0D' }}>
-                            <Text style={{ color: 'white' }}>Delete</Text>
-                        </Pressable>
-                    </View>
-                )}
-            >
-                <Pressable
-                    style={styles.contentContainer}
-                    onLongPress={() => {
-                        drag();
-                    }}
-                >
-                    <View style={{ flex: 1 }}>
-                        <Text style={[styles.contentTitle, item.image && item.title ? styles.imageTitle : null]}>{truncatedTitle}</Text>
-                        {item.image ? (
-                            <View style={styles.imageContainer}>
-                                <Image source={{ uri: item.image }} style={styles.image} resizeMode='contain' />
-                            </View>
-                        ) : null}
-                        <Text style={[styles.contentText, item.image && item.content ? styles.imageContent : null]}>{truncatedContent}</Text>
-                    </View>
-                    <AntDesign name="menufold" size={20} color="white" style={{ marginLeft: 'auto' }} />
-                </Pressable>
-            </Swipeable>
-        );
-    }
-
-    const renderAnswer = ({ item, drag }: RenderItemParams<Answer>) => {
-        const handleAnswerContent = (text: string) => {
-            setAnswerChoices(prevAnswers =>
-                prevAnswers.map(answer =>
-                    answer.key === item.key ? { ...answer, content: text } : answer
-                )
-            );
-        }
-
-        return (
-            <Swipeable
-                ref={ref => {
-                    if (ref && item.key) {
-                        swipeableRefs.current[item.key] = ref;
-                    }
-                }}
-                renderRightActions={() => (
-                    <View style={styles.swipeActionsContainer}>
-                        <Pressable onPress={() => toggleAnswer(item.key)} style={styles.swipeButton}>
-                            {item.answer ? (
-                                <FontAwesome name="times" size={20} color="red" />
-                            ) : (
-                                <FontAwesome name="check" size={20} color="green" />
-                            )}
-                        </Pressable>
-                        <Pressable onPress={() => handleAnswerDelete(item.key)} style={{ ...styles.swipeButton, backgroundColor: '#FF0D0D' }}>
-                            <Text style={{ color: 'white' }}>Delete</Text>
-                        </Pressable>
-                    </View>
-                )}
-            >
-                <Pressable
-                    style={[
-                        styles.contentContainer,
-                        item.answer && styles.correctAnswer,
-                        !item.answer && styles.incorrectAnswer
-                    ]}
-                    onLongPress={() => {
-                        drag();
-                    }}
-                >
-                    <TextInput
-                        multiline
-                        style={styles.contentText}
-                        placeholder="Tricky answer choice"
-                        onChangeText={handleAnswerContent}
-                        value={item.content}
-                    />
-                    <AntDesign name="menufold" size={20} color="white" />
-                </Pressable>
-            </Swipeable>
-        );
-    }
-
-
+    const handleCloseModal = () => {
+        setModalVisible(false);
+        openDropdown();
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -302,6 +249,19 @@ const QuestionPortal: React.FC = () => {
                     style={styles.questionInput}
                     multiline
                 />
+                <View style={styles.sectionContainer}>
+                    <Pressable style={styles.sectionHeaderContainer} onPress={toggleDropdown}>
+                        <Text style={styles.sectionTitle}>Course & Unit</Text>
+                        <Pressable onPress={() => setModalVisible(true)}>
+                            <AntDesign name="edit" size={30} color={'#3B9EBF'} />
+                        </Pressable>
+                    </Pressable>
+                </View>
+
+                <Animated.View style={[styles.dropdown, { height: dropdownHeight }, isOpen && {marginBottom: 30}]}>
+                    {selectedCourseKey? <CourseCardShort action={false} id={selectedCourseKey}/> : <Text style = {styles.dropdownReplacementText}>No course selected</Text>}
+                    {selectedUnitKey? <UnitCard courseId={selectedCourseKey as string} selected={false} id={selectedUnitKey}/> : <Text style = {styles.dropdownReplacementText}>No unit selected</Text>}
+                </Animated.View>
 
                 <View style={styles.sectionContainer}>
                     <View style={styles.sectionHeaderContainer}>
@@ -312,7 +272,7 @@ const QuestionPortal: React.FC = () => {
                     </View>
                     <NestableDraggableFlatList
                         data={hints}
-                        renderItem={renderHint}
+                        renderItem={renderHint({ swipeableRefs, openHintEditModal, handleHintDelete })}
                         keyExtractor={item => item.key}
                         onDragEnd={({ data }) => setHints(data)}
                     />
@@ -327,7 +287,7 @@ const QuestionPortal: React.FC = () => {
                     </View>
                     <NestableDraggableFlatList
                         data={answerChoices}
-                        renderItem={renderAnswer}
+                        renderItem={renderAnswer({ swipeableRefs, toggleAnswer, handleAnswerDelete, setAnswerChoices })}
                         keyExtractor={item => item.key}
                         onDragEnd={({ data }) => setAnswerChoices(data)}
                     />
@@ -338,205 +298,31 @@ const QuestionPortal: React.FC = () => {
                 </Pressable>
             </NestableScrollContainer>
 
-            <Modal visible={hintModalVisible} animationType="slide">
-                <SafeAreaView style={styles.modalContainer}>
-                    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                        <ScrollView contentContainerStyle={styles.modalContentContainer}>
-                            <Text style={styles.modalTitle}>Additional Info</Text>
-                            <TextInput
-                                multiline
-                                placeholderTextColor={"rgba(255, 255, 255, 0.7)"}
-                                placeholder="Title"
-                                value={hintModalTitle}
-                                onChangeText={setHintModalTitle}
-                                style={styles.modalHintInputContent}
-                            />
-                            {hintModalImage ? (
-                                <Pressable style={styles.modalHintInputContent} onPress={clearImage}>
-                                    <Text style={styles.modalImageButtonText}>Clear image</Text>
-                                </Pressable>
-                            ) :
-                                <Pressable style={styles.modalHintInputContent} onPress={pickImage}>
-                                    <Text style={styles.modalImageButtonText}>Pick an image from camera roll</Text>
-                                </Pressable>
-                            }
+            <HintModal
+                visible={hintModalVisible}
+                title={hintModalTitle}
+                content={hintModalContent}
+                image={hintModalImage}
+                error={hintModalError}
+                editingHint={editingHint}
+                onTitleChange={setHintModalTitle}
+                onContentChange={setHintModalContent}
+                onImagePick={pickImage}
+                onImageClear={clearImage}
+                onCancel={handleCancelHint}
+                onSubmit={editingHint ? updateHint : addHint}
+                onErrorClear={() => setHintModalError('')}
+            />
 
-                            <View style={styles.imageContainer}>
-                                {hintModalImage ? (
-                                    <Image source={{ uri: hintModalImage }} style={styles.image} resizeMode='contain' />
-                                ) : null}
-                            </View>
-                            <TextInput
-                                placeholderTextColor={"rgba(255, 255, 255, 0.7)"}
-                                placeholder="Content"
-                                value={hintModalContent}
-                                onChangeText={setHintModalContent}
-                                style={styles.modalHintInputContent}
-                                multiline
-                            />
-                            {hintModalError ? (
-                                <View style={styles.modalHintErrorContainer}>
-                                    <Text style={styles.modalHintError}>{hintModalError}</Text>
-                                    <Pressable onPress={() => setHintModalError('')} style={styles.closeButton}>
-                                        <Text style={styles.modalHintError}>X</Text>
-                                    </Pressable>
-                                </View>
-                            ) : null}
-
-                            <View style={styles.modalButtonContainer}>
-                                <Button title="Cancel" onPress={handleCancelHint} color="#FF0D0D" />
-                                <Button title={editingHint ? "Update Hint" : "Add Hint"} onPress={editingHint ? updateHint : addHint} color="#0D99FF" />
-                            </View>
-                        </ScrollView>
-                    </TouchableWithoutFeedback>
-                </SafeAreaView>
-            </Modal>
+            <CoursesAndUnitsPage
+                isVisible={modalVisible}
+                onClose={handleCloseModal}
+                onSelect={handleSelect}
+                initialCourseKey={selectedCourseKey}
+                initialUnitKey={selectedUnitKey}
+            />
         </SafeAreaView>
     )
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#1E1E1E",
-        paddingHorizontal: 16,
-    },
-    headerText: {
-        padding: 10,
-        marginBottom: 10,
-        color: "#FFFFFF",
-        fontSize: 24,
-        fontWeight: "bold",
-    },
-    questionInput: {
-        backgroundColor: "#333333",
-        color: "#FFFFFF",
-        borderRadius: 8,
-        padding: 16,
-        fontSize: 16,
-        marginBottom: 20,
-    },
-    sectionTitle: {
-        flex: 1,
-        color: "#FFFFFF",
-        fontSize: 20,
-        fontWeight: "bold"
-    },
-    sectionContainer: {
-        marginBottom: 20
-    },
-    sectionHeaderContainer: {
-        marginBottom: 20,
-        flexDirection: 'row',
-        alignItems: 'center'
-    },
-    contentContainer: {
-        backgroundColor: "#333333",
-        borderRadius: 8,
-        padding: 16,
-        marginBottom: 10,
-        flexDirection: "row",
-        alignItems: "center",
-    },
-    contentTitle: {
-        fontWeight: 'bold',
-        color: 'white',
-        fontSize: 16,
-    },
-    contentText: {
-        flex: 1,
-        color: 'white'
-    },
-    button: {
-        backgroundColor: "#ffffff",
-        padding: '3%',
-        alignItems: "center",
-        borderRadius: 5,
-    },
-    modalContainer: {
-        flex: 1,
-        backgroundColor: "#1E1E1E",
-        paddingHorizontal: 16,
-    },
-    modalContentContainer: {
-        justifyContent: "center",
-        flex: 1
-    },
-    modalTitle: {
-        color: "#FFFFFF",
-        fontSize: 24,
-        fontWeight: "bold",
-        marginBottom: 20,
-        textAlign: "center",
-    },
-    modalHintInputContent: {
-        backgroundColor: "#333333",
-        color: "#FFFFFF",
-        borderRadius: 8,
-        padding: 16,
-        fontSize: 16,
-        marginBottom: 10,
-        marginTop: 10
-    },
-    modalImageButtonText: {
-        color: "#FFFFFF",
-        fontSize: 16,
-    },
-    modalHintErrorContainer: {
-        backgroundColor: "#FF474C",
-        padding: 16,
-        marginTop: 10,
-        flexDirection: 'row',
-    },
-    modalHintError: {
-        color: "#FFFFFF",
-        fontSize: 16,
-        flex: 1,
-    },
-    closeButton: {
-        padding: 10,
-    },
-    modalButtonContainer: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        marginTop: 20,
-    },
-    swipeActionsContainer: {
-        flexDirection: 'row',
-        justifyContent: 'flex-end',
-        width: '40%',
-        paddingBottom: '3%',
-    },
-    swipeButton: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        width: '50%',
-    },
-    correctAnswer: {
-        borderColor: 'green',
-        borderWidth: 2,
-    },
-    incorrectAnswer: {
-        borderColor: 'red',
-        borderWidth: 2,
-    },
-    imageContainer: {
-        maxWidth: '100%',
-        maxHeight: 150
-    },
-    image: {
-        width: '100%',
-        height: '100%'
-    },
-    imageTitle: {
-        textAlign: 'center',
-        marginBottom: 15
-    },
-    imageContent: {
-        textAlign: 'center',
-        marginTop: 15
-    }
-
-});
 
 export default QuestionPortal;

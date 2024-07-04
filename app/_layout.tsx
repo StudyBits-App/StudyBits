@@ -5,7 +5,6 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { SessionProvider} from '@/context/ctx';
-import AuthCheck from '@/components/AuthCheck';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Stack } from 'expo-router';
 

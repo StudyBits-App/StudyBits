@@ -36,8 +36,17 @@ async function getUnitData(courseId: string) {
     } catch (error) {
       console.error('Error checking units collection:', error);
       return false;
-    }
   }
-  
+}
 
-export { getChannelData, getCourseData, getUnitData};
+async function getUnit(courseId: string, unitId: string) {
+  try {
+      const unitDoc = await firestore().collection('courses').doc(courseId).collection('units').doc(unitId).get();
+      return unitDoc.exists ? unitDoc : false;
+  } catch (error) {
+      console.error('Error checking units collection:', error);
+      return false;
+  }
+}
+
+export { getChannelData, getCourseData, getUnitData, getUnit};
