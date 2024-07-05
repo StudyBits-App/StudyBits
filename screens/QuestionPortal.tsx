@@ -97,8 +97,14 @@ const QuestionPortal: React.FC = () => {
                 }
                 return hint;
             }));
-
-            firestore().collection('courses').doc(selectedCourseKey).collection('units').doc(selectedUnitKey).collection('questions').add({ question: question, hints: updatedHints, answers: answerChoices })
+            if((await firestore().collection('courses').doc(selectedCourseKey).collection('units').doc(selectedUnitKey).get()).exists){
+                firestore().collection('courses').doc(selectedCourseKey).collection('units').doc(selectedUnitKey).collection('questions').add({ question: question, hints: updatedHints, answers: answerChoices })
+                console.log("yay")
+            }
+            else{
+                console.error('invalid unit or course')
+                setModalVisible(true);
+            }
         }
         else{
             console.error('something went wrong')

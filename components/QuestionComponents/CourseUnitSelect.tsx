@@ -10,7 +10,7 @@ import {
 import CourseCardShort from "@/components/CourseCardShort";
 import UnitCard from "@/components/UnitCard";
 import { getUnitData } from "@/services/getUserData";
-import { AntDesign } from "@expo/vector-icons";
+import { AntDesign, MaterialIcons } from "@expo/vector-icons";
 import { useUserCourses } from "@/context/userCourses";
 
 interface UnitCardData {
@@ -48,7 +48,6 @@ const CoursesAndUnitsPage: React.FC<CoursesAndUnitsPageProps> = ({
     setSelectedCourseKey(initialCourseKey);
     setSelectedUnitKey(initialUnitKey);
   }, [initialCourseKey, initialUnitKey]);
- 
 
   const fetchUnits = async (courseId: string) => {
     try {
@@ -83,6 +82,12 @@ const CoursesAndUnitsPage: React.FC<CoursesAndUnitsPageProps> = ({
     }
   }, [selectedCourseKey, courses]);
 
+  const refreshUnits = () => {
+    if (selectedCourseKey) {
+      fetchUnits(selectedCourseKey);
+    }
+  };
+
   const handleCourseSelect = (courseKey: string) => {
     const newCourseKey = courseKey === selectedCourseKey ? null : courseKey;
     setSelectedCourseKey(newCourseKey);
@@ -94,6 +99,13 @@ const CoursesAndUnitsPage: React.FC<CoursesAndUnitsPageProps> = ({
     const newUnitKey = unitKey === selectedUnitKey ? null : unitKey;
     setSelectedUnitKey(newUnitKey);
     onSelect(selectedCourseKey, newUnitKey);
+  };
+
+  const handleUnitNotFound = (unitId: string) => {
+    if (unitId === selectedUnitKey) {
+      setSelectedUnitKey(null);
+      onSelect(selectedCourseKey, null);
+    }
   };
 
   const toggleView = () => {
@@ -116,6 +128,13 @@ const CoursesAndUnitsPage: React.FC<CoursesAndUnitsPageProps> = ({
                   {showCourses ? "Show Units" : "Show Courses"}
                 </Text>
               </Pressable>
+              {!showCourses && 
+              <MaterialIcons 
+                name="refresh"
+                 size={30} 
+                 color="#ADD8E6" 
+                 onPress={refreshUnits}/>
+              }
               <AntDesign
                 name="close"
                 size={25}
@@ -145,6 +164,7 @@ const CoursesAndUnitsPage: React.FC<CoursesAndUnitsPageProps> = ({
                     courseId={unit.courseId}
                     selected={unit.id === selectedUnitKey}
                     onPress={() => handleUnitSelect(unit.id)}
+                    onUnitNotFound={handleUnitNotFound}
                   />
                 ))
               ) : (

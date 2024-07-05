@@ -8,16 +8,17 @@ interface UnitCardProps {
   courseId: string;
   selected: boolean;
   onPress?: () => void;
+  onUnitNotFound?: (unitId: string) => void; 
 }
 
-//component for unit seperate unit card display
 const UnitCard: React.FC<UnitCardProps> = ({
   id,
   courseId,
   selected,
   onPress,
+  onUnitNotFound,
 }) => {
-  const [unit, setUnit] = useState<Unit>(defaultUnit);
+  const [unit, setUnit] = useState<Unit | null>(null);
 
   useEffect(() => {
     const fetchUnit = async () => {
@@ -26,30 +27,43 @@ const UnitCard: React.FC<UnitCardProps> = ({
         if (unitDoc && "data" in unitDoc) {
           const unitData = unitDoc.data() as Unit;
           setUnit(unitData);
+        } else {
+          if (onUnitNotFound) {
+            onUnitNotFound(id);
+          }
         }
       } catch (error) {
         console.error("Error fetching unit: ", error);
+        if (onUnitNotFound) {
+          onUnitNotFound(id);
+        }
       }
     };
 
     fetchUnit();
-  }, [id, courseId]);
+  }, [id, courseId, onUnitNotFound]);
 
   return (
     <Pressable
       style={[
         styles.contentContainer,
         selected ? styles.selected : styles.unselected,
+        unit ? null : styles.disabled, 
       ]}
       onPress={() => {
-        if (onPress) {
+        if (onPress && unit) {
           onPress();
         }
       }}
+      disabled={!unit} 
     >
       <View>
-        <Text style={styles.contentTitle}>{unit.name}</Text>
-        <Text style={styles.subText}>{unit.description}</Text>
+        <Text style={styles.contentTitle}>
+          {unit ? unit.name : "Unit not found"}
+        </Text>
+        <Text style={styles.subText}>
+          {unit ? unit.description : "This unit does not exist."}
+        </Text>
       </View>
     </Pressable>
   );
@@ -81,6 +95,9 @@ const styles = StyleSheet.create({
   unselected: {
     borderColor: "grey",
     borderWidth: 1,
+  },
+  disabled: {
+    backgroundColor: "#555555",
   },
 });
 
