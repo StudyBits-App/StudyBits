@@ -17,7 +17,7 @@ import { Channel, defaultChannel } from "@/utils/interfaces";
 import CourseCardShort from "@/components/CourseCardShort";
 import { useUserCourses } from "@/context/userCourses";
 
-const UserChannelPage = () => {
+const UserChannelPage: React.FC = () => {
   const { user, isLoading } = useSession();
   const { courses } = useUserCourses()
   const [channel, setChannel] = useState<Channel>(defaultChannel);

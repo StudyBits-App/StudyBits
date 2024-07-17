@@ -9,8 +9,12 @@ import { router } from 'expo-router';
 const HomeScreen: React.FC = () => {
   const { user } = useSession();
 
-  const addCourse = () => {
+  const addLearning = () => {
     router.push('/homePages/addLearning')
+  }
+
+  const viewLearning = () => {
+    router.push('/homePages/viewLearning')
   }
   
   return (
@@ -23,16 +27,15 @@ const HomeScreen: React.FC = () => {
           </Pressable>
         </View>
 
-        <View style={styles.learnContainer}>
+        <Pressable style={styles.learnContainer} onPress={viewLearning}>
           <LinearGradient
             colors={['#4c669f', '#3b5998', '#192f6a']}
             style={styles.learnCard}
           >
             <Text style={styles.learnText}>What i'm learning</Text>
-
           </LinearGradient>
-        </View>
-        <Pressable style={styles.addButton} onPress={addCourse}>
+        </Pressable>
+        <Pressable style={styles.addButton} onPress={addLearning}>
           <Ionicons name="add" size={30} color="#fff" />
         </Pressable>
       </ScrollView>
