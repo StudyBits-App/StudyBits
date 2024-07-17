@@ -17,13 +17,17 @@ const HomeScreen: React.FC = () => {
     router.push('/homePages/viewLearning')
   }
   
+  const search = () => {
+    router.push('/homePages/search')
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Text style={styles.greeting}>{user?.displayName}</Text>
-          <Pressable style={styles.profileButton}>
-            <Ionicons name="person-circle-outline" size={40} color="#fff" />
+          <Pressable style={styles.profileButton} onPress={search}>
+            <Ionicons name="search" size={40} color="#fff" />
           </Pressable>
         </View>
 

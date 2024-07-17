@@ -16,6 +16,18 @@ export default function homePageLayout() {
                     headerShown: false
                 }}
             />
+            <Stack.Screen
+                name="search"
+                options={{
+                    headerShown: false
+                }}
+            />
+            <Stack.Screen
+                name="searchResults"
+                options={{
+                    headerShown: false
+                }}
+            />
         </Stack>
     ) 
 }
