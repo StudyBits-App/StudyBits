@@ -1,93 +1,92 @@
-import { Image, StyleSheet, Pressable, Text } from 'react-native';
-
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import auth from '@react-native-firebase/auth';
+import React from 'react';
+import { StyleSheet, View, Text, ScrollView, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { useSession } from '@/context/ctx';
 import { router } from 'expo-router';
 
-GoogleSignin.configure({
-  webClientId: '1098397225551-ibat99410nloiruc9g7aecrkvb83ptpf.apps.googleusercontent.com'
-});
+const HomeScreen: React.FC = () => {
+  const { user } = useSession();
 
-export default function HomeScreen() {
-  const { user, isLoading } = useSession();
-
+  const addCourse = () => {
+    router.push('/homePages/addLearning')
+  }
+  
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView>
-        <Pressable style={styles.button} onPress={onPress}>
-          <Text style={styles.text}>Sign in with Google</Text>
-          <Image source={require('@/assets/images/react-logo.png')} style={styles.signInImage}></Image>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <Text style={styles.greeting}>{user?.displayName}</Text>
+          <Pressable style={styles.profileButton}>
+            <Ionicons name="person-circle-outline" size={40} color="#fff" />
+          </Pressable>
+        </View>
+
+        <View style={styles.learnContainer}>
+          <LinearGradient
+            colors={['#4c669f', '#3b5998', '#192f6a']}
+            style={styles.learnCard}
+          >
+            <Text style={styles.learnText}>What i'm learning</Text>
+
+          </LinearGradient>
+        </View>
+        <Pressable style={styles.addButton} onPress={addCourse}>
+          <Ionicons name="add" size={30} color="#fff" />
         </Pressable>
-        <Pressable style={styles.button} onPress={logout}>
-          <Text style={styles.text}>Logout</Text>
-        </Pressable>
-      </ThemedView>
-    </ParallaxScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
-}
-
-const logout = async () => {
-  auth().signOut()
-}
-
-const onPress = async () => {
-  await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-  // Get the users ID token
-  const { idToken } = await GoogleSignin.signIn();
-
-  // Create a Google credential with the token
-  const googleCredential = auth.GoogleAuthProvider.credential(idToken);
-
-  // Sign-in the user with the credential
-  return auth().signInWithCredential(googleCredential);
-}
+};
 
 const styles = StyleSheet.create({
-  signInImage: {
-    width: 20,
-    height: 20,
-    marginHorizontal: '1%'
+  container: {
+    flex: 1,
+    backgroundColor: '#1E1E1E',
   },
-  titleContainer: {
+  scrollContent: {
+    padding: 20,
+  },
+  header: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
+    marginBottom: 20,
   },
-  button: {
-    marginVertical: '10%',
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 4,
-    elevation: 3,
-    backgroundColor: 'black',
+  greeting: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
   },
-  text: {
-    color: 'white',
+  profileButton: {
+    padding: 5,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
+  learnContainer: {
+    marginBottom: 20,
+  },
+  learnCard: {
+    borderRadius: 15,
+    padding: 20,
+  },
+  learnText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#fff',
+    marginBottom: 10,
+  },
+  addButton: {
     position: 'absolute',
+    right: 20,
+    bottom: 20,
+    backgroundColor: '#4c669f',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
   },
 });
+
+export default HomeScreen;
