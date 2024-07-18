@@ -35,7 +35,6 @@ const UserChannelPage: React.FC = () => {
   };
 
   useEffect(() => {
-    setChannel(defaultChannel);
     fetchUserChannel();
   }, []);
 

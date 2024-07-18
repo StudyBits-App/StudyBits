@@ -14,13 +14,14 @@ export const defaultChannel: Channel = {
   
 export interface Course {
     key: string;
+    creator: string;
     picUrl: string;
     name: string;
     description: string;
 }
-
 export const defaultCourse: Course = {
     key: ';',
+    creator: '',
     picUrl: '',
     name: '',
     description: '',

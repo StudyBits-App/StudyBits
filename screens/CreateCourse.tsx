@@ -30,6 +30,7 @@ const CreateCourse: React.FC = () => {
       }
     };
     fetchCourse();
+    setCourse({ ...course, creator: user?.uid as string });
   }, [id]);
 
   const handleAddImage = async () => {
@@ -58,7 +59,7 @@ const CreateCourse: React.FC = () => {
 
       const courseRef = await firestore().collection('courses').add(course);
       const docId = courseRef.id;
-
+      console.log(course)
       await courseRef.update({ key: docId });
       const currentCourses = (await firestore().collection('channels').doc(user?.uid).get()).data()?.courses;
       await firestore().collection('channels').doc(user?.uid).update({ courses: [...(currentCourses || []), docId] });

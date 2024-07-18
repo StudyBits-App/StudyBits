@@ -94,7 +94,7 @@ const CreateChannelPage: React.FC = () => {
         .set({
           displayName: displayName,
           bannerURL: bannerURL || "",
-          profilePicURL: profilePicURL || "",
+          profilePicURL: profilePicURL,
         });
 
       console.log("Channel created successfully with:", {

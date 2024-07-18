@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { SafeAreaView, Text, StyleSheet, Pressable } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
-import { searchCourses } from '@/utils/searchAlgorithm';
-import CourseCardShort from '@/components/CourseCardShort';
+import React, { useState, useEffect } from "react";
+import { SafeAreaView, Text, StyleSheet, Pressable, View } from "react-native";
+import { router, useLocalSearchParams } from "expo-router";
+import { searchCourses } from "@/utils/searchAlgorithm";
+import CourseCardChannel from "@/components/CourseCardWithChannel";
 
 const Results: React.FC = () => {
   const { query } = useLocalSearchParams<{ query: string }>();
@@ -23,17 +23,19 @@ const Results: React.FC = () => {
   };
 
   const search = () => {
-    router.push({ pathname: '/homePages/search', params: { query: query } });
+    router.push({ pathname: "/homePages/search", params: { query: query } });
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <Pressable style={styles.searchBarContainer} onPress={search}>
-        <Text style={styles.searchBar}>{query}</Text>
-      </Pressable>
-      {searchResults?.map((id) => (
-        <CourseCardShort action={false} id={id} key={id} />
-      ))}
+      <View style = {styles.contentContainer}>
+        <Pressable onPress={search}>
+          <Text style={styles.searchBar}>{query}</Text>
+        </Pressable>
+        {searchResults?.map((id) => (
+          <CourseCardChannel id={id} key={id} />
+        ))}
+      </View>
     </SafeAreaView>
   );
 };
@@ -41,20 +43,21 @@ const Results: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: "#1E1E1E",
   },
-  searchBarContainer: {
-    padding: 10,
+  contentContainer: {
+    padding: 15,
   },
   searchBar: {
+    marginBottom: 15,
     padding: 15,
-    backgroundColor: '#333',
-    color: '#fff',
+    backgroundColor: "#333",
+    color: "#fff",
     paddingHorizontal: 10,
     borderRadius: 8,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
   resultsList: {
     padding: 10,
