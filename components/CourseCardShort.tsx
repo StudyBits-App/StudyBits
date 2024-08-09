@@ -8,31 +8,45 @@ import {
   Dimensions,
 } from "react-native";
 import { router } from "expo-router";
-import { Course, defaultCourse } from "@/utils/interfaces";
+import {
+  Channel,
+  Course,
+  defaultChannel,
+  defaultCourse,
+} from "@/utils/interfaces";
 import { trimText } from "@/utils/utils";
-import { getCourseData } from "@/services/getUserData";
+import { getChannelData, getCourseData } from "@/services/getUserData";
 
 interface CourseCardShortProps {
-  action: boolean;
-  id: string
+  id: string;
   selected?: boolean;
   onPress?: () => void;
+  link?: string;
+  params?: { [key: string]: any };
+  channelDisplay?: boolean;
 }
 
-//A component for short course cards for list display
+// A component for short course cards for list display
 const CourseCardShort: React.FC<CourseCardShortProps> = ({
-  action,
   id,
   selected,
   onPress,
+  link,
+  params,
+  channelDisplay,
 }) => {
   const [course, setCourse] = useState<Course>(defaultCourse);
+  const [channel, setChannel] = useState<Channel>(defaultChannel);
 
   useEffect(() => {
     const fetchCourse = async () => {
       try {
         const courseData = (await getCourseData(id)).data() as Course;
         setCourse(courseData);
+        const channelData = (
+          await getChannelData(courseData.creator)
+        ).data() as Channel;
+        setChannel(channelData);
       } catch (error) {
         console.error("Error fetching course: ", error);
       }
@@ -40,19 +54,18 @@ const CourseCardShort: React.FC<CourseCardShortProps> = ({
     fetchCourse();
   }, [id]);
 
+  const handlePress = () => {
+    if (onPress) {
+      onPress();
+    } else if (link) {
+      router.push({ pathname: link, params: { ...params, id: course.key } });
+    }
+  };
+
   return (
     <Pressable
       style={[styles.course, selected && styles.selectedCourse]}
-      onPress={() => {
-        if (onPress) {
-          onPress();
-        } else if (action) {
-          router.push({
-            pathname: "/channelPages/manageCourse",
-            params: { id: course.key, isEditing: "0" },
-          });
-        }
-      }}
+      onPress={handlePress}
     >
       <View style={styles.courseContent}>
         {course.picUrl && (
@@ -73,6 +86,19 @@ const CourseCardShort: React.FC<CourseCardShortProps> = ({
           </Text>
         </View>
       </View>
+      {channelDisplay && (
+        <View style={styles.channelInfo}>
+          <Image
+            source={{
+              uri:
+                channel.profilePicURL ||
+                `https://robohash.org/${course.creator}`,
+            }}
+            style={styles.channelPic}
+          />
+          <Text style={styles.channelName}>{channel.displayName}</Text>
+        </View>
+      )}
     </Pressable>
   );
 };
@@ -116,6 +142,22 @@ const styles = StyleSheet.create({
     ),
     borderWidth: 1,
     borderColor: "#fff",
+  },
+  channelInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingBottom: 10,
+  },
+  channelPic: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    marginRight: 10,
+  },
+  channelName: {
+    color: "#fff",
+    fontSize: 14,
   },
 });
 

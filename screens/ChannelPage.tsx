@@ -94,7 +94,7 @@ const UserChannelPage: React.FC = () => {
         </View>
       )}
       {courses?.map((course) => (
-        <CourseCardShort action={true} id={course} key={course} />
+        <CourseCardShort id={course} key={course} link="/channelPages/manageCourse" params={{ isEditing: "0" }}/>
       ))}
       <AddCourse />
     </ScrollView>

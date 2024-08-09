@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { SafeAreaView, Text, StyleSheet, Pressable, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { searchCourses } from "@/utils/searchAlgorithm";
-import CourseCardChannel from "@/components/CourseCardWithChannel";
+import CourseCardShort from "@/components/CourseCardShort";
 
 const Results: React.FC = () => {
   const { query } = useLocalSearchParams<{ query: string }>();
@@ -33,7 +33,7 @@ const Results: React.FC = () => {
           <Text style={styles.searchBar}>{query}</Text>
         </Pressable>
         {searchResults?.map((id) => (
-          <CourseCardChannel id={id} key={id} />
+          <CourseCardShort channelDisplay={true} id={id} key={id} />
         ))}
       </View>
     </SafeAreaView>
