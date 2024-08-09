@@ -276,7 +276,7 @@ const QuestionPortal: React.FC = () => {
                 </View>
 
                 <Animated.View style={[styles.dropdown, { height: dropdownHeight }, isOpen && {marginBottom: 30}]}>
-                    {selectedCourseKey? <CourseCardShort action={false} id={selectedCourseKey}/> : <Text style = {styles.dropdownReplacementText}>No course selected</Text>}
+                    {selectedCourseKey? <CourseCardShort id={selectedCourseKey}/> : <Text style = {styles.dropdownReplacementText}>No course selected</Text>}
                     {selectedUnitKey? <UnitCard courseId={selectedCourseKey as string} selected={false} id={selectedUnitKey}/> : <Text style = {styles.dropdownReplacementText}>No unit selected</Text>}
                 </Animated.View>
 

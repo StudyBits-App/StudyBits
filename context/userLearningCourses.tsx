@@ -14,7 +14,7 @@ export function userLearningCourses() {
       return;
     }
 
-    const learningCourses = firestore()
+    const unsubscribe = firestore()
       .collection("learning")
       .doc(user?.uid)
       .collection("courses")
@@ -22,10 +22,7 @@ export function userLearningCourses() {
         (snapshot) => {
           const coursesArray: string[] = [];
           snapshot.forEach((doc) => {
-            const data = doc.data();
-            if (data && typeof data.course === "string") {
-              coursesArray.push(data.course);
-            }
+            coursesArray.push(doc.id); 
           });
           setLearningCourses(coursesArray);
           setLoading(false);
@@ -36,7 +33,7 @@ export function userLearningCourses() {
         }
       );
 
-    return () => learningCourses();
+    return () => unsubscribe();
   }, [user]);
 
   return { learningCourses, loading };

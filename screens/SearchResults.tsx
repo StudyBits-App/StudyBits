@@ -17,7 +17,6 @@ const Results: React.FC = () => {
   const handleSearch = async () => {
     if (query && query.trim()) {
       const results = await searchCourses(query.trim());
-      console.log(results);
       setSearchResults(results);
     }
   };
@@ -33,7 +32,7 @@ const Results: React.FC = () => {
           <Text style={styles.searchBar}>{query}</Text>
         </Pressable>
         {searchResults?.map((id) => (
-          <CourseCardShort channelDisplay={true} id={id} key={id} />
+          <CourseCardShort channelDisplay={true} id={id} key={id} link="/homePages/viewCourse"/>
         ))}
       </View>
     </SafeAreaView>

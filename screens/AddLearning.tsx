@@ -24,20 +24,21 @@ const AddLearning: React.FC = () => {
     setSelectedCourseKey(courseKey === selectedCourseKey ? null : courseKey);
   };
 
-  const handleSubmit = async () => {
-    if (selectedCourseKey) {
-      await firestore()
-        .collection("learning")
-        .doc(user?.uid)
-        .collection("courses")
-        .add({ course: selectedCourseKey });
-      console.log("Selected course:", selectedCourseKey);
-      setSelectedCourseKey(null);
-      router.push("/homePages/viewLearning");
-    } else {
-      console.log("No course selected");
-    }
-  };
+const handleSubmit = async () => {
+  if (selectedCourseKey) {
+    await firestore()
+      .collection("learning")
+      .doc(user?.uid)
+      .collection("courses")
+      .doc(selectedCourseKey)  
+      .set({ studyingUnits: [0] });
+    console.log("Selected course:", selectedCourseKey);
+    setSelectedCourseKey(null);
+    router.push("/homePages/viewLearning");
+  } else {
+    console.log("No course selected");
+  }
+};
 
   const filteredCourses = courses.filter(
     (course) => !learningCourses.includes(course)
@@ -53,7 +54,6 @@ const AddLearning: React.FC = () => {
             id={course}
             selected={course === selectedCourseKey}
             onPress={() => handleCourseSelect(course)}
-            action={false}
           />
         ))}
       </ScrollView>
@@ -66,7 +66,7 @@ const AddLearning: React.FC = () => {
           onPress={handleSubmit}
           disabled={!selectedCourseKey}
         >
-          <Text style={styles.submitButtonText}>Submit</Text>
+          <Text style={styles.submitButtonText}>Add</Text>
         </Pressable>
       </View>
     </SafeAreaView>

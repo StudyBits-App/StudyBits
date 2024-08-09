@@ -6,14 +6,19 @@ import { userLearningCourses } from "@/context/userLearningCourses";
 
 const ViewLearning: React.FC = () => {
   const { learningCourses } = userLearningCourses();
-  
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <ScrollView style={styles.scrollView}>
           <Text style={styles.title}>What i'm learning</Text>
           {learningCourses.map((courseId) => (
-            <CourseCardShort action={false} id={courseId} key={courseId} />
+            <CourseCardShort
+              channelDisplay={true}
+              id={courseId}
+              key={courseId}
+              link="/homePages/viewCourse"
+            />
           ))}
           {learningCourses.length === 0 && (
             <Text style={styles.noCourses}>

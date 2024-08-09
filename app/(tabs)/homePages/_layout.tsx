@@ -28,6 +28,13 @@ export default function homePageLayout() {
                     headerShown: false
                 }}
             />
+            <Stack.Screen
+                name="viewCourse"
+                options={{
+                    headerTitle: "",
+                    headerBackTitle: "Back"
+                }}
+            />
         </Stack>
     ) 
 }
