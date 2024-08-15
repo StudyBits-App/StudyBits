@@ -22,11 +22,10 @@ interface CourseCardShortProps {
   selected?: boolean;
   onPress?: () => void;
   link?: string;
-  params?: { [key: string]: any };
+  params?: { [key: string]: string | number };
   channelDisplay?: boolean;
 }
 
-// A component for short course cards for list display
 const CourseCardShort: React.FC<CourseCardShortProps> = ({
   id,
   selected,
@@ -58,7 +57,10 @@ const CourseCardShort: React.FC<CourseCardShortProps> = ({
     if (onPress) {
       onPress();
     } else if (link) {
-      router.push({ pathname: link, params: { ...params, id: course.key } });
+      router.push({
+        pathname: link as any,
+        params: { ...params, id: course.key },
+      });
     }
   };
 

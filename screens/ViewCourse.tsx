@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from "react-native";
 import LoadingScreen from "@/screens/LoadingScreen";
 import { getUnitData } from "@/services/getUserData";
 import { useLocalSearchParams } from "expo-router";
@@ -10,6 +10,7 @@ import { AntDesign } from "@expo/vector-icons";
 import firestore from "@react-native-firebase/firestore";
 import { useSession } from "@/context/ctx";
 import { userLearningCourses } from "@/context/userLearningCourses";
+import Back from "@/components/Back";
 
 const ViewCoursesPage: React.FC = () => {
   const { id } = useLocalSearchParams();
@@ -64,17 +65,19 @@ const ViewCoursesPage: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={studiedUnit ? undefined : handleAddUnit}
-      >
-        <AntDesign
-          name={studiedUnit ? "checkcircle" : "plus"}
-          size={30}
-          color={studiedUnit ? "green" : "#3B9EBF"}
-        />
-      </TouchableOpacity>
+    <ScrollView contentContainerStyle={styles.container}>
+      <View style={styles.header}>
+        <Back link="/homePages/viewLearning" params={{}} title="Back to Learning" />
+        <TouchableOpacity
+          onPress={studiedUnit ? undefined : handleAddUnit}
+        >
+          <AntDesign
+            name={studiedUnit ? "checkcircle" : "plus"}
+            size={30}
+            color={studiedUnit ? "green" : "#3B9EBF"}
+          />
+        </TouchableOpacity>
+      </View>
       <CourseCard id={id as string} editing={false} />
       <View>
         <View style={styles.unitHeaderContainer}>
@@ -95,7 +98,7 @@ const ViewCoursesPage: React.FC = () => {
           <Text style={styles.subText}>No units</Text>
         )}
       </View>
-    </View>
+    </ScrollView>
   );
 };
 
@@ -105,13 +108,12 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     backgroundColor: "#1E1E1E",
     padding: 20,
-    paddingVertical: 60, 
   },
-  addButton: {
-    position: "absolute",
-    top: 20,
-    left: 20,
-    zIndex: 1,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
   },
   unitHeaderContainer: {
     marginTop: 20,

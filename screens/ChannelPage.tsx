@@ -64,7 +64,7 @@ const UserChannelPage: React.FC = () => {
 
   const AddCourse = () => {
     return (
-      <Link asChild href="/channelPages/createCourse">
+      <Link asChild href="/channelExternalPages/createCourse">
         <Pressable style={styles.course}>
           <Ionicons name="add-circle" size={70} color={"#3B9EBF"} />
           <View style={{ ...styles.courseInfoBox, marginLeft: "3%" }}>
@@ -94,7 +94,7 @@ const UserChannelPage: React.FC = () => {
         </View>
       )}
       {courses?.map((course) => (
-        <CourseCardShort id={course} key={course} link="/channelPages/manageCourse" params={{ isEditing: "0" }}/>
+        <CourseCardShort id={course} key={course} link="/channelExternalPages/manageCourse" params={{ isEditing: "0" }}/>
       ))}
       <AddCourse />
     </ScrollView>

@@ -10,7 +10,7 @@ export default function TabLayout() {
   const colorScheme = useColorScheme();
   const { user, isLoading } = useSession();
 
-  if (!user) router.replace('authentication/signIn')
+  if (!user) router.replace('/authentication/signIn')
 
   return (
     <Tabs
@@ -48,6 +48,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="channelPages"
         options={{
+          headerShown: true,
           title: 'My Channel',
           tabBarIcon: ({ color, focused }) => (
             <TabBarIcon name={focused ? 'person-circle' : 'person-circle-sharp'} color={color} />
@@ -56,6 +57,12 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="homePages"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="channelExternalPages"
         options={{
           href: null,
         }}

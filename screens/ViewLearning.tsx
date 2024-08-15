@@ -14,7 +14,6 @@ const ViewLearning: React.FC = () => {
           <Text style={styles.title}>What i'm learning</Text>
           {learningCourses.map((courseId) => (
             <CourseCardShort
-              channelDisplay={true}
               id={courseId}
               key={courseId}
               link="/homePages/viewCourse"

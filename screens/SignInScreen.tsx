@@ -38,7 +38,7 @@ export default function SignInScreen() {
 
     return (
         <SafeAreaView style={styles.safeview}>
-            {user && <Redirect href={'(tabs)'} />}
+            {user && <Redirect href={'/(tabs)'} />}
             <LinearGradient
                 colors={['#510083', '#8D39AB', '#EE7200']}
                 style={styles.background}
@@ -89,7 +89,7 @@ export default function SignInScreen() {
                 </Pressable>
                 <View style={{ flexDirection: "row", justifyContent: 'center', alignItems: 'center' }}>
                     <Text style={[styles.text, styles.policies]}>Don't have an account?</Text>
-                    <Link href={'authentication/signUp'} style={[styles.text, styles.link]}>Sign Up</Link>
+                    <Link href={'/authentication/signUp'} style={[styles.text, styles.link]}>Sign Up</Link>
                 </View>
             </View>
         </SafeAreaView >

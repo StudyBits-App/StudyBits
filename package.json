@@ -17,6 +17,7 @@
   "dependencies": {
     "@babel/plugin-proposal-export-namespace-from": "^7.18.9",
     "@expo/vector-icons": "^14.0.0",
+    "@react-native-community/datetimepicker": "8.0.1",
     "@react-native-firebase/app": "^20.1.0",
     "@react-native-firebase/auth": "^20.1.0",
     "@react-native-firebase/firestore": "^20.1.0",
@@ -54,8 +55,7 @@
     "react-native-toast-notifications": "^3.4.0",
     "react-native-vector-icons": "^10.1.0",
     "react-native-web": "~0.19.10",
-    "uuid": "^9.0.1",
-    "@react-native-community/datetimepicker": "8.0.1"
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

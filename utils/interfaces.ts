@@ -66,3 +66,12 @@ export interface QuestionAnswer {
     answer: boolean;
     isSelected: boolean;
 }
+
+export interface Question {
+    id: string;
+    question: string;
+    course: string;
+    unit: string;
+    hints: Hint[];
+    answers: QuestionAnswer[];
+}

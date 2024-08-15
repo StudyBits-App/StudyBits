@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Pressable, Image, TextInput, Text, TouchableOpacity, Dimensions, Keyboard } from 'react-native';
+import { StyleSheet, View, Pressable, Image, TextInput, Text, TouchableOpacity, Dimensions, Keyboard, ScrollView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import firestore from '@react-native-firebase/firestore';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -7,10 +7,12 @@ import { useSession } from '@/context/ctx';
 import { uploadImageToFirebase, deleteImageFromFirebase } from '@/services/handleImages';
 import { getCourseData } from '@/services/getUserData';
 import { Course, defaultCourse } from '@/utils/interfaces';
+import Back from '@/components/Back';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const CreateCourse: React.FC = () => {
   const [course, setCourse] = useState<Course>(defaultCourse);
-  const [editingURL, setEditingURL] = useState<string>('')
+  const [editingURL, setEditingURL] = useState<string>('');
   const { user } = useSession();
   const { id } = useLocalSearchParams();
 
@@ -23,7 +25,6 @@ const CreateCourse: React.FC = () => {
           const courseData = (await getCourseData(id)).data() as Course;
           setCourse(courseData);
           setEditingURL(courseData.picUrl);
-
         } catch (error) {
           console.error('Error fetching course: ', error);
         }
@@ -59,11 +60,11 @@ const CreateCourse: React.FC = () => {
 
       const courseRef = await firestore().collection('courses').add(course);
       const docId = courseRef.id;
-      console.log(course)
+      console.log(course);
       await courseRef.update({ key: docId });
       const currentCourses = (await firestore().collection('channels').doc(user?.uid).get()).data()?.courses;
       await firestore().collection('channels').doc(user?.uid).update({ courses: [...(currentCourses || []), docId] });
-      router.push({ pathname: "/channelPages/manageCourse", params: { id: docId, isEditing: '1' } });
+      router.push({ pathname: "/channelExternalPages/manageCourse", params: { id: docId, isEditing: '1' } });
     } catch (error) {
       console.error('Error adding course: ', error);
     }
@@ -80,59 +81,69 @@ const CreateCourse: React.FC = () => {
     if(typeof id === 'string'){
       firestore().collection('courses').doc(id).update(course);
     }
-    router.push({ pathname: "/channelPages/manageCourse", params: { id: id, isEditing: '1' } });
+    router.push({ pathname: "/channelExternalPages/manageCourse", params: { id: id, isEditing: '1' } });
   }
 
   return (
-    <Pressable style={styles.container} onPress={Keyboard.dismiss}>
-      <Text style={styles.headerText}>Create a Course</Text>
-      <View style={styles.row}>
-        <Pressable onPress={course.picUrl ? removeImage : handleAddImage}>
-          {course.picUrl ? (
-            <Image source={{ uri: course.picUrl }} style={styles.image} />
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.backContainer}>
+        <Back link="/channelPages" params={{}} title="" />
+      </View>
+      <ScrollView>
+        <Pressable style={styles.container} onPress={Keyboard.dismiss}>
+          <Text style={styles.headerText}>Create a Course</Text>
+          <View style={styles.row}>
+            <Pressable onPress={course.picUrl ? removeImage : handleAddImage}>
+              {course.picUrl ? (
+                <Image source={{ uri: course.picUrl }} style={styles.image} />
+              ) : (
+                <View style={styles.circle}>
+                  <Text style={styles.circleText}>Upload Image</Text>
+                </View>
+              )}
+            </Pressable>
+            <TextInput
+              multiline
+              style={styles.nameInput}
+              placeholder="Course Name"
+              placeholderTextColor="#888"
+              value={course.name}
+              onChangeText={(text) => setCourse({ ...course, name: text })}
+            />
+          </View>
+          <TextInput
+            style={styles.descriptionInput}
+            placeholder="Course Description"
+            placeholderTextColor="#888"
+            multiline
+            numberOfLines={4}
+            value={course.description}
+            onChangeText={(text) => setCourse({ ...course, description: text })}
+          />
+          {id ? (
+            <TouchableOpacity style={styles.button} onPress={handleSave}>
+              <Text style={styles.buttonText}>Save</Text>
+            </TouchableOpacity>
           ) : (
-            <View style={styles.circle}>
-              <Text style={styles.circleText}>Upload Image</Text>
-            </View>
+            <TouchableOpacity style={styles.button} onPress={handleNext}>
+              <Text style={styles.buttonText}>Next</Text>
+            </TouchableOpacity>
           )}
         </Pressable>
-        <TextInput
-          multiline
-          style={{ ...styles.text, width: '60%' }}
-          placeholder="Course Name"
-          placeholderTextColor="#888"
-          value={course.name}
-          onChangeText={(text) => setCourse({ ...course, name: text })}
-        />
-      </View>
-      <TextInput
-        style={{ ...styles.text, width: '90%' }}
-        placeholder="Course Description"
-        placeholderTextColor="#888"
-        multiline
-        numberOfLines={4}
-        value={course.description}
-        onChangeText={(text) => setCourse({ ...course, description: text })}
-      />
-      {id ? (
-        <TouchableOpacity style={styles.button} onPress={handleSave}>
-          <Text style={styles.buttonText}>Save</Text>
-        </TouchableOpacity>
-      ) :
-        <TouchableOpacity style={styles.button} onPress={handleNext}>
-          <Text style={styles.buttonText}>Next</Text>
-        </TouchableOpacity>
-      }
-    </Pressable>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: '#1E1E1E',
+  },
+  backContainer: {
+    paddingHorizontal: 20,
+  },
+  container: {
     padding: 20,
   },
   row: {
@@ -162,7 +173,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#fff',
   },
-  text: {
+  nameInput: {
     backgroundColor: '#333333',
     color: '#FFFFFF',
     borderColor: '#555',
@@ -171,9 +182,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 10,
     fontSize: 16,
-    shadowColor: '#3B82F6',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.8,
+    flex: 1,
+  },
+  descriptionInput: {
+    backgroundColor: '#333333',
+    color: '#FFFFFF',
+    borderColor: '#555',
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    fontSize: 16,
+    width: '100%',
+    marginBottom: 20,
   },
   headerText: {
     padding: 10,
@@ -186,7 +207,7 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: '#3B82F6',
     padding: 15,
-    width: '90%',
+    width: '100%',
     alignItems: 'center',
     marginTop: 30,
     borderRadius: 10,

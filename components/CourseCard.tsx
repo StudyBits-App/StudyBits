@@ -27,7 +27,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ id, editing }) => {
   }, [id]);
 
   const editCourse = () => {
-    router.push({ pathname: "/channelPages/createCourse", params: { id: id } });
+    router.push({ pathname: "/channelExternalPages/createCourse", params: { id: id } });
   };
 
   return (

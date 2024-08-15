@@ -124,15 +124,15 @@ export const styles = StyleSheet.create({
     marginTop: 20,
   },
   swipeActionsContainer: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    width: "40%",
-    paddingBottom: "3%",
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    width: '40%',
+    paddingTop: '2.5%',
   },
   swipeButton: {
-    justifyContent: "center",
-    alignItems: "center",
-    width: "50%",
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '50%',
   },
   correctAnswer: {
     borderColor: "green",

@@ -148,7 +148,6 @@ const CoursesAndUnitsPage: React.FC<CoursesAndUnitsPageProps> = ({
             {showCourses ? (
               courses.map((course) => (
                 <CourseCardShort
-                  action={false}
                   selected={course === selectedCourseKey}
                   onPress={() => handleCourseSelect(course)}
                   id={course}
