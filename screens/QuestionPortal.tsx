@@ -17,7 +17,6 @@ import {
 } from "react-native-draggable-flatlist";
 import { Swipeable } from "react-native-gesture-handler";
 import { AntDesign, Ionicons } from "@expo/vector-icons";
-import { uploadImageToFirebase } from "@/services/handleImages";
 import firestore from "@react-native-firebase/firestore";
 import { Answer, Hint } from "@/utils/interfaces";
 import CoursesAndUnitsPage from "@/components/QuestionComponents/CourseUnitSelect";
@@ -31,6 +30,11 @@ import {
 } from "@/components/QuestionComponents/QuestionRenderFunctions";
 import { styles } from "@/components/QuestionComponents/QuestionStyles";
 import { useUserCourses } from "@/context/userCourses";
+import {
+  fetchQuestion,
+  handleHintImages,
+  updateQuestion,
+} from "@/services/getQuestionData";
 
 const QuestionPortal: React.FC = () => {
   const [question, setQuestion] = useState<string>("");
@@ -49,13 +53,15 @@ const QuestionPortal: React.FC = () => {
   const [selectedCourseKey, setSelectedCourseKey] = useState<string | null>(
     null
   );
-  const [selectedUnitKey, setSelectedUnitKey] = useState<string | null>(null);
-
-  const swipeableRefs = useRef<{ [key: string]: Swipeable | null }>({});
-
-  const { courseId, unitId } = useLocalSearchParams();
   const [isOpen, setIsOpen] = useState(false);
   const animationController = useRef(new Animated.Value(0)).current;
+  const [selectedUnitKey, setSelectedUnitKey] = useState<string | null>(null);
+  const swipeableRefs = useRef<{ [key: string]: Swipeable | null }>({});
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [originalHints, setOriginalHints] = useState<Hint[]>([]);
+
+  const { courseId, unitId, id } = useLocalSearchParams();
   const { courses } = useUserCourses();
 
   useEffect(() => {
@@ -76,6 +82,25 @@ const QuestionPortal: React.FC = () => {
     }
     openDropdown();
   }, [courseId, unitId]);
+
+  useEffect(() => {
+    if (id && typeof id === "string") {
+      setIsEditing(true);
+      loadQuestion(id);
+    }
+  }, [id]);
+
+  const loadQuestion = async (questionId: string) => {
+    const questionData = await fetchQuestion(questionId);
+    if (questionData) {
+      setQuestion(questionData.question);
+      setHints(questionData.hints);
+      setOriginalHints(questionData.hints);
+      setAnswerChoices(questionData.answers);
+      setSelectedCourseKey(questionData.course);
+      setSelectedUnitKey(questionData.unit);
+    }
+  };
 
   const toggleDropdown = () => {
     const toValue = isOpen ? 0 : 1;
@@ -105,50 +130,42 @@ const QuestionPortal: React.FC = () => {
       typeof selectedCourseKey === "string" &&
       typeof selectedUnitKey === "string"
     ) {
-      const updatedHints = await Promise.all(
-        hints.map(async (hint) => {
-          if (hint.image) {
-            const imageRef = await uploadImageToFirebase(
-              hint.image,
-              "questions"
-            );
-            if (imageRef) {
-              return {
-                ...hint,
-                image: imageRef,
-              };
-            }
-          }
-          return hint;
-        })
-      );
+      const updatedHints = await handleHintImages(hints, originalHints);
+  
+      const questionData = {
+        question: question,
+        hints: updatedHints,
+        answers: answerChoices,
+        course: selectedCourseKey,
+        unit: selectedUnitKey,
+      };
+  
       const unitDocRef = firestore()
         .collection("courses")
         .doc(selectedCourseKey)
         .collection("units")
         .doc(selectedUnitKey);
-
-      if ((await unitDocRef.get()).exists) {
-        const questionDocRef = await firestore()
-          .collection("questions")
-          .add({
-            question: question,
-            hints: updatedHints,
-            answers: answerChoices,
-            course: selectedCourseKey,
-            unit: selectedUnitKey
+  
+      const unitDoc = await unitDocRef.get();
+  
+      if (unitDoc.exists) {
+        if (isEditing && id && typeof id === "string") {
+          await updateQuestion(id, questionData);
+        } else {
+          const questionDocRef = await firestore()
+            .collection("questions")
+            .add(questionData);
+  
+          await unitDocRef.update({
+            questions: firestore.FieldValue.arrayUnion(questionDocRef.id),
           });
-
-        await unitDocRef.update({
-          questions: firestore.FieldValue.arrayUnion(questionDocRef.id),
-        });
-
+        }
       } else {
-        console.error("invalid unit or course");
+        console.error("Invalid unit or course");
         setModalVisible(true);
       }
     } else {
-      console.error("something went wrong");
+      console.error("Something went wrong");
     }
   };
 
@@ -392,7 +409,7 @@ const QuestionPortal: React.FC = () => {
         </View>
 
         <Pressable style={styles.button} onPress={handleSubmit}>
-          <Text>Submit</Text>
+          <Text>{isEditing ? "Update" : "Submit"}</Text>
         </Pressable>
       </NestableScrollContainer>
 

@@ -70,8 +70,8 @@ export interface QuestionAnswer {
 export interface Question {
     id: string;
     question: string;
+    hints: Hint[];
+    answers: Answer[];
     course: string;
     unit: string;
-    hints: Hint[];
-    answers: QuestionAnswer[];
-}
+  }

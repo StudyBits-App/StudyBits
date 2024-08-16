@@ -15,6 +15,8 @@ import {
   defaultCourse,
   defaultUnit,
 } from "@/utils/interfaces";
+import { router } from "expo-router";
+import { useSession } from "@/context/ctx";
 
 const UserQuestionsPage: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -25,6 +27,7 @@ const UserQuestionsPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [showCourseDropdown, setShowCourseDropdown] = useState<boolean>(false);
   const [showUnitDropdown, setShowUnitDropdown] = useState<boolean>(false);
+  const { user } = useSession();
 
   useEffect(() => {
     fetchCourses();
@@ -51,22 +54,35 @@ const UserQuestionsPage: React.FC = () => {
 
   const fetchCourses = async () => {
     try {
-      const snapshot = await firestore().collection("courses").get();
-      setCourses(
-        snapshot.docs.map((doc) => ({
-          ...defaultCourse,
-          key: doc.id,
-          name: doc.data().name || "",
-          creator: doc.data().creator || "",
-          picUrl: doc.data().picUrl || "",
-          description: doc.data().description || "",
-        }))
-      );
+      const channelDoc = await firestore().collection("channels").doc(user?.uid).get();
+  
+      if (channelDoc.exists) {
+        const courseIds = channelDoc.data()?.courses || []; 
+        const coursePromises = courseIds.map((courseId: string) =>
+          firestore().collection("courses").doc(courseId).get()
+        );
+  
+        const courseSnapshots = await Promise.all(coursePromises);
+  
+        setCourses(
+          courseSnapshots.map((doc) => ({
+            ...defaultCourse,
+            key: doc.id,
+            name: doc.data()?.name || "", 
+            creator: doc.data()?.creator || "",
+            picUrl: doc.data()?.picUrl || "",
+            description: doc.data()?.description || "",
+          }))
+        );
+      } else {
+        console.log("No channel found for this user.");
+        setCourses([]);
+      }
     } catch (error) {
       console.error("Error fetching courses:", error);
     }
   };
-
+  
   const fetchUnits = async (courseId: string) => {
     try {
       const snapshot = await firestore()
@@ -74,19 +90,22 @@ const UserQuestionsPage: React.FC = () => {
         .doc(courseId)
         .collection("units")
         .get();
-      setUnits(
-        snapshot.docs.map((doc) => ({
+        
+      const units = snapshot.docs
+        .map((doc) => ({
           ...defaultUnit,
           key: doc.id,
           name: doc.data().name || "",
           description: doc.data().description || "",
           order: doc.data().order || 0,
         }))
-      );
+        .sort((a, b) => a.order - b.order); 
+  
+      setUnits(units);
     } catch (error) {
       console.error("Error fetching units:", error);
     }
-  };
+  }    
 
   const fetchQuestions = async (courseId: string, unitId: string) => {
     setLoading(true);
@@ -164,6 +183,13 @@ const UserQuestionsPage: React.FC = () => {
     </View>
   );
 
+  const handleQuestionSelect = (questionId: string) => {
+    router.push({
+      pathname: "/question",
+      params: { id: questionId },
+    });
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.topBar}>
@@ -197,9 +223,13 @@ const UserQuestionsPage: React.FC = () => {
           <ScrollView>
             {questions.length > 0 ? (
               questions.map((item) => (
-                <View key={item.id} style={styles.questionContainer}>
+                <TouchableOpacity
+                  key={item.id}
+                  style={styles.questionContainer}
+                  onPress={() => handleQuestionSelect(item.id)}
+                >
                   <Text style={styles.questionText}>{item.question}</Text>
-                </View>
+                </TouchableOpacity>
               ))
             ) : (
               <Text style={styles.emptyText}>No questions found.</Text>

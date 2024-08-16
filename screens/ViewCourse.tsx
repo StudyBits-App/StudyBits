@@ -35,8 +35,6 @@ const ViewCoursesPage: React.FC = () => {
               setUnits(sortedUnits);
             }
           }
-
-          // Check if the unit is already studied
           const isStudied = learningCourses.includes(id);
           setStudiedUnit(isStudied);
         }
@@ -112,8 +110,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
+    alignItems: 'center', 
   },
   unitHeaderContainer: {
     marginTop: 20,
