@@ -1,66 +1,22 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   StyleSheet,
   Text,
   View,
-  Image,
   ScrollView,
   Pressable,
   Dimensions,
 } from "react-native";
 import { useSession } from "@/context/ctx";
-import { getChannelData } from "@/services/getUserData";
 import { Ionicons } from "@expo/vector-icons";
 import { Link } from "expo-router";
-import LoadingScreen from "./LoadingScreen";
-import { Channel, defaultChannel } from "@/utils/interfaces";
 import CourseCardShort from "@/components/CourseCardShort";
 import { useUserCourses } from "@/context/userCourses";
+import ChannelDisplay from "@/components/ChannelComponent";
 
 const UserChannelPage: React.FC = () => {
-  const { user, isLoading } = useSession();
-  const { courses } = useUserCourses()
-  const [channel, setChannel] = useState<Channel>(defaultChannel);
-
-  const fetchUserChannel = async () => {
-    if (!user) {
-      return;
-    }
-    try {
-      const channelData = (await getChannelData(user.uid)).data() as Channel;
-      setChannel(channelData);
-    } catch (error) {
-      console.error("Error fetching user channel: ", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchUserChannel();
-  }, []);
-
-  if (isLoading || channel === defaultChannel) {
-    return <LoadingScreen />;
-  }
-
-  const ChannelComponent = ({ hasBanner }: { hasBanner: boolean }) => {
-    return (
-      <View style={{ marginTop: hasBanner ? 0 : 60 }}>
-        <View style={styles.profileSection}>
-          <Image
-            source={{
-              uri: channel.profilePicURL || `https://robohash.org/${user?.uid}`,
-            }}
-            style={styles.profilePic}
-          />
-          <View style={styles.profileInfo}>
-            <Text style={styles.displayName}>
-              {channel.displayName || "Default Display Name"}
-            </Text>
-          </View>
-        </View>
-      </View>
-    );
-  };
+  const { user } = useSession();
+  const { courses } = useUserCourses();
 
   const AddCourse = () => {
     return (
@@ -80,21 +36,14 @@ const UserChannelPage: React.FC = () => {
 
   return (
     <ScrollView style={styles.container}>
-      {channel.bannerURL ? (
-        <View>
-          <Image
-            source={{ uri: channel.bannerURL }}
-            style={styles.bannerImage}
-          />
-          <ChannelComponent hasBanner={true} />
-        </View>
-      ) : (
-        <View>
-          <ChannelComponent hasBanner={false} />
-        </View>
-      )}
+      <ChannelDisplay id={user?.uid as string} displayBanner={true} />
       {courses?.map((course) => (
-        <CourseCardShort id={course} key={course} link="/channelExternalPages/manageCourse" params={{ isEditing: "0" }}/>
+        <CourseCardShort
+          id={course}
+          key={course}
+          link="/channelExternalPages/manageCourse"
+          params={{ isEditing: "0" }}
+        />
       ))}
       <AddCourse />
     </ScrollView>

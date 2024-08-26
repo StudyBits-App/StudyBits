@@ -87,7 +87,7 @@ const CreateCourse: React.FC = () => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.backContainer}>
-        <Back link="/channelPages" params={{}} title="" />
+        <Back link="/channelPages" params={{}}/>
       </View>
       <ScrollView>
         <Pressable style={styles.container} onPress={Keyboard.dismiss}>

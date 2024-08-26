@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, View, ActivityIndicator, Image, Pressable
 import firestore from "@react-native-firebase/firestore";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Hint, QuestionAnswer, QuestionInfo } from "@/utils/interfaces";
+import { trimText } from "@/utils/utils";
 
 const AnswerPage: React.FC = () => {
     const [hints, setHints] = useState<Hint[]>([]);
@@ -71,19 +72,6 @@ const AnswerPage: React.FC = () => {
         setHintModalVisible(true);
 
     }
-
-    const trimText = (text: string, maxTitleLength: number): string => {
-        if (text.length <= maxTitleLength) {
-            return text;
-        }
-        let trimmedText = text.substring(0, maxTitleLength - 2);
-        const lastSpaceIndex = trimmedText.lastIndexOf(' ');
-
-        if (lastSpaceIndex !== -1) {
-            trimmedText = trimmedText.substring(0, lastSpaceIndex);
-        }
-        return trimmedText + '...';
-    };
 
     const renderHint = ({ item }: { item: Hint }) => {
         const truncatedTitle = trimText(item.title, 10);

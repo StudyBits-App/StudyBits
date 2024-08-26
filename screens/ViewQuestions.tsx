@@ -6,6 +6,7 @@ import {
   ScrollView,
   ActivityIndicator,
   StyleSheet,
+  Pressable,
 } from "react-native";
 import firestore from "@react-native-firebase/firestore";
 import {
@@ -15,8 +16,11 @@ import {
   defaultCourse,
   defaultUnit,
 } from "@/utils/interfaces";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useSession } from "@/context/ctx";
+import { Ionicons } from "@expo/vector-icons";
+import { trimText } from "@/utils/utils";
+import Back from "@/components/Back";
 
 const UserQuestionsPage: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -28,6 +32,7 @@ const UserQuestionsPage: React.FC = () => {
   const [showCourseDropdown, setShowCourseDropdown] = useState<boolean>(false);
   const [showUnitDropdown, setShowUnitDropdown] = useState<boolean>(false);
   const { user } = useSession();
+  const { id } = useLocalSearchParams();
 
   useEffect(() => {
     fetchCourses();
@@ -54,21 +59,24 @@ const UserQuestionsPage: React.FC = () => {
 
   const fetchCourses = async () => {
     try {
-      const channelDoc = await firestore().collection("channels").doc(user?.uid).get();
-  
+      const channelDoc = await firestore()
+        .collection("channels")
+        .doc(id ? (id as string) : user?.uid)
+        .get();
+
       if (channelDoc.exists) {
-        const courseIds = channelDoc.data()?.courses || []; 
+        const courseIds = channelDoc.data()?.courses || [];
         const coursePromises = courseIds.map((courseId: string) =>
           firestore().collection("courses").doc(courseId).get()
         );
-  
+
         const courseSnapshots = await Promise.all(coursePromises);
-  
+
         setCourses(
           courseSnapshots.map((doc) => ({
             ...defaultCourse,
             key: doc.id,
-            name: doc.data()?.name || "", 
+            name: doc.data()?.name || "",
             creator: doc.data()?.creator || "",
             picUrl: doc.data()?.picUrl || "",
             description: doc.data()?.description || "",
@@ -82,7 +90,7 @@ const UserQuestionsPage: React.FC = () => {
       console.error("Error fetching courses:", error);
     }
   };
-  
+
   const fetchUnits = async (courseId: string) => {
     try {
       const snapshot = await firestore()
@@ -90,7 +98,7 @@ const UserQuestionsPage: React.FC = () => {
         .doc(courseId)
         .collection("units")
         .get();
-        
+
       const units = snapshot.docs
         .map((doc) => ({
           ...defaultUnit,
@@ -99,13 +107,13 @@ const UserQuestionsPage: React.FC = () => {
           description: doc.data().description || "",
           order: doc.data().order || 0,
         }))
-        .sort((a, b) => a.order - b.order); 
-  
+        .sort((a, b) => a.order - b.order);
+
       setUnits(units);
     } catch (error) {
       console.error("Error fetching units:", error);
     }
-  }    
+  };
 
   const fetchQuestions = async (courseId: string, unitId: string) => {
     setLoading(true);
@@ -159,9 +167,12 @@ const UserQuestionsPage: React.FC = () => {
         onPress={() => setShow(!show)}
       >
         <Text style={styles.dropdownButtonText}>
-          {selectedValue
-            ? items.find((item) => item.key === selectedValue)?.name
-            : placeholder}
+          {trimText(
+            selectedValue
+              ? items.find((item) => item.key === selectedValue)?.name
+              : placeholder,
+            100
+          )}
         </Text>
       </TouchableOpacity>
       {show && (
@@ -183,9 +194,16 @@ const UserQuestionsPage: React.FC = () => {
     </View>
   );
 
-  const handleQuestionSelect = (questionId: string) => {
+  const handleQuestionEdit = (questionId: string) => {
     router.push({
       pathname: "/question",
+      params: { id: questionId },
+    });
+  };
+
+  const handleView = (questionId: string) => {
+    router.push({
+      pathname: "/answer",
       params: { id: questionId },
     });
   };
@@ -223,13 +241,21 @@ const UserQuestionsPage: React.FC = () => {
           <ScrollView>
             {questions.length > 0 ? (
               questions.map((item) => (
-                <TouchableOpacity
+                <Pressable
                   key={item.id}
                   style={styles.questionContainer}
-                  onPress={() => handleQuestionSelect(item.id)}
+                  onPress={() => handleView(item.id)}
                 >
                   <Text style={styles.questionText}>{item.question}</Text>
-                </TouchableOpacity>
+                  {!id && (
+                    <TouchableOpacity
+                      style={styles.editButton}
+                      onPress={() => handleQuestionEdit(item.id)}
+                    >
+                      <Ionicons name="pencil" color="white" size={24} />
+                    </TouchableOpacity>
+                  )}
+                </Pressable>
               ))
             ) : (
               <Text style={styles.emptyText}>No questions found.</Text>
@@ -284,6 +310,9 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   questionContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 15,
     backgroundColor: "#333",
     borderRadius: 8,
@@ -292,6 +321,10 @@ const styles = StyleSheet.create({
   questionText: {
     fontSize: 16,
     color: "white",
+    flex: 1,
+  },
+  editButton: {
+    padding: 5,
   },
   emptyText: {
     textAlign: "center",

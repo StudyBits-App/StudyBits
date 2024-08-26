@@ -4,11 +4,8 @@ import {
   MaterialTopTabNavigationOptions,
   MaterialTopTabNavigationEventMap,
 } from "@react-navigation/material-top-tabs";
-import { withLayoutContext } from "expo-router";
+import { useLocalSearchParams, withLayoutContext } from "expo-router";
 import { ParamListBase, TabNavigationState } from "@react-navigation/native";
-import { useUserChannel } from "@/context/userChannel";
-import CreateChannelPage from "@/screens/CreateChannel";
-import LoadingScreen from "@/screens/LoadingScreen";
 
 const { Navigator } = createMaterialTopTabNavigator();
 
@@ -19,31 +16,28 @@ export const MaterialTopTabs = withLayoutContext<
   MaterialTopTabNavigationEventMap
 >(Navigator);
 
-export default function ChannelLayout() {
-  const { hasChannel, loading } = useUserChannel();
+export default function ViewChannelLayout() {
+  const { id } = useLocalSearchParams();
 
-  if (loading) {
-    return <LoadingScreen />;
-  }
-
-  return hasChannel ? (
+  return (
     <MaterialTopTabs
       screenOptions={{
+        tabBarContentContainerStyle: {marginTop: 70},
         tabBarStyle: { backgroundColor: "#1E1E1E" },
         tabBarLabelStyle: { color: "#fff" },
         tabBarIndicatorStyle: { backgroundColor: "#3B9EBF" },
       }}
     >
       <MaterialTopTabs.Screen
-        name="channelPage"
+        name="channelPageView"
         options={{ title: "Channel" }}
+        initialParams={{id}}
       />
       <MaterialTopTabs.Screen
-        name="questionPage"
+        name="questionPageView"
         options={{ title: "Questions" }}
+        initialParams={{id}}
       />
     </MaterialTopTabs>
-  ) : (
-    <CreateChannelPage />
-  );
+  )
 }

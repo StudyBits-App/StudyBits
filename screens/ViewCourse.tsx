@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
 import LoadingScreen from "@/screens/LoadingScreen";
 import { getUnitData } from "@/services/getUserData";
 import { useLocalSearchParams } from "expo-router";
@@ -11,6 +17,8 @@ import firestore from "@react-native-firebase/firestore";
 import { useSession } from "@/context/ctx";
 import { userLearningCourses } from "@/context/userLearningCourses";
 import Back from "@/components/Back";
+import ChannelDisplay from "@/components/ChannelComponent";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const ViewCoursesPage: React.FC = () => {
   const { id } = useLocalSearchParams();
@@ -18,11 +26,22 @@ const ViewCoursesPage: React.FC = () => {
   const { user } = useSession();
   const [studiedUnit, setStudiedUnit] = useState(false);
   const { learningCourses } = userLearningCourses();
+  const [courseCreatorId, setCourseCreatorId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUnits = async () => {
+    const fetchUnitsAndCourseCreator = async () => {
+      setIsLoading(true);
       try {
         if (typeof id === "string") {
+          const courseDoc = await firestore()
+            .collection("courses")
+            .doc(id)
+            .get();
+          if (courseDoc.exists) {
+            const creatorId = courseDoc.data()?.creator;
+            setCourseCreatorId(creatorId);
+          }
           const unitDocs = await getUnitData(id);
           if (unitDocs) {
             const unitData: Unit[] = [];
@@ -39,14 +58,16 @@ const ViewCoursesPage: React.FC = () => {
           setStudiedUnit(isStudied);
         }
       } catch (error) {
-        console.error("Error fetching units: ", error);
+        console.error("Error: ", error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    fetchUnits();
+    fetchUnitsAndCourseCreator();
   }, [id, learningCourses]);
 
-  if (!units) {
+  if (isLoading) {
     return <LoadingScreen />;
   }
 
@@ -63,72 +84,94 @@ const ViewCoursesPage: React.FC = () => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.header}>
-        <Back link="/homePages/viewLearning" params={{}} title="Back to Learning" />
+    <SafeAreaView style={styles.container}>
+      <View style={styles.topBar}>
+        <Back trueBack/>
+        <Text style={styles.pageTitle}>Course Details</Text>
         <TouchableOpacity
+          style={styles.actionButton}
           onPress={studiedUnit ? undefined : handleAddUnit}
         >
           <AntDesign
             name={studiedUnit ? "checkcircle" : "plus"}
-            size={30}
-            color={studiedUnit ? "green" : "#3B9EBF"}
+            size={24}
+            color={studiedUnit ? "#4CAF50" : "#3B9EBF"}
           />
         </TouchableOpacity>
       </View>
-      <CourseCard id={id as string} editing={false} />
-      <View>
-        <View style={styles.unitHeaderContainer}>
+      
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ChannelDisplay
+          link="/viewChannelPages/channelPageView"
+          id={courseCreatorId as string}
+          displayBanner={false}
+        />
+        <CourseCard id={id as string} editing={false} />
+        
+        <View style={styles.unitSection}>
           <Text style={styles.unitHeaderText}>Units</Text>
+          {units.length > 0 ? (
+            <View style={styles.unitsContainer}>
+              {units.map((unit) => (
+                <UnitCard
+                  key={unit.key}
+                  id={unit.key}
+                  courseId={id as string}
+                  selected={false}
+                />
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.subText}>No units</Text>
+          )}
         </View>
-        {units.length > 0 ? (
-          <View style={styles.unitsContainer}>
-            {units.map((unit) => (
-              <UnitCard
-                key={unit.key}
-                id={unit.key}
-                courseId={id as string}
-                selected={false}
-              />
-            ))}
-          </View>
-        ) : (
-          <Text style={styles.subText}>No units</Text>
-        )}
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
-    justifyContent: "flex-start",
+    flex: 1,
     backgroundColor: "#1E1E1E",
-    padding: 20,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center', 
+  topBar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 16,
+    backgroundColor: "#2E2E2E",
   },
-  unitHeaderContainer: {
-    marginTop: 20,
-    marginBottom: 20,
+  pageTitle: {
+    color: "#FFFFFF",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  actionButton: {
+    padding: 8,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    padding: 16,
+  },
+  unitSection: {
+    marginTop: 24,
   },
   unitHeaderText: {
     color: "#FFFFFF",
-    fontSize: 25,
+    fontSize: 22,
     fontWeight: "bold",
+    marginBottom: 16,
   },
   unitsContainer: {
-    borderRadius: 15,
+    borderRadius: 12,
     backgroundColor: "#2E2E2E",
-    padding: 10,
+    padding: 12,
   },
   subText: {
     fontSize: 16,
     color: "white",
+    marginTop: 12,
   },
 });
 

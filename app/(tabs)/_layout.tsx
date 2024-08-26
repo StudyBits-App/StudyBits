@@ -1,4 +1,4 @@
-import { Redirect, Tabs, router } from 'expo-router';
+import { Tabs, router } from 'expo-router';
 import React from 'react';
 
 import { TabBarIcon } from '@/components/navigation/TabBarIcon';
@@ -63,6 +63,12 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="channelExternalPages"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="viewChannelPages"
         options={{
           href: null,
         }}

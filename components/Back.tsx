@@ -5,35 +5,31 @@ import { AntDesign } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 interface BackProps {
-  link: string;
-  params: { [key: string]: string | number };
-  title: string;
+  link?: string;
+  params?: { [key: string]: string | number };
+  trueBack?: boolean;
 }
 
-const Back: React.FC<BackProps> = ({ link, params }) => {
+const Back: React.FC<BackProps> = ({ link, params, trueBack }) => {
   const redirect = () => {
-    router.push({
-      pathname: link as any,
-      params: params,
-    });
+    if (trueBack) {
+      router.back();
+    } else if (link) {
+      router.push({
+        pathname: link as any,
+        params: params,
+      });
+    }
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
       <AntDesign
         name="leftcircle"
         size={30}
         color={"#3B9EBF"}
         onPress={redirect}
       />
-    </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: "#1E1E1E",
-  },
-});
 
 export default Back;

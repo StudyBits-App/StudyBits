@@ -29,6 +29,7 @@ import { useToast } from "react-native-toast-notifications";
 import { Unit } from "@/utils/interfaces";
 import CourseCard from "../components/CourseCard";
 import Back from "@/components/Back";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const ManageCoursesPage: React.FC = () => {
   const { id, isEditing } = useLocalSearchParams();
@@ -340,9 +341,11 @@ const ManageCoursesPage: React.FC = () => {
   };
 
   return (
-    <View style={{ flex: 1 }}>
+    <View>
       <NestableScrollContainer contentContainerStyle={styles.container}>
-        <Back link={"/channelPages"} params={{}} title={""} />
+        <SafeAreaView>
+          <Back link={"/channelPages"} params={{}} />
+        </SafeAreaView>
         <View style={styles.topBar}>
           <LinearGradient
             colors={["#bb52aa", "#63ff85"]}
@@ -489,8 +492,6 @@ const ManageCoursesPage: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
-    justifyContent: "flex-start",
     backgroundColor: "#1E1E1E",
     padding: 20,
   },

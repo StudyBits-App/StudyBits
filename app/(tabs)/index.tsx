@@ -48,9 +48,9 @@ const HomeScreen: React.FC = () => {
           <Ionicons name="add" size={30} color="#fff" />
         </Pressable>
       </ScrollView>
-      <Pressable style={styles.button} onPress={logout}>
+      {/* <Pressable style={styles.button} onPress={logout}>
         <Text style={styles.text}>Logout</Text>
-      </Pressable>
+      </Pressable> */}
     </SafeAreaView>
   );
 };

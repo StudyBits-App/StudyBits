@@ -7,17 +7,22 @@ import CourseCardShort from "@/components/CourseCardShort";
 const Results: React.FC = () => {
   const { query } = useLocalSearchParams<{ query: string }>();
   const [searchResults, setSearchResults] = useState<string[]>([]);
+  const [lastQuery, setLastQuery] = useState<string>("");
 
   useEffect(() => {
     if (query) {
       handleSearch();
+    } else if (lastQuery) {
+      handleSearch(lastQuery);
     }
   }, [query]);
 
-  const handleSearch = async () => {
-    if (query && query.trim()) {
-      const results = await searchCourses(query.trim());
+  const handleSearch = async (searchQuery?: string) => {
+    const searchTerm = searchQuery ?? query;
+    if (searchTerm && searchTerm.trim()) {
+      const results = await searchCourses(searchTerm.trim());
       setSearchResults(results);
+      setLastQuery(searchTerm); 
     }
   };
 
@@ -27,12 +32,17 @@ const Results: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style = {styles.contentContainer}>
+      <View style={styles.contentContainer}>
         <Pressable onPress={search}>
-          <Text style={styles.searchBar}>{query}</Text>
+          <Text style={styles.searchBar}>{query || lastQuery}</Text>
         </Pressable>
         {searchResults?.map((id) => (
-          <CourseCardShort channelDisplay={true} id={id} key={id} link="/homePages/viewCourse"/>
+          <CourseCardShort
+            channelDisplay={true}
+            id={id}
+            key={id}
+            link="/homePages/viewCourse"
+          />
         ))}
       </View>
     </SafeAreaView>
@@ -53,10 +63,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#333",
     color: "#fff",
     paddingHorizontal: 10,
-    borderRadius: 8,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
   },
   resultsList: {
     padding: 10,
