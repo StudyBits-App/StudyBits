@@ -6,6 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSession } from "@/context/ctx";
 import { router } from "expo-router";
 import auth from "@react-native-firebase/auth";
+import ViewLearning from "@/screens/ViewLearning";
 
 const HomeScreen: React.FC = () => {
   const { user } = useSession();
@@ -15,7 +16,7 @@ const HomeScreen: React.FC = () => {
   };
 
   const viewLearning = () => {
-    router.push("/homePages/viewLearning");
+    router.push("/");
   };
 
   const search = () => {
@@ -28,7 +29,7 @@ const HomeScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <View style={styles.addCoursesBox}>
         <View style={styles.header}>
           <Text style={styles.greeting}>{user?.displayName}</Text>
           <Pressable style={styles.profileButton} onPress={search}>
@@ -36,18 +37,19 @@ const HomeScreen: React.FC = () => {
           </Pressable>
         </View>
 
-        <Pressable style={styles.learnContainer} onPress={viewLearning}>
-          <LinearGradient
-            colors={["#4c669f", "#3b5998", "#192f6a"]}
+        <Pressable style={styles.learnContainer}>
+          <View
+            // colors={["#4c669f", "#3b5998", "#192f6a"]}
             style={styles.learnCard}
           >
-            <Text style={styles.learnText}>What i'm learning</Text>
-          </LinearGradient>
+            <Text style={styles.learnText}>What I'm Learning</Text>
+          </View>
         </Pressable>
         <Pressable style={styles.addButton} onPress={addLearning}>
           <Ionicons name="add" size={30} color="#fff" />
         </Pressable>
-      </ScrollView>
+      </View>
+      <ViewLearning />
       {/* <Pressable style={styles.button} onPress={logout}>
         <Text style={styles.text}>Logout</Text>
       </Pressable> */}
@@ -60,7 +62,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#1E1E1E",
   },
-  scrollContent: {
+  addCoursesBox: {
     padding: 20,
   },
   header: {
@@ -81,6 +83,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   learnCard: {
+    backgroundColor: "#192f6a",
     borderRadius: 15,
     padding: 20,
   },
@@ -99,8 +102,7 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 30,
     justifyContent: "center",
-    alignItems: "center",
-    elevation: 5,
+    alignItems: "center"
   },
   button: {
     marginVertical: "10%",

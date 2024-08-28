@@ -24,21 +24,21 @@ const AddLearning: React.FC = () => {
     setSelectedCourseKey(courseKey === selectedCourseKey ? null : courseKey);
   };
 
-const handleSubmit = async () => {
-  if (selectedCourseKey) {
-    await firestore()
-      .collection("learning")
-      .doc(user?.uid)
-      .collection("courses")
-      .doc(selectedCourseKey)  
-      .set({ studyingUnits: [0] });
-    console.log("Selected course:", selectedCourseKey);
-    setSelectedCourseKey(null);
-    router.push("/homePages/viewLearning");
-  } else {
-    console.log("No course selected");
-  }
-};
+  const handleSubmit = async () => {
+    if (selectedCourseKey) {
+      await firestore()
+        .collection("learning")
+        .doc(user?.uid)
+        .collection("courses")
+        .doc(selectedCourseKey)
+        .set({ studyingUnits: [0] });
+      console.log("Selected course:", selectedCourseKey);
+      setSelectedCourseKey(null);
+      router.push("/");
+    } else {
+      console.log("No course selected");
+    }
+  };
 
   const filteredCourses = courses.filter(
     (course) => !learningCourses.includes(course)

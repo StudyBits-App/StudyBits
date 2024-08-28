@@ -8,33 +8,26 @@ const ViewLearning: React.FC = () => {
   const { learningCourses } = userLearningCourses();
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <ScrollView style={styles.scrollView}>
-          <Text style={styles.title}>What i'm learning</Text>
-          {learningCourses.map((courseId) => (
-            <CourseCardShort
-              id={courseId}
-              key={courseId}
-              link="/homePages/viewCourse"
-            />
-          ))}
-          {learningCourses.length === 0 && (
-            <Text style={styles.noCourses}>
-              You haven't started learning any courses yet.
-            </Text>
-          )}
-        </ScrollView>
-      </View>
-    </SafeAreaView>
+    <View style={styles.container}>
+      <ScrollView style={styles.scrollView}>
+        {learningCourses.map((courseId) => (
+          <CourseCardShort
+            id={courseId}
+            key={courseId}
+            link="/homePages/viewCourse"
+          />
+        ))}
+        {learningCourses.length === 0 && (
+          <Text style={styles.noCourses}>
+            You haven't started learning any courses yet.
+          </Text>
+        )}
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#1E1E1E",
-  },
   container: {
     flex: 1,
     paddingHorizontal: 15,

@@ -22,7 +22,7 @@ export function userLearningCourses() {
         (snapshot) => {
           const coursesArray: string[] = [];
           snapshot.forEach((doc) => {
-            coursesArray.push(doc.id); 
+            coursesArray.push(doc.id);
           });
           setLearningCourses(coursesArray);
           setLoading(false);

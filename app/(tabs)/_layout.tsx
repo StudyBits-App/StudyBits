@@ -30,7 +30,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="question"
         options={{
-          title: 'Create a question',
+          title: 'Create',
           tabBarIcon: ({ color, focused }) => (
             <TabBarIcon name={focused ? 'add-circle' : 'add-circle-sharp'} color={color} />
           ),
@@ -39,9 +39,18 @@ export default function TabLayout() {
       <Tabs.Screen
         name="answer"
         options={{
-          title: 'Answer questions',
+          title: 'Answer',
           tabBarIcon: ({ color, focused }) => (
             <TabBarIcon name={focused ? 'pencil' : 'pencil-outline'} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="leaderboard"
+        options={{
+          title: 'Leaderboard',
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name={focused ? 'trophy' : 'trophy-outline'} color={color} />
           ),
         }}
       />

@@ -4,8 +4,10 @@ import firestore from "@react-native-firebase/firestore";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Hint, QuestionAnswer, QuestionInfo } from "@/utils/interfaces";
 import { trimText } from "@/utils/utils";
+import { useSession } from "@/context/ctx";
 
 const AnswerPage: React.FC = () => {
+    const { user } = useSession();
     const [hints, setHints] = useState<Hint[]>([]);
     const [answerChoices, setAnswerChoices] = useState<QuestionAnswer[]>([]);
 
@@ -21,8 +23,10 @@ const AnswerPage: React.FC = () => {
 
     const fetchQuestionInfo = async () => {
         try {
-            const querySnapshot = await firestore().collection('questions').get();
-            const data = querySnapshot.docs[Math.floor(Math.random() * querySnapshot.size)].data() as QuestionInfo;
+            const subscribedCourses = await firestore().collection('learning').doc(user?.uid).collection('courses').get();
+            const courseIds = subscribedCourses.docs.map(doc => doc.id);
+            const questionSnapshot = await firestore().collection('questions').where('course', 'in', courseIds).get();
+            const data = questionSnapshot.docs[Math.floor(Math.random() * questionSnapshot.size)].data() as QuestionInfo;
             setQuestionInfo(data);
         } catch (error) {
             console.error('Error fetching question info:', error);
@@ -50,6 +54,21 @@ const AnswerPage: React.FC = () => {
         }
     }, [questionInfo]);
 
+    const updateUserAccuracy = async () => {
+        for (const answer of answerChoices) {
+            if (answer.isSelected && !answer.answer || !answer.isSelected && answer.answer) {
+                return;
+            }
+        }
+        try {
+            await firestore().collection('learning').doc(user?.uid).set({
+                accuracy: firestore.FieldValue.increment(1)
+            }, { merge: true });
+        } catch (error) {
+            console.error('Error updating user document with answer result:', error);
+        }
+    }
+
     const toggleSelectedAnswer = (inputAnswer: QuestionAnswer) => {
         setAnswerChoices(prevAnswers =>
             prevAnswers.map(answer =>
@@ -71,6 +90,11 @@ const AnswerPage: React.FC = () => {
         setHintModalImage(item.image);
         setHintModalVisible(true);
 
+    }
+
+    const handleSubmitAnswers = () => {
+        setAnswersSubmitted(true);
+        updateUserAccuracy();
     }
 
     const renderHint = ({ item }: { item: Hint }) => {
@@ -120,7 +144,7 @@ const AnswerPage: React.FC = () => {
                             <Text style={[styles.text, styles.question]}>{question}</Text>
                             {hints.map(hint => renderHint({ item: hint }))}
                             {answerChoices.map(answer => renderAnswer({ item: answer }))}
-                            <Pressable style={styles.button} onPress={() => answersSubmitted ? nextQuestion() : setAnswersSubmitted(true)}>
+                            <Pressable style={styles.button} onPress={() => answersSubmitted ? nextQuestion() : handleSubmitAnswers()}>
                                 <Text>{answersSubmitted ? "Next Question" : "Check"}</Text>
                             </Pressable>
                         </View>
