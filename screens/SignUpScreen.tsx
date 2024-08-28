@@ -1,9 +1,9 @@
 import React from "react";
-import { SafeAreaView, View, Text, StyleSheet, Pressable, TextInput } from "react-native";
+import { SafeAreaView, View, Text, StyleSheet, Pressable, TextInput, ActivityIndicator } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import auth from '@react-native-firebase/auth';
-import { Link, Redirect} from "expo-router";
+import { Link, Redirect } from "expo-router";
 import RNDateTimePicker from '@react-native-community/datetimepicker';
 import { useSession } from "@/context/ctx";
 
@@ -13,17 +13,32 @@ GoogleSignin.configure({
 
 export default function SignUpScreen() {
     const [email, onChangeEmail] = React.useState('');
+    const [name, onChangeName] = React.useState('');
+    const [errorText, setErrorText] = React.useState('');
     const [password, onChangePassword] = React.useState('');
     const [confirmPassword, onChangeConfirmPassword] = React.useState('');
     const [enteredUsername, setEnteredUsername] = React.useState(false);
     const [birthday, setBirthday] = React.useState<Date>(new Date());
+    const [isLoading, setIsLoading] = React.useState(false);
     const { user } = useSession();
 
     const signUp = async () => {
         setEnteredUsername(true);
         if (!enteredUsername) return;
         if (email === '' || password === '') return;
-        return auth().createUserWithEmailAndPassword(email, password);
+        if (password !== confirmPassword) return setErrorText('Passwords do not match');
+
+        setIsLoading(true);
+        try {
+            await auth().createUserWithEmailAndPassword(email, password);
+            await auth().currentUser?.updateProfile({
+                displayName: name
+            });
+        } catch (error) {
+            setErrorText((error as Error).message);
+        } finally {
+            setIsLoading(false);
+        }
     }
 
     return (
@@ -34,56 +49,69 @@ export default function SignUpScreen() {
                 style={styles.background}
             />
             <View style={styles.container}>
-                <Text style={styles.titleText}>StudyBits</Text>
-                <Text style={styles.headText}>Welcome</Text>
-                <Text style={styles.subText}>Get ready to be an intellectual</Text>
-                <View style={styles.labelContainer}>
-                    <Text style={styles.label}>Email</Text>
-                    <TextInput
-                        style={[styles.input, { marginBottom: 0 }]}
-                        onChangeText={onChangeEmail}
-                        value={email}
-                        placeholder="email@domain.com"
-                        placeholderTextColor={'#868686'}
-                    />
-                </View>
-                <View style={styles.labelContainer}>
-                    <Text style={styles.label}>Password</Text>
-                    <TextInput
-                        style={styles.input}
-                        onChangeText={onChangePassword}
-                        secureTextEntry
-                        value={password}
-                        placeholder="mysupersafepassword123"
-                        placeholderTextColor={'#868686'}
-                    />
-                </View>
-                <View style={styles.labelContainer}>
-                    <Text style={styles.label}>Confirm Password</Text>
-                    <TextInput
-                        style={styles.input}
-                        onChangeText={onChangeConfirmPassword}
-                        secureTextEntry
-                        value={confirmPassword}
-                        placeholder="mysupersafepassword123"
-                        placeholderTextColor={'#868686'}
-                    />
-                </View>
-                <View style={styles.labelContainer}>
-                    <Text style={styles.label}>Birthday</Text>
-                    <RNDateTimePicker value={birthday || new Date()} onChange={(event, date) => setBirthday(date || new Date())} />
-                </View>
-                <Pressable
-                    style={styles.button}
-                    onPress={signUp}>
-                    <Text style={styles.signuptext}>Sign Up</Text>
-                </Pressable>
-                <View style={{ flexDirection: "row", justifyContent: 'center', alignItems: 'center' }}>
-                    <Text style={[styles.text, styles.policies]}>Already have an account?</Text>
-                    <Link href={'/authentication/signIn'} style={[styles.text, styles.link]}>Sign In</Link>
-                </View>
+                {isLoading ? (
+                    <ActivityIndicator size="large" color="#ffffff" />
+                ) : (
+                    <>
+                        <Text style={styles.titleText}>StudyBits</Text>
+                        <Text style={styles.headText}>Welcome</Text>
+                        <Text style={styles.subText}>Get ready to be an intellectual</Text>
+                        {errorText !== '' && <Text style={styles.errorText}>{errorText}</Text>}
+                        <View style={styles.labelContainer}>
+                            <Text style={styles.label}>Name</Text>
+                            <TextInput
+                                style={[styles.input, { marginBottom: 0 }]}
+                                onChangeText={onChangeName}
+                                value={name}
+                                placeholder="John Doe"
+                                placeholderTextColor={'#868686'}
+                            />
+                        </View>
+                        <View style={styles.labelContainer}>
+                            <Text style={styles.label}>Email</Text>
+                            <TextInput
+                                style={[styles.input, { marginBottom: 0 }]}
+                                onChangeText={onChangeEmail}
+                                value={email}
+                                placeholder="email@domain.com"
+                                placeholderTextColor={'#868686'}
+                            />
+                        </View>
+                        <View style={styles.labelContainer}>
+                            <Text style={styles.label}>Password</Text>
+                            <TextInput
+                                style={styles.input}
+                                onChangeText={onChangePassword}
+                                secureTextEntry
+                                value={password}
+                                placeholder="mysupersafepassword123"
+                                placeholderTextColor={'#868686'}
+                            />
+                        </View>
+                        <View style={styles.labelContainer}>
+                            <Text style={styles.label}>Confirm Password</Text>
+                            <TextInput
+                                style={styles.input}
+                                onChangeText={onChangeConfirmPassword}
+                                secureTextEntry
+                                value={confirmPassword}
+                                placeholder="mysupersafepassword123"
+                                placeholderTextColor={'#868686'}
+                            />
+                        </View>
+                        <Pressable
+                            style={styles.button}
+                            onPress={signUp}>
+                            <Text style={styles.signuptext}>Sign Up</Text>
+                        </Pressable>
+                        <View style={{ flexDirection: "row", justifyContent: 'center', alignItems: 'center' }}>
+                            <Text style={[styles.text, styles.policies]}>Already have an account?</Text>
+                            <Link href={'/authentication/signIn'} style={[styles.text, styles.link]}>Sign In</Link>
+                        </View>
+                    </>
+                )}
             </View>
-        </SafeAreaView >
+        </SafeAreaView>
     )
 }
 

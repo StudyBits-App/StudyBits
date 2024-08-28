@@ -8,15 +8,23 @@ import {
   SafeAreaView,
 } from "react-native";
 import CourseCardShort from "@/components/CourseCardShort";
-import { useUserCourses } from "@/context/userCourses";
 import { userLearningCourses } from "@/context/userLearningCourses";
 import firestore from "@react-native-firebase/firestore";
 import { useSession } from "@/context/ctx";
 import { router } from "expo-router";
+import LoadingScreen from "./LoadingScreen";
 
 const AddLearning: React.FC = () => {
   const [selectedCourseKey, setSelectedCourseKey] = useState<string | null>(null);
-  const { courses } = useUserCourses();
+  const [courses, setCourses] = useState<string[]>([]);
+
+  const getCourses = async () => {
+    const snapshot = await firestore().collection("courses").limit(10).get();
+    setCourses(snapshot.docs.map((doc) => doc.id));
+  };
+
+  getCourses();
+
   const { learningCourses } = userLearningCourses();
   const { user } = useSession();
 
@@ -43,6 +51,12 @@ const AddLearning: React.FC = () => {
   const filteredCourses = courses.filter(
     (course) => !learningCourses.includes(course)
   );
+
+  if (courses === null) {
+    return (
+      <LoadingScreen />
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>

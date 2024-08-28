@@ -10,21 +10,23 @@ const AnswerPage: React.FC = () => {
     const { user } = useSession();
     const [hints, setHints] = useState<Hint[]>([]);
     const [answerChoices, setAnswerChoices] = useState<QuestionAnswer[]>([]);
-
     const [question, setQuestion] = useState<string>();
     const [questionInfo, setQuestionInfo] = useState<QuestionInfo | null>(null);
-
     const [hintModalVisible, setHintModalVisible] = useState(false);
     const [hintModalContent, setHintModalContent] = useState<string>('');
     const [hintModalTitle, setHintModalTitle] = useState<string>('');
     const [hintModalImage, setHintModalImage] = useState<string>('');
-
     const [answersSubmitted, setAnswersSubmitted] = useState(false);
+    const [noCourses, setNoCourses] = useState(false);
 
     const fetchQuestionInfo = async () => {
         try {
             const subscribedCourses = await firestore().collection('learning').doc(user?.uid).collection('courses').get();
             const courseIds = subscribedCourses.docs.map(doc => doc.id);
+            if (courseIds.length === 0) {
+                setNoCourses(true);
+                return;
+            }
             const questionSnapshot = await firestore().collection('questions').where('course', 'in', courseIds).get();
             const data = questionSnapshot.docs[Math.floor(Math.random() * questionSnapshot.size)].data() as QuestionInfo;
             setQuestionInfo(data);
@@ -139,7 +141,9 @@ const AnswerPage: React.FC = () => {
         <SafeAreaView style={styles.container}>
             <ScrollView style={styles.scrollview}>
                 {
-                    questionInfo ? (
+                    noCourses ? (
+                        <Text style={[styles.text, styles.noCoursesText]}>You aren't subscribed to any courses.</Text>
+                    ) : questionInfo ? (
                         <View>
                             <Text style={[styles.text, styles.question]}>{question}</Text>
                             {hints.map(hint => renderHint({ item: hint }))}
@@ -282,6 +286,11 @@ const styles = StyleSheet.create({
         borderColor: '#8bc34a',
         borderWidth: 4,
     },
+    noCoursesText: {
+        textAlign: 'center',
+        fontSize: 18,
+        marginVertical: '5%'
+    }
 });
 
 export default AnswerPage;

@@ -29,13 +29,13 @@ const ViewChannelPage: React.FC = () => {
 
   return (
     <ScrollView style={styles.container}>
-      <Back link="/homePages/searchResults"/>
+      <Back link="/" />
       <ChannelDisplay id={id as string} displayBanner={true} />
       {otherCourses.map((course) => (
         <CourseCardShort
           id={course}
           key={course}
-          link={ "/homePages/viewCourse"}
+          link={"/homePages/viewCourse"}
           params={{ id: id as string }}
         />
       ))}
