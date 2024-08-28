@@ -5,7 +5,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from 'react-native-vector-icons/FontAwesome';
 
 const LeaderboardPage: React.FC = () => {
-    const [users, setUsers] = useState<string[]>([]);
+    type Participant = {
+        name: string;
+        points: number;
+    };
+    const [users, setUsers] = useState<Participant[]>([]);
     const [loading, setLoading] = useState(true);
 
     const fetchDocuments = async () => {
@@ -14,11 +18,16 @@ const LeaderboardPage: React.FC = () => {
                 .collection('learning')
                 .orderBy('accuracy', 'desc')
                 .get();
-            const docNames = querySnapshot.docs.map(doc => doc.id);
+            const docNames = querySnapshot.docs.map(doc => [doc.id, doc.data().accuracy]);
 
             for (const docName of docNames) {
-                const user = await firestore().collection('channels').doc(docName).get();
-                if (user.data()?.displayName) setUsers((prev) => [...prev, user.data()?.displayName]);
+                let docID = docName[0];
+                let points = docName[1];
+                const user = await firestore().collection('channels').doc(docID).get();
+                if (user.data()?.displayName) setUsers((prev) => [...prev, {
+                    name: user.data()?.displayName,
+                    points: points
+                }]);
             }
         } catch (error) {
             console.error('Error fetching documents:', error);
@@ -33,13 +42,14 @@ const LeaderboardPage: React.FC = () => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <Text style={styles.title}>Leaderboard</Text>
+            <Text style={styles.title}>Points Leaderboard</Text>
+            <Text style={styles.description}>Earn points by answering questions correctly!</Text>
             {loading ? (
                 <ActivityIndicator size="large" />
             ) : (
                 <ScrollView style={styles.scrollview}>
-                    {users.map((name, index) => {
-                        if (name == null) return null;
+                    {users.map((info, index) => {
+                        if (info == null) return null;
 
                         let trophyColor;
                         if (index === 0) trophyColor = "#FFD700"; // Gold
@@ -51,7 +61,9 @@ const LeaderboardPage: React.FC = () => {
                                 {index < 3 && (
                                     <Icon name="trophy" size={20} color={trophyColor} style={styles.icon} />
                                 )}
-                                <Text style={styles.text}>{name}</Text>
+                                <Text style={styles.rank}>{index + 1}.</Text>
+                                <Text style={styles.text}>{info.name}</Text>
+                                <Text style={styles.points}>{info.points}</Text>
                             </View>
                         );
                     })}
@@ -73,14 +85,27 @@ const styles = StyleSheet.create({
         color: "#FFF",
         marginVertical: 20
     },
+    description: {
+        fontSize: 16,
+        color: "#AAA",
+        marginBottom: 20,
+        textAlign: 'center',
+        paddingHorizontal: '10%'
+    },
     scrollview: {
-        width: '75%'
+        width: '90%'
+    },
+    points: {
+        position: 'absolute',
+        right: '10%',
+        color: "#5AFF5A",
+        fontSize: 18,
     },
     docContainer: {
         backgroundColor: "#333333",
         borderRadius: 8,
-        paddingVertical: '4%',
-        marginBottom: 10,
+        paddingVertical: '6%',
+        marginBottom: 15,
         flexDirection: "row",
         alignItems: "center",
         paddingHorizontal: '5%'
@@ -88,8 +113,14 @@ const styles = StyleSheet.create({
     icon: {
         marginRight: 10
     },
+    rank: {
+        color: "#FFF",
+        fontSize: 18,
+        marginRight: 10
+    },
     text: {
-        color: "#FFF"
+        color: "#FFF",
+        fontSize: 18
     }
 });
 

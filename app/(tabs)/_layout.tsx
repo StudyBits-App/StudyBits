@@ -22,6 +22,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
+          unmountOnBlur: true,
           tabBarIcon: ({ color, focused }) => (
             <TabBarIcon name={focused ? 'home' : 'home-outline'} color={color} />
           ),
@@ -40,6 +41,7 @@ export default function TabLayout() {
         name="answer"
         options={{
           title: 'Answer',
+          unmountOnBlur: true,
           tabBarIcon: ({ color, focused }) => (
             <TabBarIcon name={focused ? 'pencil' : 'pencil-outline'} color={color} />
           ),
@@ -49,6 +51,7 @@ export default function TabLayout() {
         name="leaderboard"
         options={{
           title: 'Leaderboard',
+          unmountOnBlur: true,
           tabBarIcon: ({ color, focused }) => (
             <TabBarIcon name={focused ? 'trophy' : 'trophy-outline'} color={color} />
           ),
@@ -59,6 +62,7 @@ export default function TabLayout() {
         options={{
           headerShown: true,
           title: 'My Channel',
+          unmountOnBlur: true,
           tabBarIcon: ({ color, focused }) => (
             <TabBarIcon name={focused ? 'person-circle' : 'person-circle-sharp'} color={color} />
           ),
