@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     },
     points: {
         position: 'absolute',
-        right: '10%',
+        right: 15,
         color: "#5AFF5A",
         fontSize: 18,
     },
