@@ -65,7 +65,7 @@ const ViewCoursesPage: React.FC = () => {
     };
 
     fetchUnitsAndCourseCreator();
-  }, [id, learningCourses]);
+  }, [id]);
 
   if (isLoading) {
     return <LoadingScreen />;
@@ -89,12 +89,11 @@ const ViewCoursesPage: React.FC = () => {
         <Back trueBack/>
         <Text style={styles.pageTitle}>Course Details</Text>
         <TouchableOpacity
-          style={styles.actionButton}
           onPress={studiedUnit ? undefined : handleAddUnit}
         >
           <AntDesign
             name={studiedUnit ? "checkcircle" : "plus"}
-            size={24}
+            size={30}
             color={studiedUnit ? "#4CAF50" : "#3B9EBF"}
           />
         </TouchableOpacity>
@@ -146,9 +145,6 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 18,
     fontWeight: "bold",
-  },
-  actionButton: {
-    padding: 8,
   },
   scrollContent: {
     flexGrow: 1,

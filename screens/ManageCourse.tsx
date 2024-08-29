@@ -341,8 +341,8 @@ const ManageCoursesPage: React.FC = () => {
   };
 
   return (
-    <View>
-      <NestableScrollContainer contentContainerStyle={styles.container}>
+    <View style={styles.pageContainer}>
+      <NestableScrollContainer contentContainerStyle={styles.scrollContainer}>
         <SafeAreaView>
           <Back link={"/channelPages"} params={{}} />
         </SafeAreaView>
@@ -491,8 +491,12 @@ const ManageCoursesPage: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  pageContainer: {
+    flex: 1,
     backgroundColor: "#1E1E1E",
+  },
+  scrollContainer: {
+    flexGrow: 1,
     padding: 20,
   },
   topBar: {
