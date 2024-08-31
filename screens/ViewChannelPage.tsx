@@ -20,7 +20,7 @@ const ViewChannelPage: React.FC = () => {
       }
     };
     setCourses();
-  }, []);
+  }, [id]);
 
   if (isLoading) {
     return <LoadingScreen />;
