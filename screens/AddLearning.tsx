@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   SafeAreaView,
 } from "react-native";
 import CourseCardShort from "@/components/CourseCardShort";
-import { userLearningCourses } from "@/context/userLearningCourses";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import firestore from "@react-native-firebase/firestore";
 import { useSession } from "@/context/ctx";
 import { router } from "expo-router";
@@ -17,16 +17,34 @@ import LoadingScreen from "./LoadingScreen";
 const AddLearning: React.FC = () => {
   const [selectedCourseKey, setSelectedCourseKey] = useState<string | null>(null);
   const [courses, setCourses] = useState<string[]>([]);
+  const [learningCourses, setLearningCourses] = useState<string[]>([]); 
 
-  const getCourses = async () => {
-    const snapshot = await firestore().collection("courses").limit(10).get();
-    setCourses(snapshot.docs.map((doc) => doc.id));
-  };
-
-  getCourses();
-
-  const { learningCourses } = userLearningCourses();
   const { user } = useSession();
+
+  useEffect(() => {
+    const fetchLearningCourses = async () => {
+      try {
+        const storedCourses = await AsyncStorage.getItem("learningCourses");
+        if (storedCourses) {
+          setLearningCourses(JSON.parse(storedCourses));
+        }
+      } catch (error) {
+        console.error("Error fetching learning courses from AsyncStorage:", error);
+      }
+    };
+
+    const getCourses = async () => {
+      try {
+        const snapshot = await firestore().collection("courses").limit(10).get();
+        setCourses(snapshot.docs.map((doc) => doc.id));
+      } catch (error) {
+        console.error("Error fetching courses:", error);
+      }
+    };
+
+    fetchLearningCourses();
+    getCourses();
+  }, []);
 
   const handleCourseSelect = (courseKey: string) => {
     setSelectedCourseKey(courseKey === selectedCourseKey ? null : courseKey);
@@ -34,15 +52,24 @@ const AddLearning: React.FC = () => {
 
   const handleSubmit = async () => {
     if (selectedCourseKey) {
-      await firestore()
-        .collection("learning")
-        .doc(user?.uid)
-        .collection("courses")
-        .doc(selectedCourseKey)
-        .set({ studyingUnits: [0] });
-      console.log("Selected course:", selectedCourseKey);
-      setSelectedCourseKey(null);
-      router.push("/");
+      try {
+        await firestore()
+          .collection("learning")
+          .doc(user?.uid)
+          .collection("courses")
+          .doc(selectedCourseKey)
+          .set({ studyingUnits: [0] });
+
+        console.log("Selected course:", selectedCourseKey);
+
+        const updatedCourses = [...learningCourses, selectedCourseKey];
+        await AsyncStorage.setItem("learningCourses", JSON.stringify(updatedCourses));
+
+        setSelectedCourseKey(null);
+        router.push("/");
+      } catch (error) {
+        console.error("Error adding course:", error);
+      }
     } else {
       console.log("No course selected");
     }
@@ -52,10 +79,8 @@ const AddLearning: React.FC = () => {
     (course) => !learningCourses.includes(course)
   );
 
-  if (courses === null) {
-    return (
-      <LoadingScreen />
-    );
+  if (courses.length === 0) {
+    return <LoadingScreen />;
   }
 
   return (

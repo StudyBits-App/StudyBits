@@ -1,3 +1,4 @@
+import { Unit } from "@/utils/interfaces";
 import firestore from "@react-native-firebase/firestore";
 
 const getChannelData = async (userId: string) => {
@@ -61,17 +62,40 @@ async function getUnit(courseId: string, unitId: string) {
   }
 }
 
-async function courseArray (userId: string) {
+export const fetchUnitsAndCourseCreator = async (id: string) => {
   try {
-    const snapshot = await firestore()
-      .collection('channels')
-      .doc(userId)
-      .get();
+    const courseDoc = await getCourseData(id);
+    const creatorId = courseDoc.data()?.creator;
+
+    const unitDocs = await getUnitData(id);
+    const unitData: Unit[] = [];
+
+    if (!unitDocs.empty) {
+      unitDocs.forEach((doc) => {
+        const unit = doc.data() as Unit;
+        unitData.push(unit);
+      });
+      
+      const sortedUnits = unitData.sort((a, b) => a.order - b.order);
+      return { creatorId, sortedUnits };
+    }
+    return { creatorId, sortedUnits: [] };
+  } catch (error) {
+    console.error("Error fetching units and course creator: ", error);
+  }
+};
+
+
+async function courseArray(userId: string) {
+  try {
+    const snapshot = await firestore().collection("channels").doc(userId).get();
 
     if (snapshot.exists) {
       const data = snapshot.data();
       if (data && Array.isArray(data.courses)) {
-        return data.courses.filter((course): course is string => typeof course === 'string');
+        return data.courses.filter(
+          (course): course is string => typeof course === "string"
+        );
       } else {
         return [];
       }
@@ -79,10 +103,9 @@ async function courseArray (userId: string) {
       return [];
     }
   } catch (error) {
-    console.error('Error fetching courses:', error);
+    console.error("Error fetching courses:", error);
     return [];
   }
-};
+}
 
-
-export { getChannelData, getCourseData, getUnitData, getUnit, courseArray};
+export { getChannelData, getCourseData, getUnitData, getUnit, courseArray };

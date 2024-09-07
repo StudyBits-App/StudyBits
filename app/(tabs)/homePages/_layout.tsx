@@ -11,12 +11,6 @@ export default function homePageLayout() {
                 }}
             />
             <Stack.Screen
-                name="viewLearning"
-                options={{
-                    headerShown: false
-                }}
-            />
-            <Stack.Screen
                 name="search"
                 options={{
                     headerShown: false

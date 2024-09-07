@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { SafeAreaView, Text, StyleSheet, Pressable, View } from "react-native";
+import {
+  SafeAreaView,
+  Text,
+  StyleSheet,
+  Pressable,
+  View,
+  ScrollView,
+} from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { searchCourses } from "@/utils/searchAlgorithm";
 import CourseCardShort from "@/components/CourseCardShort";
@@ -22,7 +29,7 @@ const Results: React.FC = () => {
     if (searchTerm && searchTerm.trim()) {
       const results = await searchCourses(searchTerm.trim());
       setSearchResults(results);
-      setLastQuery(searchTerm); 
+      setLastQuery(searchTerm);
     }
   };
 
@@ -36,14 +43,16 @@ const Results: React.FC = () => {
         <Pressable onPress={search}>
           <Text style={styles.searchBar}>{query || lastQuery}</Text>
         </Pressable>
-        {searchResults?.map((id) => (
-          <CourseCardShort
-            channelDisplay={true}
-            id={id}
-            key={id}
-            link="/homePages/viewCourse"
-          />
-        ))}
+        <ScrollView>
+          {searchResults?.map((id) => (
+            <CourseCardShort
+              channelDisplay={true}
+              id={id}
+              key={id}
+              link="/homePages/viewCourse"
+            />
+          ))}
+        </ScrollView>
       </View>
     </SafeAreaView>
   );

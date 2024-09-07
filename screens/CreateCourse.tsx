@@ -57,7 +57,7 @@ const CreateCourse: React.FC = () => {
         const uploadedImageUrl = await uploadImageToFirebase(course.picUrl, 'coursePics');
         course.picUrl = uploadedImageUrl;
       }
-
+      course.lastModified = new Date().getTime();
       const courseRef = await firestore().collection('courses').add(course);
       const docId = courseRef.id;
       console.log(course);
@@ -78,6 +78,7 @@ const CreateCourse: React.FC = () => {
         course.picUrl = uploadedImageUrl;
       }
     }
+    course.lastModified = new Date().getTime();
     if(typeof id === 'string'){
       firestore().collection('courses').doc(id).update(course);
     }

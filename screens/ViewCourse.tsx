@@ -6,8 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
 } from "react-native";
-import LoadingScreen from "@/screens/LoadingScreen";
-import { getUnitData } from "@/services/getUserData";
+import { fetchUnitsAndCourseCreator } from "@/services/getUserData";
 import { useLocalSearchParams } from "expo-router";
 import { Unit } from "@/utils/interfaces";
 import CourseCard from "../components/CourseCard";
@@ -15,61 +14,39 @@ import UnitCard from "@/components/UnitCard";
 import { AntDesign } from "@expo/vector-icons";
 import firestore from "@react-native-firebase/firestore";
 import { useSession } from "@/context/ctx";
-import { userLearningCourses } from "@/context/userLearningCourses";
 import Back from "@/components/Back";
 import ChannelDisplay from "@/components/ChannelComponent";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const ViewCoursesPage: React.FC = () => {
   const { id } = useLocalSearchParams();
   const [units, setUnits] = useState<Unit[]>([]);
   const { user } = useSession();
   const [studiedUnit, setStudiedUnit] = useState(false);
-  const { learningCourses } = userLearningCourses();
   const [courseCreatorId, setCourseCreatorId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUnitsAndCourseCreator = async () => {
-      setIsLoading(true);
+    const fetchCourseData = async () => {
       try {
         if (typeof id === "string") {
-          const courseDoc = await firestore()
-            .collection("courses")
-            .doc(id)
-            .get();
-          if (courseDoc.exists) {
-            const creatorId = courseDoc.data()?.creator;
-            setCourseCreatorId(creatorId);
+          const courseData = await fetchUnitsAndCourseCreator(id);
+          if (courseData) {
+            setCourseCreatorId(courseData.creatorId);
+            setUnits(courseData.sortedUnits);
           }
-          const unitDocs = await getUnitData(id);
-          if (unitDocs) {
-            const unitData: Unit[] = [];
-            if (!unitDocs.empty) {
-              unitDocs.forEach((doc) => {
-                const unit = doc.data() as Unit;
-                unitData.push(unit);
-              });
-              const sortedUnits = unitData.sort((a, b) => a.order - b.order);
-              setUnits(sortedUnits);
-            }
-          }
+          const storedCourses = await AsyncStorage.getItem("learningCourses");
+          const learningCourses = storedCourses ? JSON.parse(storedCourses) : [];
           const isStudied = learningCourses.includes(id);
           setStudiedUnit(isStudied);
         }
       } catch (error) {
-        console.error("Error: ", error);
-      } finally {
-        setIsLoading(false);
-      }
+        console.error("Error fetching course data: ", error);
+      } 
     };
 
-    fetchUnitsAndCourseCreator();
+    fetchCourseData();
   }, [id]);
-
-  if (isLoading) {
-    return <LoadingScreen />;
-  }
 
   const handleAddUnit = async () => {
     if (typeof id === "string") {
@@ -82,15 +59,13 @@ const ViewCoursesPage: React.FC = () => {
       setStudiedUnit(true);
     }
   };
-
+  
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.topBar}>
-        <Back trueBack/>
+        <Back trueBack />
         <Text style={styles.pageTitle}>Course Details</Text>
-        <TouchableOpacity
-          onPress={studiedUnit ? undefined : handleAddUnit}
-        >
+        <TouchableOpacity onPress={studiedUnit ? undefined : handleAddUnit}>
           <AntDesign
             name={studiedUnit ? "checkcircle" : "plus"}
             size={30}
@@ -98,7 +73,7 @@ const ViewCoursesPage: React.FC = () => {
           />
         </TouchableOpacity>
       </View>
-      
+
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <ChannelDisplay
           link="/viewChannelPages/channelPageView"
@@ -106,7 +81,7 @@ const ViewCoursesPage: React.FC = () => {
           displayBanner={false}
         />
         <CourseCard id={id as string} editing={false} />
-        
+
         <View style={styles.unitSection}>
           <Text style={styles.unitHeaderText}>Units</Text>
           {units.length > 0 ? (

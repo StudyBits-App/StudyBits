@@ -18,13 +18,15 @@ export interface Course {
     picUrl: string;
     name: string;
     description: string;
+    lastModified: number
 }
 export const defaultCourse: Course = {
-    key: ';',
+    key: '',
     creator: '',
     picUrl: '',
     name: '',
     description: '',
+    lastModified: new Date().getTime()
 };
 
 export interface Unit {

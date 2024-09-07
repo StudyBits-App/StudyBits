@@ -30,6 +30,7 @@ import { Unit } from "@/utils/interfaces";
 import CourseCard from "../components/CourseCard";
 import Back from "@/components/Back";
 import { SafeAreaView } from "react-native-safe-area-context";
+import firestore from '@react-native-firebase/firestore';
 
 const ManageCoursesPage: React.FC = () => {
   const { id, isEditing } = useLocalSearchParams();
@@ -170,11 +171,15 @@ const ManageCoursesPage: React.FC = () => {
         setFirebaseUnits(savedUnits);
         setUnits(savedUnits);
         console.log("Units saved successfully!");
+          await firestore().collection('courses').doc(id).update({
+          lastModified: new Date().getTime(),
+        });        
       } catch (error) {
-        console.error("Error saving units: ", error);
+        console.error("Error saving units or updating lastModified: ", error);
       }
     }
   };
+  
 
   const unsavedChangesToast = () => {
     toast.show("Please save your changes before performing this action", {
