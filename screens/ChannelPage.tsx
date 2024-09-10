@@ -35,8 +35,12 @@ const UserChannelPage: React.FC = () => {
   return (
     <ScrollView style={styles.container}>
       <ChannelDisplay id={user?.uid as string} displayBanner={true} />
-      <CourseList collectionName={"userCourses"} link="/channelExternalPages/manageCourse"/>
-      <View style = {styles.addCourseCard}>
+      <CourseList
+        collectionName={"userCourses"}
+        link="/channelExternalPages/manageCourse"
+        noSync={true}
+      />
+      <View style={styles.addCourseCard}>
         <AddCourse />
       </View>
     </ScrollView>
@@ -87,7 +91,7 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   addCourseCard: {
-    paddingHorizontal: 15
+    paddingHorizontal: 15,
   },
   courseName: {
     fontSize: 24,

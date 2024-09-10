@@ -8,11 +8,17 @@ interface CourseListProps {
   collectionName: string;
   link?: string;
   params?: { [key: string]: string | number };
+  noSync?: boolean;
 }
 
-const CourseList: React.FC<CourseListProps> = ({ collectionName, link, params }) => {
+const CourseList: React.FC<CourseListProps> = ({
+  collectionName,
+  link,
+  params,
+  noSync,
+}) => {
   const [learningCourseIds, setLearningCourseIds] = useState<string[]>([]);
-  const {user} = useSession();
+  const { user } = useSession();
   useEffect(() => {
     const fetchLearningCourseIds = async () => {
       try {
@@ -37,9 +43,10 @@ const CourseList: React.FC<CourseListProps> = ({ collectionName, link, params })
             key={courseId}
             link={link}
             params={{ ...params, id: courseId }}
+            noSync={true}
           />
         ))}
-      
+
         {learningCourseIds.length === 0 && (
           <Text style={styles.noCourses}>
             You haven't started learning any courses yet.

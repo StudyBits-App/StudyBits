@@ -11,7 +11,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Course, defaultCourse } from "@/utils/interfaces";
 import { trimText } from "@/utils/utils";
 import { router } from "expo-router";
-import { decideCourseListSync, syncCourse } from "@/services/fetchCacheData";
+import { syncCourse } from "@/services/fetchCacheData";
 import { useSession } from "@/context/ctx";
 
 interface CourseCardShortProps {
@@ -20,6 +20,7 @@ interface CourseCardShortProps {
   params?: { [key: string]: string | number };
   selected?: boolean;
   onPress?: () => void;
+  noSync?: boolean;
 }
 
 const CourseCardShortCache: React.FC<CourseCardShortProps> = ({
@@ -28,9 +29,10 @@ const CourseCardShortCache: React.FC<CourseCardShortProps> = ({
   params,
   selected,
   onPress,
+  noSync,
 }) => {
   const [course, setCourse] = useState<Course>(defaultCourse);
-  const {user} = useSession();
+  const { user } = useSession();
 
   useEffect(() => {
     const loadCachedData = async () => {
@@ -59,7 +61,9 @@ const CourseCardShortCache: React.FC<CourseCardShortProps> = ({
     };
 
     loadCachedData();
-    syncData();
+    if (!noSync) {
+      syncData();
+    }
   }, [id]);
 
   const handlePress = () => {
