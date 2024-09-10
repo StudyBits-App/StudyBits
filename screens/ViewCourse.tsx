@@ -30,19 +30,22 @@ const ViewCoursesPage: React.FC = () => {
     const fetchCourseData = async () => {
       try {
         if (typeof id === "string") {
+          console.log(id);
           const courseData = await fetchUnitsAndCourseCreator(id);
           if (courseData) {
             setCourseCreatorId(courseData.creatorId);
             setUnits(courseData.sortedUnits);
           }
           const storedCourses = await AsyncStorage.getItem("learningCourses");
-          const learningCourses = storedCourses ? JSON.parse(storedCourses) : [];
+          const learningCourses = storedCourses
+            ? JSON.parse(storedCourses)
+            : [];
           const isStudied = learningCourses.includes(id);
           setStudiedUnit(isStudied);
         }
       } catch (error) {
         console.error("Error fetching course data: ", error);
-      } 
+      }
     };
 
     fetchCourseData();
@@ -59,7 +62,7 @@ const ViewCoursesPage: React.FC = () => {
       setStudiedUnit(true);
     }
   };
-  
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.topBar}>
@@ -80,7 +83,7 @@ const ViewCoursesPage: React.FC = () => {
           id={courseCreatorId as string}
           displayBanner={false}
         />
-        <CourseCard id={id as string} editing={false} />
+        <CourseCard id={id as string} editing={false} cache={false} />
 
         <View style={styles.unitSection}>
           <Text style={styles.unitHeaderText}>Units</Text>

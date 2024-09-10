@@ -5,15 +5,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSession } from "@/context/ctx";
 import { router } from "expo-router";
 import auth from "@react-native-firebase/auth";
-import ViewLearning from "@/components/ViewLearning";
+import CourseList from "@/components/CourseList";
 import LoadingScreen from "./LoadingScreen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { fetchAndSaveCourses, syncCourses } from "@/services/fetchCacheData";
+import { fetchAndSaveCourses, fetchAndSaveUserChannelCourses } from "@/services/fetchCacheData";
 
 const HomeScreen: React.FC = () => {
   const { user } = useSession();
   const [loading, setLoading] = useState(false);
-  const [coursesUpdated, setCoursesUpdated] = useState(false); 
 
   useEffect(() => {
     const initializeUserData = async () => {
@@ -25,11 +24,9 @@ const HomeScreen: React.FC = () => {
           if (!hasInitialized) {
             setLoading(true);
             await fetchAndSaveCourses(user.uid);
+            await fetchAndSaveUserChannelCourses(user?.uid)
             await AsyncStorage.setItem(`user_initialized_${user.uid}`, "true");
             setLoading(false);
-          } else {
-            await syncCourses(user.uid);
-            setCoursesUpdated((prev) => !prev); 
           }
         } catch (error) {
           console.error("Error initializing user data:", error);
@@ -82,7 +79,7 @@ const HomeScreen: React.FC = () => {
           <Ionicons name="add" size={30} color="#fff" />
         </Pressable>
       </View>
-      <ViewLearning coursesUpdated={coursesUpdated} />
+      <CourseList collectionName="learningCourses" link="/homePages/viewCourse"/>
       <Pressable style={styles.button} onPress={logout}>
         <Text style={styles.text}>Logout</Text>
       </Pressable>

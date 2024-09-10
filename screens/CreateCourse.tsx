@@ -9,6 +9,7 @@ import { getCourseData } from '@/services/getUserData';
 import { Course, defaultCourse } from '@/utils/interfaces';
 import Back from '@/components/Back';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const CreateCourse: React.FC = () => {
   const [course, setCourse] = useState<Course>(defaultCourse);
@@ -62,14 +63,27 @@ const CreateCourse: React.FC = () => {
       const docId = courseRef.id;
       console.log(course);
       await courseRef.update({ key: docId });
-      const currentCourses = (await firestore().collection('channels').doc(user?.uid).get()).data()?.courses;
-      await firestore().collection('channels').doc(user?.uid).update({ courses: [...(currentCourses || []), docId] });
-      router.push({ pathname: "/channelExternalPages/manageCourse", params: { id: docId, isEditing: '1' } });
+  
+      const channelRef = firestore().collection('channels').doc(user?.uid);
+      const channelDoc = await channelRef.get();
+      const currentCourses = channelDoc.data()?.courses || [];
+      await channelRef.update({ courses: [...currentCourses, docId] });
+  
+      const storedUserCourses = await AsyncStorage.getItem('userCourses');
+      let userCourses = storedUserCourses ? JSON.parse(storedUserCourses) : [];
+      userCourses.push(docId);
+      await AsyncStorage.setItem('userCourses', JSON.stringify(userCourses));
+      await AsyncStorage.setItem(`course_${docId}`, JSON.stringify(course));
+  
+      router.push({ 
+        pathname: "/channelExternalPages/manageCourse", 
+        params: { id: docId, isEditing: '1' } 
+      });
     } catch (error) {
       console.error('Error adding course: ', error);
     }
   };
-
+  
   const handleSave = async () => {
     if (!(editingURL && editingURL === course.picUrl)) {
       deleteImageFromFirebase(editingURL);
@@ -82,6 +96,11 @@ const CreateCourse: React.FC = () => {
     if(typeof id === 'string'){
       firestore().collection('courses').doc(id).update(course);
     }
+    await AsyncStorage.setItem(
+      `course_${id}`,
+      JSON.stringify(course)
+    );
+
     router.push({ pathname: "/channelExternalPages/manageCourse", params: { id: id, isEditing: '1' } });
   }
 

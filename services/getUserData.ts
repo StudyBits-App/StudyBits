@@ -75,7 +75,7 @@ export const fetchUnitsAndCourseCreator = async (id: string) => {
         const unit = doc.data() as Unit;
         unitData.push(unit);
       });
-      
+
       const sortedUnits = unitData.sort((a, b) => a.order - b.order);
       return { creatorId, sortedUnits };
     }

@@ -10,13 +10,11 @@ import {
 import { useSession } from "@/context/ctx";
 import { Ionicons } from "@expo/vector-icons";
 import { Link } from "expo-router";
-import CourseCardShort from "@/components/CourseCardShort";
-import { useUserCourses } from "@/context/userCourses";
 import ChannelDisplay from "@/components/ChannelComponent";
+import CourseList from "@/components/CourseList";
 
 const UserChannelPage: React.FC = () => {
   const { user } = useSession();
-  const { courses } = useUserCourses();
 
   const AddCourse = () => {
     return (
@@ -37,15 +35,10 @@ const UserChannelPage: React.FC = () => {
   return (
     <ScrollView style={styles.container}>
       <ChannelDisplay id={user?.uid as string} displayBanner={true} />
-      {courses?.map((course) => (
-        <CourseCardShort
-          id={course}
-          key={course}
-          link="/channelExternalPages/manageCourse"
-          params={{ isEditing: "0" }}
-        />
-      ))}
-      <AddCourse />
+      <CourseList collectionName={"userCourses"} link="/channelExternalPages/manageCourse"/>
+      <View style = {styles.addCourseCard}>
+        <AddCourse />
+      </View>
     </ScrollView>
   );
 };
@@ -54,7 +47,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#1E1E1E",
-    paddingHorizontal: 15,
   },
   bannerImage: {
     height: 300,
@@ -93,6 +85,9 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: "#fff",
+  },
+  addCourseCard: {
+    paddingHorizontal: 15
   },
   courseName: {
     fontSize: 24,

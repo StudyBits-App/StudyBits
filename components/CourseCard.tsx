@@ -3,18 +3,22 @@ import { View, Text, Image, Pressable, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { getCourseData } from "@/services/getUserData";
 import { Course, defaultCourse } from "@/utils/interfaces";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { syncCourse } from "@/services/fetchCacheData";
 
 interface CourseCardProps {
   id: string;
   editing: boolean;
-}  
+  cache: boolean;
+}
 
 // Component for fill size course cards when managing courses
-const CourseCard: React.FC<CourseCardProps> = ({ id, editing }) => {
+const CourseCard: React.FC<CourseCardProps> = ({ id, editing, cache }) => {
   const [course, setCourse] = useState<Course>(defaultCourse);
   const router = useRouter();
 
   useEffect(() => {
+    console.log(cache);
     const fetchCourse = async () => {
       try {
         const courseData = (await getCourseData(id)).data() as Course;
@@ -23,11 +27,30 @@ const CourseCard: React.FC<CourseCardProps> = ({ id, editing }) => {
         console.error("Error fetching course: ", error);
       }
     };
-    fetchCourse();
+    const loadCachedData = async () => {
+      try {
+        const cachedCourseData = await AsyncStorage.getItem(`course_${id}`);
+        if (cachedCourseData) {
+          const courseData = JSON.parse(cachedCourseData) as Course;
+          setCourse(courseData);
+        }
+      } catch (error) {
+        console.error("Error loading cached data:", error);
+      }
+    };
+
+    if (cache) {
+      loadCachedData();
+    } else {
+      fetchCourse();
+    }
   }, [id]);
 
   const editCourse = () => {
-    router.push({ pathname: "/channelExternalPages/createCourse", params: { id: id } });
+    router.push({
+      pathname: "/channelExternalPages/createCourse",
+      params: { id: id },
+    });
   };
 
   return (

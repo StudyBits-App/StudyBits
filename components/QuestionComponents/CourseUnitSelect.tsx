@@ -7,11 +7,11 @@ import {
   Pressable,
   Modal,
 } from "react-native";
-import CourseCardShort from "@/components/CourseCardShort";
 import UnitCard from "@/components/UnitCard";
 import { getUnitData } from "@/services/getUserData";
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
-import { useUserCourses } from "@/context/userCourses";
+import CourseCardShortCache from "../CourseCardCached";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface UnitCardData {
   id: string;
@@ -42,12 +42,27 @@ const CoursesAndUnitsPage: React.FC<CoursesAndUnitsPageProps> = ({
   );
   const [units, setUnits] = useState<UnitCardData[]>([]);
   const [showCourses, setShowCourses] = useState(true);
-  const { courses } = useUserCourses();
+  const [courses, setCourses] = useState<string[]>();
 
   useEffect(() => {
     setSelectedCourseKey(initialCourseKey);
     setSelectedUnitKey(initialUnitKey);
   }, [initialCourseKey, initialUnitKey]);
+
+  useEffect(() => {
+    const fetchLearningCourseIds = async () => {
+      try {
+        const storedIds = await AsyncStorage.getItem("userCourses");
+        if (storedIds) {
+          setCourses(JSON.parse(storedIds));
+        }
+      } catch (error) {
+        console.error("Error fetching learning course IDs:", error);
+      }
+    };
+
+    fetchLearningCourseIds();
+  }, []);
 
   const fetchUnits = async (courseId: string) => {
     try {
@@ -80,7 +95,7 @@ const CoursesAndUnitsPage: React.FC<CoursesAndUnitsPageProps> = ({
     } else {
       setUnits([]);
     }
-  }, [selectedCourseKey, courses]);
+  }, [selectedCourseKey]);
 
   const refreshUnits = () => {
     if (selectedCourseKey) {
@@ -128,13 +143,14 @@ const CoursesAndUnitsPage: React.FC<CoursesAndUnitsPageProps> = ({
                   {showCourses ? "Show Units" : "Show Courses"}
                 </Text>
               </Pressable>
-              {!showCourses && 
-              <MaterialIcons 
-                name="refresh"
-                 size={30} 
-                 color="#ADD8E6" 
-                 onPress={refreshUnits}/>
-              }
+              {!showCourses && (
+                <MaterialIcons
+                  name="refresh"
+                  size={30}
+                  color="#ADD8E6"
+                  onPress={refreshUnits}
+                />
+              )}
               <AntDesign
                 name="close"
                 size={25}
@@ -146,8 +162,8 @@ const CoursesAndUnitsPage: React.FC<CoursesAndUnitsPageProps> = ({
               {showCourses ? "Courses" : "Units"}
             </Text>
             {showCourses ? (
-              courses.map((course) => (
-                <CourseCardShort
+              courses?.map((course) => (
+                <CourseCardShortCache
                   selected={course === selectedCourseKey}
                   onPress={() => handleCourseSelect(course)}
                   id={course}

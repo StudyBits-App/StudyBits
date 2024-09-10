@@ -399,7 +399,7 @@ const ManageCoursesPage: React.FC = () => {
           </View>
         )}
 
-        <CourseCard id={id as string} editing={editing} />
+        <CourseCard id={id as string} editing={editing} cache = {true} />
 
         <View>
           <View style={styles.unitHeaderContainer}>

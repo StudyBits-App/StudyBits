@@ -11,40 +11,61 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Course, defaultCourse } from "@/utils/interfaces";
 import { trimText } from "@/utils/utils";
 import { router } from "expo-router";
+import { decideCourseListSync, syncCourse } from "@/services/fetchCacheData";
+import { useSession } from "@/context/ctx";
 
 interface CourseCardShortProps {
   id: string;
   link?: string;
   params?: { [key: string]: string | number };
+  selected?: boolean;
+  onPress?: () => void;
 }
 
 const CourseCardShortCache: React.FC<CourseCardShortProps> = ({
   id,
   link,
   params,
+  selected,
+  onPress,
 }) => {
   const [course, setCourse] = useState<Course>(defaultCourse);
+  const {user} = useSession();
 
   useEffect(() => {
-    const fetchCourseData = async () => {
+    const loadCachedData = async () => {
       try {
         const cachedCourseData = await AsyncStorage.getItem(`course_${id}`);
         if (cachedCourseData) {
           const courseData = JSON.parse(cachedCourseData) as Course;
           setCourse(courseData);
-        } else {
-          console.log("No data in cache fix");
         }
       } catch (error) {
-        console.error("Error fetching course data: ", error);
+        console.error("Error loading cached data:", error);
       }
     };
 
-    fetchCourseData();
+    const syncData = async () => {
+      try {
+        await syncCourse(id);
+        const updatedCourseData = await AsyncStorage.getItem(`course_${id}`);
+        if (updatedCourseData) {
+          const updatedCourse = JSON.parse(updatedCourseData) as Course;
+          setCourse(updatedCourse);
+        }
+      } catch (error) {
+        console.error("Error syncing data:", error);
+      }
+    };
+
+    loadCachedData();
+    syncData();
   }, [id]);
 
-  const editCourse = () => {
-    if (link && params) {
+  const handlePress = () => {
+    if (onPress) {
+      onPress();
+    } else if (link && params) {
       router.push({
         pathname: link as any,
         params: { ...params, id: course.key },
@@ -57,7 +78,10 @@ const CourseCardShortCache: React.FC<CourseCardShortProps> = ({
   };
 
   return (
-    <Pressable style={styles.course} onPress={editCourse}>
+    <Pressable
+      style={[styles.course, selected && styles.selectedCourse]}
+      onPress={handlePress}
+    >
       <View style={styles.courseContent}>
         {course.picUrl && (
           <Image source={{ uri: course.picUrl }} style={styles.coursePic} />
@@ -113,6 +137,10 @@ const styles = StyleSheet.create({
     ),
     borderWidth: 1,
     borderColor: "#fff",
+  },
+  selectedCourse: {
+    borderColor: "#ADD8E6",
+    borderWidth: 2,
   },
 });
 

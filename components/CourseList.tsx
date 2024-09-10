@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, Text, ScrollView } from "react-native";
+import { StyleSheet, Text, ScrollView, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { SafeAreaView } from "react-native-safe-area-context";
 import CourseCardShortCache from "./CourseCardCached";
+import { useSession } from "@/context/ctx";
 
-interface ViewLearningProps {
-  coursesUpdated: boolean; 
+interface CourseListProps {
+  collectionName: string;
+  link?: string;
+  params?: { [key: string]: string | number };
 }
 
-const ViewLearning: React.FC<ViewLearningProps> = ({ coursesUpdated }) => {
+const CourseList: React.FC<CourseListProps> = ({ collectionName, link, params }) => {
   const [learningCourseIds, setLearningCourseIds] = useState<string[]>([]);
-
+  const {user} = useSession();
   useEffect(() => {
     const fetchLearningCourseIds = async () => {
       try {
-        const storedIds = await AsyncStorage.getItem("learningCourses");
+        const storedIds = await AsyncStorage.getItem(collectionName);
         if (storedIds) {
           setLearningCourseIds(JSON.parse(storedIds));
         }
@@ -24,38 +26,50 @@ const ViewLearning: React.FC<ViewLearningProps> = ({ coursesUpdated }) => {
     };
 
     fetchLearningCourseIds();
-  }, [coursesUpdated]); 
+  }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView>
+    <View style={styles.container}>
+      <ScrollView style={styles.scrollView}>
         {learningCourseIds.map((courseId) => (
           <CourseCardShortCache
             id={courseId}
             key={courseId}
-            link="/homePages/viewCourse"
-            params={{ id:courseId }}
+            link={link}
+            params={{ ...params, id: courseId }}
           />
         ))}
+      
         {learningCourseIds.length === 0 && (
           <Text style={styles.noCourses}>
             You haven't started learning any courses yet.
           </Text>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     paddingHorizontal: 15,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#fff",
+    marginVertical: 20,
   },
   noCourses: {
     fontSize: 16,
     color: "#fff",
     textAlign: "center",
+    marginTop: 20,
   },
 });
 
-export default ViewLearning;
+export default CourseList;

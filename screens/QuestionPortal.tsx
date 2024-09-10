@@ -29,7 +29,6 @@ import {
   renderHint,
 } from "@/components/QuestionComponents/QuestionRenderFunctions";
 import { styles } from "@/components/QuestionComponents/QuestionStyles";
-import { useUserCourses } from "@/context/userCourses";
 import {
   fetchQuestion,
   handleHintImages,
@@ -62,17 +61,7 @@ const QuestionPortal: React.FC = () => {
   const [originalHints, setOriginalHints] = useState<Hint[]>([]);
 
   const { courseId, unitId, id } = useLocalSearchParams();
-  const { courses } = useUserCourses();
-
-  useEffect(() => {
-    if (selectedCourseKey) {
-      if (!courses.includes(selectedCourseKey)) {
-        setSelectedCourseKey(null);
-        setSelectedUnitKey(null);
-      }
-    }
-  }, [courses]);
-
+  
   useEffect(() => {
     if (typeof courseId === "string") {
       setSelectedCourseKey(courseId);
