@@ -80,9 +80,9 @@ const HomeScreen: React.FC = () => {
         </Pressable>
       </View>
       <CourseList collectionName="learningCourses" link="/homePages/viewCourse"/>
-      {/* <Pressable style={styles.button} onPress={logout}>
+      <Pressable style={styles.button} onPress={logout}>
         <Text style={styles.text}>Logout</Text>
-      </Pressable> */}
+      </Pressable>
     </SafeAreaView>
   );
 };

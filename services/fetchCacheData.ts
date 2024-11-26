@@ -3,47 +3,40 @@ import firestore from "@react-native-firebase/firestore";
 import { Channel, Course } from "../utils/interfaces";
 
 const fetchAndSaveCourses = async (userUid?: string) => {
-  try {
-    const userCoursesQuery = firestore()
-      .collection("learning")
-      .doc(userUid)
-      .collection("courses")
-      .get();
+  let userCoursesQuery = firestore()
+    .collection("learning")
+    .doc(userUid)
+    .collection("courses");
 
-    if ((await userCoursesQuery).empty) {
-      console.log("No courses found for this user in the channels collection.");
-      return;
-    }
+  const userCoursesSnapshot = await userCoursesQuery.get();
+
+  if (!userCoursesSnapshot.empty) {
     const courseIds: string[] = [];
-    for (const userCourseDoc of (await userCoursesQuery).docs) {
+
+    for (const userCourseDoc of userCoursesSnapshot.docs) {
       const courseId = userCourseDoc.id;
       courseIds.push(courseId);
+
       try {
         const courseDoc = await firestore()
           .collection("courses")
           .doc(courseId)
           .get();
+
         if (courseDoc.exists) {
           const courseData = courseDoc.data();
           await AsyncStorage.setItem(
             `course_${courseId}`,
             JSON.stringify(courseData)
           );
-          console.log(`Saved learning ourse ${courseId} to AsyncStorage`);
+          console.log(`Saved course ${courseId} to AsyncStorage`);
         }
       } catch (error) {
-        console.error(
-          `Error fetching course ${courseId} from 'courses`,
-          error
-        );
+        console.error(`Error fetching course ${courseId} from 'courses`, error);
       }
-      console.log("Saved course index to AsyncStorage");
     }
-  } catch (error) {
-    console.error(
-      "Error fetching courses from user's learning collection: ",
-      error
-    );
+    await AsyncStorage.setItem("learningCourses", JSON.stringify(courseIds));
+    console.log("Saved course index to AsyncStorage");
   }
 };
 
@@ -234,11 +227,13 @@ const deleteCourseFromLocalStorage = async (courseId: string) => {
 
     console.log(`Deletion complete for course ${courseId}.`);
   } catch (error) {
-    console.error(`Error deleting course ${courseId} from local storage:`, error);
+    console.error(
+      `Error deleting course ${courseId} from local storage:`,
+      error
+    );
     throw error;
   }
 };
-
 
 export {
   fetchAndSaveCourses,
@@ -246,5 +241,5 @@ export {
   fetchAndSaveUserChannelCourses,
   syncUserCourseList,
   syncUserLearnList,
-  deleteCourseFromLocalStorage
+  deleteCourseFromLocalStorage,
 };

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { StyleSheet, Text, ScrollView, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import CourseCardShortCache from "./CourseCardCached";
-import { useSession } from "@/context/ctx";
 
 interface CourseListProps {
   collectionName: string;
@@ -16,13 +15,14 @@ const CourseList: React.FC<CourseListProps> = ({
   params,
 }) => {
   const [learningCourseIds, setLearningCourseIds] = useState<string[]>([]);
-  const { user } = useSession();
+  
   useEffect(() => {
     const fetchLearningCourseIds = async () => {
       try {
         const storedIds = await AsyncStorage.getItem(collectionName);
         if (storedIds) {
           setLearningCourseIds(JSON.parse(storedIds));
+          console.log(storedIds)
         }
       } catch (error) {
         console.error("Error fetching learning course IDs:", error);
