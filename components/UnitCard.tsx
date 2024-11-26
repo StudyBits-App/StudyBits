@@ -59,10 +59,10 @@ const UnitCard: React.FC<UnitCardProps> = ({
     >
       <View>
         <Text style={styles.contentTitle}>
-          {unit ? unit.name : "Unit not found"}
+          {unit ? unit.name : "Loading..."}
         </Text>
         <Text style={styles.subText}>
-          {unit ? unit.description : "This unit does not exist."}
+          {unit ? unit.description : "Please wait"}
         </Text>
       </View>
     </Pressable>
@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     borderRadius: 8,
-    marginBottom: 10,
+    marginVertical: 5,
     borderColor: "grey",
     borderWidth: 1,
   },

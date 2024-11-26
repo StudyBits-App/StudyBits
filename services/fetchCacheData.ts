@@ -1,67 +1,43 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import firestore, {
-  FirebaseFirestoreTypes,
-} from "@react-native-firebase/firestore";
+import firestore from "@react-native-firebase/firestore";
 import { Channel, Course } from "../utils/interfaces";
 
-const fetchAndSaveCourses = async (
-  userUid?: string,
-  courseIdsToUpdate?: string[]
-) => {
+const fetchAndSaveCourses = async (userUid?: string) => {
   try {
-    let userCoursesQuery: FirebaseFirestoreTypes.Query<FirebaseFirestoreTypes.DocumentData>;
+    const userCoursesQuery = firestore()
+      .collection("learning")
+      .doc(userUid)
+      .collection("courses")
+      .get();
 
-    if (courseIdsToUpdate && courseIdsToUpdate.length > 0) {
-      userCoursesQuery = firestore()
-        .collection("learning")
-        .doc(userUid)
-        .collection("courses")
-        .where(firestore.FieldPath.documentId(), "in", courseIdsToUpdate);
-    } else {
-      userCoursesQuery = firestore()
-        .collection("learning")
-        .doc(userUid)
-        .collection("courses");
+    if ((await userCoursesQuery).empty) {
+      console.log("No courses found for this user in the channels collection.");
+      return;
     }
-
-    const userCoursesSnapshot = await userCoursesQuery.get();
-
-    if (!userCoursesSnapshot.empty) {
-      const courseIds: string[] = [];
-
-      for (const userCourseDoc of userCoursesSnapshot.docs) {
-        const courseId = userCourseDoc.id;
-        courseIds.push(courseId);
-
-        try {
-          const courseDoc = await firestore()
-            .collection("courses")
-            .doc(courseId)
-            .get();
-
-          if (courseDoc.exists) {
-            const courseData = courseDoc.data();
-            await AsyncStorage.setItem(
-              `course_${courseId}`,
-              JSON.stringify(courseData)
-            );
-            console.log(`Saved course ${courseId} to AsyncStorage`);
-          }
-        } catch (error) {
-          console.error(
-            `Error fetching course ${courseId} from 'courses`,
-            error
+    const courseIds: string[] = [];
+    for (const userCourseDoc of (await userCoursesQuery).docs) {
+      const courseId = userCourseDoc.id;
+      courseIds.push(courseId);
+      try {
+        const courseDoc = await firestore()
+          .collection("courses")
+          .doc(courseId)
+          .get();
+        if (courseDoc.exists) {
+          const courseData = courseDoc.data();
+          await AsyncStorage.setItem(
+            `course_${courseId}`,
+            JSON.stringify(courseData)
           );
+          console.log(`Saved learning ourse ${courseId} to AsyncStorage`);
         }
-      }
-
-      if (!courseIdsToUpdate) {
-        await AsyncStorage.setItem(
-          "learningCourses",
-          JSON.stringify(courseIds)
+      } catch (error) {
+        console.error(
+          `Error fetching course ${courseId} from 'courses`,
+          error
         );
-        console.log("Saved course index to AsyncStorage");
       }
+      console.log("Saved course index to AsyncStorage");
     }
   } catch (error) {
     console.error(
@@ -105,6 +81,7 @@ const syncCourse = async (courseId: string) => {
       );
       console.log(`Updated course ${courseId}`);
     }
+
     const courseIndexString = await AsyncStorage.getItem("learningCourses");
     const courseIndex: string[] = courseIndexString
       ? JSON.parse(courseIndexString)
@@ -202,20 +179,66 @@ const syncUserLearnList = async (uid: string) => {
       .collection("courses");
     const coursesSnapshot = await coursesRef.get();
     const learningCourses = coursesSnapshot.docs.map((doc) => doc.id);
-  
+
     if (learningCourses.length > 0) {
-      await AsyncStorage.setItem('learningCourses', JSON.stringify(learningCourses));
-      console.log('Learning courses stored successfully');
-      console.log('Number of courses:', learningCourses.length);
+      await AsyncStorage.setItem(
+        "learningCourses",
+        JSON.stringify(learningCourses)
+      );
+      console.log("Learning courses stored successfully");
+      console.log("Number of courses:", learningCourses.length);
     } else {
-      await AsyncStorage.removeItem('learningCourses');
-      console.log('No learning courses found. AsyncStorage cleared.');
+      await AsyncStorage.removeItem("learningCourses");
+      console.log("No learning courses found. AsyncStorage cleared.");
     }
   } catch (error) {
     console.error("Error fetching and storing learning courses:", error);
-    throw error; 
+    throw error;
   }
 };
+
+const deleteCourseFromLocalStorage = async (courseId: string) => {
+  try {
+    await AsyncStorage.removeItem(`course_${courseId}`);
+    console.log(`Deleted course ${courseId} from AsyncStorage.`);
+
+    const learningCoursesString = await AsyncStorage.getItem("learningCourses");
+    const learningCourses: string[] = learningCoursesString
+      ? JSON.parse(learningCoursesString)
+      : [];
+
+    if (learningCourses.includes(courseId)) {
+      const updatedLearningCourses = learningCourses.filter(
+        (id) => id !== courseId
+      );
+      await AsyncStorage.setItem(
+        "learningCourses",
+        JSON.stringify(updatedLearningCourses)
+      );
+      console.log(`Removed course ${courseId} from learning courses index.`);
+    }
+
+    const userCoursesString = await AsyncStorage.getItem("userCourses");
+    const userCourses: string[] = userCoursesString
+      ? JSON.parse(userCoursesString)
+      : [];
+
+    if (userCourses.includes(courseId)) {
+      const updatedUserCourses = userCourses.filter((id) => id !== courseId);
+      await AsyncStorage.setItem(
+        "userCourses",
+        JSON.stringify(updatedUserCourses)
+      );
+      console.log(`Removed course ${courseId} from user courses index.`);
+    }
+
+    console.log(`Deletion complete for course ${courseId}.`);
+  } catch (error) {
+    console.error(`Error deleting course ${courseId} from local storage:`, error);
+    throw error;
+  }
+};
+
 
 export {
   fetchAndSaveCourses,
@@ -223,4 +246,5 @@ export {
   fetchAndSaveUserChannelCourses,
   syncUserCourseList,
   syncUserLearnList,
+  deleteCourseFromLocalStorage
 };

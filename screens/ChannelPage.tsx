@@ -38,7 +38,6 @@ const UserChannelPage: React.FC = () => {
       <CourseList
         collectionName={"userCourses"}
         link="/channelExternalPages/manageCourse"
-        noSync={true}
       />
       <View style={styles.addCourseCard}>
         <AddCourse />

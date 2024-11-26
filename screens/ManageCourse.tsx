@@ -521,7 +521,6 @@ const styles = StyleSheet.create({
   },
   errorContainer: {
     flexDirection: "row",
-    backgroundColor: "transparent",
     borderRadius: 25,
     padding: 15,
     marginVertical: 20,
@@ -529,7 +528,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   errorText: {
-    flex: 1,
     color: "#EED202",
     fontSize: 16,
   },

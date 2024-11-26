@@ -8,14 +8,12 @@ interface CourseListProps {
   collectionName: string;
   link?: string;
   params?: { [key: string]: string | number };
-  noSync?: boolean;
 }
 
 const CourseList: React.FC<CourseListProps> = ({
   collectionName,
   link,
   params,
-  noSync,
 }) => {
   const [learningCourseIds, setLearningCourseIds] = useState<string[]>([]);
   const { user } = useSession();
