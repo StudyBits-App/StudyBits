@@ -1,8 +1,6 @@
 import React from "react";
 import { router } from "expo-router";
-import { StyleSheet } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 interface BackProps {
   link?: string;

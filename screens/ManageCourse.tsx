@@ -11,11 +11,17 @@ import {
   Keyboard,
   Animated,
   Easing,
+  ScrollView,
 } from "react-native";
 import LoadingScreen from "@/screens/LoadingScreen";
 import { getUnitData } from "@/services/getUserData";
 import { deleteExistingUnits, saveUnit } from "@/services/handleUserData";
-import { AntDesign, Ionicons, MaterialIcons } from "@expo/vector-icons";
+import {
+  AntDesign,
+  FontAwesome,
+  Ionicons,
+  MaterialIcons,
+} from "@expo/vector-icons";
 import {
   NestableDraggableFlatList,
   RenderItemParams,
@@ -30,7 +36,9 @@ import { Unit } from "@/utils/interfaces";
 import CourseCard from "../components/CourseCard";
 import Back from "@/components/Back";
 import { SafeAreaView } from "react-native-safe-area-context";
-import firestore from '@react-native-firebase/firestore';
+import firestore from "@react-native-firebase/firestore";
+import { useSession } from "@/context/ctx";
+import { deleteCourseFromLocalStorage } from "@/services/fetchCacheData";
 
 const ManageCoursesPage: React.FC = () => {
   const { id, isEditing } = useLocalSearchParams();
@@ -49,6 +57,7 @@ const ManageCoursesPage: React.FC = () => {
 
   const swipeableRefs = useRef<{ [key: string]: Swipeable | null }>({});
   const toast = useToast();
+  const { user } = useSession();
 
   const editingAnimation = useRef(new Animated.Value(-100)).current;
   const editingOpacity = useRef(new Animated.Value(0)).current;
@@ -171,15 +180,14 @@ const ManageCoursesPage: React.FC = () => {
         setFirebaseUnits(savedUnits);
         setUnits(savedUnits);
         console.log("Units saved successfully!");
-          await firestore().collection('courses').doc(id).update({
+        await firestore().collection("courses").doc(id).update({
           lastModified: new Date().getTime(),
-        });        
+        });
       } catch (error) {
         console.error("Error saving units or updating lastModified: ", error);
       }
     }
   };
-  
 
   const unsavedChangesToast = () => {
     toast.show("Please save your changes before performing this action", {
@@ -268,6 +276,15 @@ const ManageCoursesPage: React.FC = () => {
     setIsEditing(!editing);
   };
 
+  const deleteCourse = async () => {
+    deleteCourseFromLocalStorage(id as string);
+    await firestore()
+      .collection("courses")
+      .doc(id as string)
+      .delete();
+    router.push("/channelPages/channelPage");
+  };
+
   const renderUnit = ({ item, drag }: RenderItemParams<Unit>) => {
     const originalUnit = firebaseUnits.find((fUnit) => fUnit.key === item.key);
     let hasNewChanges = false;
@@ -348,8 +365,14 @@ const ManageCoursesPage: React.FC = () => {
   return (
     <View style={styles.pageContainer}>
       <NestableScrollContainer contentContainerStyle={styles.scrollContainer}>
-        <SafeAreaView>
+        <SafeAreaView style={styles.topActions}>
           <Back link={"/channelPages"} params={{}} />
+          <FontAwesome
+            name="trash"
+            size={30}
+            color={"#FF474C"}
+            onPress={deleteCourse}
+          />
         </SafeAreaView>
         <View style={styles.topBar}>
           <LinearGradient
@@ -399,7 +422,7 @@ const ManageCoursesPage: React.FC = () => {
           </View>
         )}
 
-        <CourseCard id={id as string} editing={editing} cache = {true} />
+        <CourseCard id={id as string} editing={editing} cache={true} />
 
         <View>
           <View style={styles.unitHeaderContainer}>
@@ -459,33 +482,35 @@ const ManageCoursesPage: React.FC = () => {
         >
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.modalContainer}>
-              <View style={styles.modalContent}>
-                <TextInput
-                  multiline
-                  style={styles.modalInput}
-                  onChangeText={(text) => setUnitName(text)}
-                  value={unitName}
-                  placeholder="Unit name"
-                />
-                <TextInput
-                  placeholder="Unit Description"
-                  value={unitDescription}
-                  onChangeText={setUnitDescription}
-                  style={styles.modalInput}
-                  multiline
-                />
-                <View style={styles.modalButtons}>
-                  <Button
-                    title="Cancel"
-                    onPress={cancelModal}
-                    color="#FF0D0D"
+              <View style={styles.modalContentContainer}>
+                <ScrollView contentContainerStyle={styles.modalContent}>
+                  <TextInput
+                    multiline
+                    style={styles.modalInput}
+                    onChangeText={(text) => setUnitName(text)}
+                    value={unitName}
+                    placeholder="Unit name"
                   />
-                  <Button
-                    title={editingUnit ? "Update Unit" : "Add Unit"}
-                    onPress={editingUnit ? updateUnit : addUnit}
-                    color="#0D99FF"
+                  <TextInput
+                    placeholder="Unit Description"
+                    value={unitDescription}
+                    onChangeText={setUnitDescription}
+                    style={styles.modalInput}
+                    multiline
                   />
-                </View>
+                  <View style={styles.modalButtons}>
+                    <Button
+                      title="Cancel"
+                      onPress={cancelModal}
+                      color="#FF0D0D"
+                    />
+                    <Button
+                      title={editingUnit ? "Update Unit" : "Add Unit"}
+                      onPress={editingUnit ? updateUnit : addUnit}
+                      color="#0D99FF"
+                    />
+                  </View>
+                </ScrollView>
               </View>
             </View>
           </TouchableWithoutFeedback>
@@ -503,6 +528,11 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     padding: 20,
+  },
+  topActions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   topBar: {
     marginBottom: 15,
@@ -603,11 +633,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
+  modalContentContainer: {
+    maxHeight: "80%",
+    width: "90%",
+  },
   modalContent: {
     backgroundColor: "#1E1E1E",
     padding: 20,
     borderRadius: 10,
-    width: "90%",
   },
   modalButtons: {
     flexDirection: "row",
