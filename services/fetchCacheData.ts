@@ -190,48 +190,97 @@ const syncUserLearnList = async (uid: string) => {
   }
 };
 
-const deleteCourseFromLocalStorage = async (courseId: string) => {
+const deleteUserChannelCourse = async (courseId: string) => {
   try {
-    await AsyncStorage.removeItem(`course_${courseId}`);
-    console.log(`Deleted course ${courseId} from AsyncStorage.`);
-
     const learningCoursesString = await AsyncStorage.getItem("learningCourses");
-    const learningCourses: string[] = learningCoursesString
-      ? JSON.parse(learningCoursesString)
+    const learningCourses: string[] = learningCoursesString 
+      ? JSON.parse(learningCoursesString) 
       : [];
 
-    if (learningCourses.includes(courseId)) {
-      const updatedLearningCourses = learningCourses.filter(
-        (id) => id !== courseId
-      );
-      await AsyncStorage.setItem(
-        "learningCourses",
-        JSON.stringify(updatedLearningCourses)
-      );
-      console.log(`Removed course ${courseId} from learning courses index.`);
-    }
-
     const userCoursesString = await AsyncStorage.getItem("userCourses");
-    const userCourses: string[] = userCoursesString
-      ? JSON.parse(userCoursesString)
+    const userCourses: string[] = userCoursesString 
+      ? JSON.parse(userCoursesString) 
       : [];
 
     if (userCourses.includes(courseId)) {
       const updatedUserCourses = userCourses.filter((id) => id !== courseId);
       await AsyncStorage.setItem(
-        "userCourses",
+        "userCourses", 
         JSON.stringify(updatedUserCourses)
       );
       console.log(`Removed course ${courseId} from user courses index.`);
     }
 
+    if (!learningCourses.includes(courseId) && !userCourses.includes(courseId)) {
+      await AsyncStorage.removeItem(`course_${courseId}`);
+      console.log(`Deleted course ${courseId} from AsyncStorage.`);
+    }
+
     console.log(`Deletion complete for course ${courseId}.`);
+    return true;
   } catch (error) {
-    console.error(
-      `Error deleting course ${courseId} from local storage:`,
-      error
-    );
-    throw error;
+    console.error(`Error deleting course ${courseId}:`, error);
+    return false;
+  }
+};
+
+const deleteUserLearninglCourse = async (courseId: string) => {
+  try {
+    const learningCoursesString = await AsyncStorage.getItem("learningCourses");
+    const learningCourses: string[] = learningCoursesString 
+      ? JSON.parse(learningCoursesString) 
+      : [];
+
+    const userCoursesString = await AsyncStorage.getItem("userCourses");
+    const userCourses: string[] = userCoursesString 
+      ? JSON.parse(userCoursesString) 
+      : [];
+
+    if (learningCourses.includes(courseId)) {
+      const updatedLearningCourses = learningCourses.filter((id) => id !== courseId);
+      await AsyncStorage.setItem(
+        "learningCourses", 
+        JSON.stringify(updatedLearningCourses)
+      );
+      console.log(`Removed course ${courseId} from learning courses index.`);
+    }
+
+    if (!learningCourses.includes(courseId) && !userCourses.includes(courseId)) {
+      await AsyncStorage.removeItem(`course_${courseId}`);
+      console.log(`Deleted course ${courseId} from AsyncStorage.`);
+    }
+
+    console.log(`Deletion complete for course ${courseId}.`);
+    return true;
+  } catch (error) {
+    console.error(`Error deleting learning course ${courseId}:`, error);
+    return false;
+  }
+};
+
+const saveCourse = async (courseId: string) => {
+  try {
+    const courseDoc = await firestore()
+      .collection("courses")
+      .doc(courseId)
+      .get();
+
+    if (courseDoc.exists) {
+      const courseData = courseDoc.data()
+
+      await AsyncStorage.setItem(
+        `course_${courseId}`,
+        JSON.stringify(courseData)
+      );
+      console.log(`Saved course contents for ${courseId} to local storage`);
+      return courseData;
+    } else {
+      console.error(`Course ${courseId} not found in Firestore`);
+      return null;
+    }
+  } catch (error) {
+    console.error(`Error saving course ${courseId} contents locally:`, error);
+    return null;
   }
 };
 
@@ -241,5 +290,7 @@ export {
   fetchAndSaveUserChannelCourses,
   syncUserCourseList,
   syncUserLearnList,
-  deleteCourseFromLocalStorage,
+  saveCourse,
+  deleteUserChannelCourse,
+  deleteUserLearninglCourse
 };

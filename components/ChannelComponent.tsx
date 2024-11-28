@@ -31,7 +31,7 @@ const ChannelDisplay: React.FC<ChannelDisplayProps> = ({
           console.log("Channel not found");
         }
       } catch (error) {
-        console.error("Error febocpfeh data: ", error);
+        console.error("Error fetching channel data: ", error);
       }
     };
 

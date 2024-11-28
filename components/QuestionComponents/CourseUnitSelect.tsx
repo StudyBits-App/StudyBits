@@ -50,19 +50,21 @@ const CoursesAndUnitsPage: React.FC<CoursesAndUnitsPageProps> = ({
   }, [initialCourseKey, initialUnitKey]);
 
   useEffect(() => {
-    const fetchLearningCourseIds = async () => {
-      try {
-        const storedIds = await AsyncStorage.getItem("userCourses");
-        if (storedIds) {
-          setCourses(JSON.parse(storedIds));
+    if (isVisible) {
+      const fetchLearningCourseIds = async () => {
+        try {
+          const storedIds = await AsyncStorage.getItem("userCourses");
+          if (storedIds) {
+            setCourses(JSON.parse(storedIds));
+          }
+        } catch (error) {
+          console.error("Error fetching learning course IDs:", error);
         }
-      } catch (error) {
-        console.error("Error fetching learning course IDs:", error);
-      }
-    };
+      };
 
-    fetchLearningCourseIds();
-  }, []);
+      fetchLearningCourseIds();
+    }
+  }, [isVisible]);
 
   const fetchUnits = async (courseId: string) => {
     try {

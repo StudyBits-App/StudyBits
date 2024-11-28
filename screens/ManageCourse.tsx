@@ -37,7 +37,7 @@ import CourseCard from "../components/CourseCard";
 import Back from "@/components/Back";
 import { SafeAreaView } from "react-native-safe-area-context";
 import firestore from "@react-native-firebase/firestore";
-import { deleteCourseFromLocalStorage } from "@/services/fetchCacheData";
+import { deleteUserChannelCourse } from "@/services/fetchCacheData";
 
 const ManageCoursesPage: React.FC = () => {
   const { id, isEditing } = useLocalSearchParams();
@@ -275,7 +275,7 @@ const ManageCoursesPage: React.FC = () => {
   };
 
   const deleteCourse = async () => {
-    deleteCourseFromLocalStorage(id as string);
+    deleteUserChannelCourse(id as string);
     await firestore()
       .collection("courses")
       .doc(id as string)

@@ -12,14 +12,14 @@ import { router, useLocalSearchParams } from "expo-router";
 import { Unit } from "@/utils/interfaces";
 import CourseCard from "../components/CourseCard";
 import UnitCard from "@/components/UnitCard";
-import { AntDesign, Ionicons } from "@expo/vector-icons";
+import { AntDesign } from "@expo/vector-icons";
 import firestore from "@react-native-firebase/firestore";
 import { useSession } from "@/context/ctx";
 import Back from "@/components/Back";
 import ChannelDisplay from "@/components/ChannelComponent";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { deleteCourseFromLocalStorage } from "@/services/fetchCacheData";
+import { deleteUserLearninglCourse } from "@/services/fetchCacheData";
 
 const ViewCoursesPage: React.FC = () => {
   const { id } = useLocalSearchParams();
@@ -33,7 +33,6 @@ const ViewCoursesPage: React.FC = () => {
     const fetchCourseData = async () => {
       try {
         if (typeof id === "string") {
-          console.log(id);
           const courseData = await fetchUnitsAndCourseCreator(id);
           if (courseData) {
             setCourseCreatorId(courseData.creatorId);
@@ -96,8 +95,7 @@ const ViewCoursesPage: React.FC = () => {
   };
 
   const deleteLearningCourse = async () => {
-    deleteCourseFromLocalStorage(id as string);
-    console.log("hi");
+    deleteUserLearninglCourse(id as string);
     await firestore()
       .collection("learning")
       .doc(user?.uid)

@@ -13,11 +13,14 @@ import firestore from "@react-native-firebase/firestore";
 import { useSession } from "@/context/ctx";
 import { router } from "expo-router";
 import LoadingScreen from "./LoadingScreen";
+import { saveCourse } from "@/services/fetchCacheData";
 
 const AddLearning: React.FC = () => {
-  const [selectedCourseKey, setSelectedCourseKey] = useState<string | null>(null);
+  const [selectedCourseKey, setSelectedCourseKey] = useState<string | null>(
+    null
+  );
   const [courses, setCourses] = useState<string[]>([]);
-  const [learningCourses, setLearningCourses] = useState<string[]>([]); 
+  const [learningCourses, setLearningCourses] = useState<string[]>([]);
 
   const { user } = useSession();
 
@@ -29,13 +32,19 @@ const AddLearning: React.FC = () => {
           setLearningCourses(JSON.parse(storedCourses));
         }
       } catch (error) {
-        console.error("Error fetching learning courses from AsyncStorage:", error);
+        console.error(
+          "Error fetching learning courses from AsyncStorage:",
+          error
+        );
       }
     };
 
     const getCourses = async () => {
       try {
-        const snapshot = await firestore().collection("courses").limit(10).get();
+        const snapshot = await firestore()
+          .collection("courses")
+          .limit(10)
+          .get();
         setCourses(snapshot.docs.map((doc) => doc.id));
       } catch (error) {
         console.error("Error fetching courses:", error);
@@ -61,9 +70,16 @@ const AddLearning: React.FC = () => {
           .set({ studyingUnits: [0] });
 
         console.log("Selected course:", selectedCourseKey);
+        const updatedCourses = [
+          ...new Set([...learningCourses, selectedCourseKey]),
+        ];
 
-        const updatedCourses = [...learningCourses, selectedCourseKey];
-        await AsyncStorage.setItem("learningCourses", JSON.stringify(updatedCourses));
+        await AsyncStorage.setItem(
+          "learningCourses",
+          JSON.stringify(updatedCourses)
+        );
+        await saveCourse(selectedCourseKey);
+        setLearningCourses(updatedCourses);
 
         setSelectedCourseKey(null);
         router.push("/");
