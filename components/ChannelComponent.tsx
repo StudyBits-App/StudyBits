@@ -22,10 +22,6 @@ const ChannelDisplay: React.FC<ChannelDisplayProps> = ({
 
   useEffect(() => {
     const fetchChannelData = async () => {
-      if (!id || id.trim() === "") {
-        return;
-      }
-
       try {
         const channelSnapshot = await getChannelData(id);
         if (channelSnapshot.exists) {
@@ -35,7 +31,7 @@ const ChannelDisplay: React.FC<ChannelDisplayProps> = ({
           console.log("Channel not found");
         }
       } catch (error) {
-        console.error("Error fetching channel data: ", error);
+        console.error("Error febocpfeh data: ", error);
       }
     };
 

@@ -37,7 +37,6 @@ import CourseCard from "../components/CourseCard";
 import Back from "@/components/Back";
 import { SafeAreaView } from "react-native-safe-area-context";
 import firestore from "@react-native-firebase/firestore";
-import { useSession } from "@/context/ctx";
 import { deleteCourseFromLocalStorage } from "@/services/fetchCacheData";
 
 const ManageCoursesPage: React.FC = () => {
@@ -57,7 +56,6 @@ const ManageCoursesPage: React.FC = () => {
 
   const swipeableRefs = useRef<{ [key: string]: Swipeable | null }>({});
   const toast = useToast();
-  const { user } = useSession();
 
   const editingAnimation = useRef(new Animated.Value(-100)).current;
   const editingOpacity = useRef(new Animated.Value(0)).current;

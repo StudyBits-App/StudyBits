@@ -39,7 +39,7 @@ const ViewCoursesPage: React.FC = () => {
             setCourseCreatorId(courseData.creatorId);
             setUnits(courseData.sortedUnits);
           }
-          
+
           const storedCourses = await AsyncStorage.getItem("learningCourses");
           const learningCourses = storedCourses
             ? JSON.parse(storedCourses)
@@ -55,10 +55,10 @@ const ViewCoursesPage: React.FC = () => {
               .doc(id)
               .get();
 
-            const fetchedStudyingUnits = learningDoc.exists 
-              ? learningDoc.data()?.studyingUnits || [] 
+            const fetchedStudyingUnits = learningDoc.exists
+              ? learningDoc.data()?.studyingUnits || []
               : [];
-            
+
             setStudyingUnits(fetchedStudyingUnits);
           }
         }
@@ -73,10 +73,8 @@ const ViewCoursesPage: React.FC = () => {
   const handleAddCourse = async () => {
     if (typeof id === "string") {
       const storedCourses = await AsyncStorage.getItem("learningCourses");
-      const learningCourses = storedCourses
-        ? JSON.parse(storedCourses)
-        : [];
-      
+      const learningCourses = storedCourses ? JSON.parse(storedCourses) : [];
+
       if (!learningCourses.includes(id)) {
         const updatedCourses = [...learningCourses, id];
         await AsyncStorage.setItem(
@@ -91,23 +89,23 @@ const ViewCoursesPage: React.FC = () => {
         .collection("courses")
         .doc(id)
         .set({ studyingUnits: [0] });
-      
+
       setStudiedCourse(true);
       setStudyingUnits([0]);
     }
   };
 
   const deleteLearningCourse = async () => {
-    deleteCourseFromLocalStorage(id as string)
-    console.log("hi")
+    deleteCourseFromLocalStorage(id as string);
+    console.log("hi");
     await firestore()
-    .collection("learning")
-    .doc(user?.uid)
-    .collection("courses")
-    .doc(id as string)
-    .delete();
-    router.push('/')
-  }
+      .collection("learning")
+      .doc(user?.uid)
+      .collection("courses")
+      .doc(id as string)
+      .delete();
+    router.push("/");
+  };
 
   const handleUnitCheckboxToggle = async (unitIndex: number) => {
     if (typeof id === "string" && user?.uid) {
@@ -147,11 +145,13 @@ const ViewCoursesPage: React.FC = () => {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <ChannelDisplay
-          link="/viewChannelPages/channelPageView"
-          id={courseCreatorId as string}
-          displayBanner={false}
-        />
+        {courseCreatorId && (
+          <ChannelDisplay
+            link="/viewChannelPages/channelPageView"
+            id={courseCreatorId}
+            displayBanner={false}
+          />
+        )}
         <CourseCard id={id as string} editing={false} cache={false} />
 
         <View style={styles.unitSection}>
@@ -161,12 +161,16 @@ const ViewCoursesPage: React.FC = () => {
               {units.map((unit, index) => (
                 <View key={unit.key} style={styles.unitRow}>
                   {studiedCourse && (
-                    <Pressable 
+                    <Pressable
                       onPress={() => handleUnitCheckboxToggle(index)}
                       style={styles.checkboxContainer}
                     >
                       <AntDesign
-                        name={studyingUnits.includes(index) ? "checkcircle" : "checkcircleo"}
+                        name={
+                          studyingUnits.includes(index)
+                            ? "checkcircle"
+                            : "checkcircleo"
+                        }
                         size={24}
                         color="#3B9EBF"
                       />
@@ -223,8 +227,8 @@ const styles = StyleSheet.create({
     marginTop: 24,
   },
   unitRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   checkboxContainer: {
     marginRight: 10,
@@ -236,7 +240,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "#2E2E2E",
     padding: 12,
-
   },
   errorContainer: {
     borderRadius: 25,
@@ -247,7 +250,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     color: "#FF474C",
-    textAlign: 'center'
+    textAlign: "center",
   },
   unitHeaderText: {
     color: "#FFFFFF",

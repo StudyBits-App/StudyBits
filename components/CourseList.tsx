@@ -45,7 +45,7 @@ const CourseList: React.FC<CourseListProps> = ({
           />
         ))}
 
-        {learningCourseIds.length === 0 && (
+        {(learningCourseIds.length == 0 && collectionName == 'learningCourses') && (
           <Text style={styles.noCourses}>
             You haven't started learning any courses yet.
           </Text>
