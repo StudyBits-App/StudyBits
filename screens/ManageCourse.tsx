@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import LoadingScreen from "@/screens/LoadingScreen";
 import { getUnitData } from "@/services/getUserData";
-import { deleteExistingUnits, saveUnit } from "@/services/handleUserData";
+import { deleteExistingUnits, handleUserCourseDeletion, saveUnit } from "@/services/handleUserData";
 import {
   AntDesign,
   FontAwesome,
@@ -38,9 +38,11 @@ import Back from "@/components/Back";
 import { SafeAreaView } from "react-native-safe-area-context";
 import firestore from "@react-native-firebase/firestore";
 import { deleteUserChannelCourse } from "@/services/fetchCacheData";
+import { useSession } from "@/context/ctx";
 
 const ManageCoursesPage: React.FC = () => {
   const { id, isEditing } = useLocalSearchParams();
+  const { user } = useSession()
   const [errorVisable, setErrorVisable] = useState(false);
 
   const [units, setUnits] = useState<Unit[]>([]);
@@ -275,11 +277,8 @@ const ManageCoursesPage: React.FC = () => {
   };
 
   const deleteCourse = async () => {
-    deleteUserChannelCourse(id as string);
-    await firestore()
-      .collection("courses")
-      .doc(id as string)
-      .delete();
+    deleteUserChannelCourse(id as string, user?.uid as string);
+    handleUserCourseDeletion(id as string)
     router.push("/channelPages/channelPage");
   };
 

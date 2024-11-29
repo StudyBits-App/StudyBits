@@ -2,17 +2,16 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   TextInput,
-  Button,
   Image,
   StyleSheet,
   Alert,
   TouchableOpacity,
   Text,
-  useColorScheme,
+  ScrollView,
+  Pressable,
 } from "react-native";
 import { uploadImageToFirebase } from "@/services/handleImages";
 import * as ImagePicker from "expo-image-picker";
-import ParallaxScrollView from "@/components/ParallaxScrollView";
 import firestore from "@react-native-firebase/firestore";
 import { useSession } from "@/context/ctx";
 
@@ -24,8 +23,6 @@ const CreateChannelPage: React.FC = () => {
   >(null);
   const [displayName, setDisplayName] = useState<string>("");
   const { user } = useSession();
-  const colorScheme = useColorScheme();
-  const isDarkMode = colorScheme === "dark";
 
   useEffect(() => {
     const fetchProfilePicUrl = async () => {
@@ -65,7 +62,6 @@ const CreateChannelPage: React.FC = () => {
   };
 
   const handleCreateChannel = async () => {
-    //Make this a toast in the future
     if (!displayName.trim()) {
       Alert.alert("Error", "You must provide a display name!");
       return;
@@ -149,27 +145,23 @@ const CreateChannelPage: React.FC = () => {
   };
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
-      headerImage={
-        bannerImage ? (
-          <TouchableOpacity onPress={handleRemoveBanner}>
-            <Image source={{ uri: bannerImage }} style={styles.bannerImage} />
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity
-            onPress={handleBannerUpload}
-            style={styles.uploadBannerButton}
-          >
-            <Text style={styles.uploadBannerText}>Upload Banner Image</Text>
-          </TouchableOpacity>
-        )
-      }
-    >
+    <ScrollView style={styles.container}>
+      {bannerImage ? (
+        <TouchableOpacity onPress={handleRemoveBanner}>
+          <Image source={{ uri: bannerImage }} style={styles.bannerImage} />
+        </TouchableOpacity>
+      ) : (
+        <Pressable
+          onPress={handleBannerUpload}
+          style={styles.uploadBannerButton}
+        >
+          <Text style={styles.uploadBannerText}>Upload Banner Image</Text>
+        </Pressable>
+      )}
       <View style={styles.container}>
         <View style={styles.profileSection}>
           {/* Profile Picture */}
-          <TouchableOpacity onPress={handleRemoveProfilePic}>
+          <Pressable onPress={handleRemoveProfilePic}>
             {profilePicImage ? (
               <Image
                 source={{ uri: profilePicImage || undefined }}
@@ -181,67 +173,105 @@ const CreateChannelPage: React.FC = () => {
                 style={styles.profilePic}
               />
             )}
-          </TouchableOpacity>
+          </Pressable>
           {/* Upload Profile Picture Button */}
-          <View>
-            <Button
-              title="Upload a profile pic"
-              onPress={handleProfilePicUpload}
-            />
-          </View>
+          <Pressable
+            onPress={handleProfilePicUpload}
+            style={styles.uploadProfilePicButton}
+          >
+            <Text style={styles.uploadProfilePicText}>
+              Upload Profile Picture
+            </Text>
+          </Pressable>
         </View>
 
         {/* Display Name Input */}
         <TextInput
-          style={[styles.input, isDarkMode && styles.darkInput]}
+          style={styles.input}
           placeholder="Display Name"
+          placeholderTextColor="#bbb"
           value={displayName}
           onChangeText={setDisplayName}
         />
 
         {/* Create Channel Button */}
-        <Button title="Create Channel" onPress={handleCreateChannel} />
+        <Pressable
+          onPress={handleCreateChannel}
+          style={styles.createChannelButton}
+        >
+          <Text style={styles.createChannelText}>Create Channel</Text>
+        </Pressable>
       </View>
-    </ParallaxScrollView>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     padding: 20,
+    backgroundColor: "#1E1E1E",
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#555",
     padding: 10,
     marginBottom: 10,
-  },
-  darkInput: {
-    color: "white",
+    backgroundColor: "#444",
+    color: "#fff",
   },
   bannerImage: {
-    height: 300,
+    height: 150,
+    width: "100%",
     resizeMode: "cover",
   },
   uploadBannerButton: {
-    height: 300,
-    backgroundColor: "#e1e1e1",
+    height: 150,
+    backgroundColor: "#26282e",
     justifyContent: "center",
     alignItems: "center",
+    borderRadius: 10,
   },
   uploadBannerText: {
-    color: "#888",
+    color: "#ddd",
+    fontSize: 16,
+    fontWeight: "bold",
   },
   profileSection: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     marginBottom: 20,
   },
   profilePic: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 3,
+    borderColor: "#fff",
     marginRight: 20,
+  },
+  uploadProfilePicButton: {
+    backgroundColor: "#26282e",
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+  },
+  uploadProfilePicText: {
+    color: "#ddd",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  createChannelButton: {
+    backgroundColor: "#1e90ff",
+    paddingVertical: 15,
+    alignItems: "center",
+    borderRadius: 10,
+    marginTop: 20,
+  },
+  createChannelText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
   },
 });
 

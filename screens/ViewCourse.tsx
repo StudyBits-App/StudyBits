@@ -19,7 +19,7 @@ import Back from "@/components/Back";
 import ChannelDisplay from "@/components/ChannelComponent";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { deleteUserLearninglCourse } from "@/services/fetchCacheData";
+import { deleteUserLearningCourse } from "@/services/fetchCacheData";
 
 const ViewCoursesPage: React.FC = () => {
   const { id } = useLocalSearchParams();
@@ -95,7 +95,7 @@ const ViewCoursesPage: React.FC = () => {
   };
 
   const deleteLearningCourse = async () => {
-    deleteUserLearninglCourse(id as string);
+    deleteUserLearningCourse(id as string);
     await firestore()
       .collection("learning")
       .doc(user?.uid)
@@ -187,13 +187,15 @@ const ViewCoursesPage: React.FC = () => {
           ) : (
             <Text style={styles.subText}>No units</Text>
           )}
-          <TouchableOpacity onPress={deleteLearningCourse}>
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>
-                Remove from courses i'm are learning
-              </Text>
-            </View>
-          </TouchableOpacity>
+          {studiedCourse && (
+            <TouchableOpacity onPress={deleteLearningCourse}>
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>
+                  Remove from courses i'm are learning
+                </Text>
+              </View>
+            </TouchableOpacity>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>

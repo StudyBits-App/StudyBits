@@ -62,6 +62,14 @@ const AddLearning: React.FC = () => {
   const handleSubmit = async () => {
     if (selectedCourseKey) {
       try {
+        
+        await firestore()
+        .collection("courses")
+        .doc(selectedCourseKey)
+        .update({
+          dependency: firestore.FieldValue.increment(1),
+        });
+
         await firestore()
           .collection("learning")
           .doc(user?.uid)

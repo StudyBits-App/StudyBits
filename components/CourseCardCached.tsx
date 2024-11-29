@@ -12,7 +12,6 @@ import { Course, defaultCourse } from "@/utils/interfaces";
 import { trimText } from "@/utils/utils";
 import { router } from "expo-router";
 import { syncCourse } from "@/services/fetchCacheData";
-import { useSession } from "@/context/ctx";
 
 interface CourseCardShortProps {
   id: string;
@@ -29,10 +28,8 @@ const CourseCardShortCache: React.FC<CourseCardShortProps> = ({
   params,
   selected,
   onPress,
-  noSync,
 }) => {
   const [course, setCourse] = useState<Course>(defaultCourse);
-  const { user } = useSession();
 
   useEffect(() => {
     const loadCachedData = async () => {
@@ -61,9 +58,7 @@ const CourseCardShortCache: React.FC<CourseCardShortProps> = ({
     };
 
     loadCachedData();
-    if (!noSync) {
       syncData();
-    }
   }, [id]);
 
   const handlePress = () => {

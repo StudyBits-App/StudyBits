@@ -26,6 +26,7 @@ interface CourseCardShortProps {
   channelDisplay?: boolean;
 }
 
+//component for non-cached short course card display
 const CourseCardShort: React.FC<CourseCardShortProps> = ({
   id,
   selected,

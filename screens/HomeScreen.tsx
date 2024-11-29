@@ -8,7 +8,7 @@ import auth from "@react-native-firebase/auth";
 import CourseList from "@/components/CourseList";
 import LoadingScreen from "./LoadingScreen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { fetchAndSaveCourses, fetchAndSaveUserChannelCourses } from "@/services/fetchCacheData";
+import { fetchAndSaveCourses, fetchAndSaveUserChannelCourses, syncUserCourseList } from "@/services/fetchCacheData";
 
 const HomeScreen: React.FC = () => {
   const { user } = useSession();

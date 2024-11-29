@@ -22,7 +22,6 @@ const CourseList: React.FC<CourseListProps> = ({
         const storedIds = await AsyncStorage.getItem(collectionName);
         if (storedIds) {
           setLearningCourseIds(JSON.parse(storedIds));
-          console.log(storedIds)
         }
       } catch (error) {
         console.error("Error fetching learning course IDs:", error);

@@ -4,7 +4,6 @@ import { useRouter } from "expo-router";
 import { getCourseData } from "@/services/getUserData";
 import { Course, defaultCourse } from "@/utils/interfaces";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { syncCourse } from "@/services/fetchCacheData";
 
 interface CourseCardProps {
   id: string;

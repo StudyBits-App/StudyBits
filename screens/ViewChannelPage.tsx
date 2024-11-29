@@ -26,11 +26,10 @@ const ViewChannelPage: React.FC = () => {
     return <LoadingScreen />;
   }
 
-
   return (
     <ScrollView style={styles.container}>
-      <Back link="/" />
-      <ChannelDisplay id={id as string} displayBanner={true} />
+      <Back trueBack />
+      {id && <ChannelDisplay id={id as string} displayBanner={true} />}
       {otherCourses.map((course) => (
         <CourseCardShort
           id={course}
@@ -48,7 +47,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#1E1E1E",
     paddingHorizontal: 15,
-    paddingVertical: 20
+    paddingVertical: 20,
   },
 });
 

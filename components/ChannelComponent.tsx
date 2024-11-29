@@ -43,17 +43,18 @@ const ChannelDisplay: React.FC<ChannelDisplayProps> = ({
   }
 
   const handlePress = () => {
-      router.push({
-        pathname: link as any,
-        params: { ...params, id:id },
-      });
-    
+    router.push({
+      pathname: link as any,
+      params: { ...params, id: id },
+    });
   };
 
   return (
-    <Pressable disabled = {!link} onPress={handlePress}> 
+    <Pressable disabled={!link} onPress={handlePress} style={styles.container}>
       {channel.bannerURL && displayBanner && (
-        <Image source={{ uri: channel.bannerURL }} style={styles.bannerImage} />
+        <View>
+          <Image source={{ uri: channel.bannerURL }} style={styles.bannerImage} />
+        </View>
       )}
       <View style={styles.profileSection}>
         <Image
@@ -71,25 +72,29 @@ const ChannelDisplay: React.FC<ChannelDisplayProps> = ({
     </Pressable>
   );
 };
+
 const styles = StyleSheet.create({
+  container: {
+    marginVertical: 10,
+    borderRadius: 10,
+    overflow: "hidden",
+    backgroundColor: "#2c2c2c",
+  },
   bannerImage: {
-    height: 300,
+    height: 150,
+    width: "100%",
     resizeMode: "cover",
   },
   profileSection: {
-    borderBottomRightRadius: 10,
-    borderBottomLeftRadius: 10,
     paddingVertical: "5%",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
   },
   profilePic: {
-    width: 100,
-    height: 100,
-    borderRadius: Math.round(
-      (Dimensions.get("window").height + Dimensions.get("window").width) / 2
-    ),
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     borderWidth: 3,
     borderColor: "#fff",
   },
@@ -97,7 +102,7 @@ const styles = StyleSheet.create({
     marginLeft: 20,
   },
   displayName: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: "bold",
     color: "#fff",
   },

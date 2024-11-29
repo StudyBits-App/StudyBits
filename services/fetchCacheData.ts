@@ -190,71 +190,61 @@ const syncUserLearnList = async (uid: string) => {
   }
 };
 
-const deleteUserChannelCourse = async (courseId: string) => {
+const deleteUserChannelCourse = async (courseId: string, userUid: string) => {
   try {
-    const learningCoursesString = await AsyncStorage.getItem("learningCourses");
-    const learningCourses: string[] = learningCoursesString 
-      ? JSON.parse(learningCoursesString) 
-      : [];
-
     const userCoursesString = await AsyncStorage.getItem("userCourses");
-    const userCourses: string[] = userCoursesString 
-      ? JSON.parse(userCoursesString) 
-      : [];
+    const userCourses: string[] = userCoursesString ? JSON.parse(userCoursesString) : [];
+
+    const learningCoursesString = await AsyncStorage.getItem("learningCourses");
+    const learningCourses: string[] = learningCoursesString ? JSON.parse(learningCoursesString) : [];
 
     if (userCourses.includes(courseId)) {
+      if(learningCourses.includes(courseId)) {
+        await firestore().collection('learning').doc(userUid).collection('courses').doc(courseId).delete()
+      }
       const updatedUserCourses = userCourses.filter((id) => id !== courseId);
-      await AsyncStorage.setItem(
-        "userCourses", 
-        JSON.stringify(updatedUserCourses)
-      );
+      await AsyncStorage.setItem("userCourses", JSON.stringify(updatedUserCourses));
       console.log(`Removed course ${courseId} from user courses index.`);
     }
 
-    if (!learningCourses.includes(courseId) && !userCourses.includes(courseId)) {
-      await AsyncStorage.removeItem(`course_${courseId}`);
-      console.log(`Deleted course ${courseId} from AsyncStorage.`);
-    }
-
+    await deleteUserLearningCourse(courseId);
     console.log(`Deletion complete for course ${courseId}.`);
-    return true;
   } catch (error) {
-    console.error(`Error deleting course ${courseId}:`, error);
+    console.error(`Error deleting course ${courseId} from user courses:`, error);
     return false;
   }
 };
 
-const deleteUserLearninglCourse = async (courseId: string) => {
+const deleteUserLearningCourse = async (courseId: string) => {
   try {
     const learningCoursesString = await AsyncStorage.getItem("learningCourses");
-    const learningCourses: string[] = learningCoursesString 
-      ? JSON.parse(learningCoursesString) 
-      : [];
-
-    const userCoursesString = await AsyncStorage.getItem("userCourses");
-    const userCourses: string[] = userCoursesString 
-      ? JSON.parse(userCoursesString) 
-      : [];
+    const learningCourses: string[] = learningCoursesString ? JSON.parse(learningCoursesString) : [];
 
     if (learningCourses.includes(courseId)) {
       const updatedLearningCourses = learningCourses.filter((id) => id !== courseId);
-      await AsyncStorage.setItem(
-        "learningCourses", 
-        JSON.stringify(updatedLearningCourses)
-      );
+      await AsyncStorage.setItem("learningCourses", JSON.stringify(updatedLearningCourses));
       console.log(`Removed course ${courseId} from learning courses index.`);
     }
 
-    if (!learningCourses.includes(courseId) && !userCourses.includes(courseId)) {
-      await AsyncStorage.removeItem(`course_${courseId}`);
-      console.log(`Deleted course ${courseId} from AsyncStorage.`);
-    }
-
+    await deleteCourseFromStorageIfUnused(courseId);
     console.log(`Deletion complete for course ${courseId}.`);
     return true;
   } catch (error) {
-    console.error(`Error deleting learning course ${courseId}:`, error);
+    console.error(`Error deleting course ${courseId} from learning courses:`, error);
     return false;
+  }
+};
+
+const deleteCourseFromStorageIfUnused = async (courseId: string) => {
+  const learningCoursesString = await AsyncStorage.getItem("learningCourses");
+  const learningCourses: string[] = learningCoursesString ? JSON.parse(learningCoursesString) : [];
+
+  const userCoursesString = await AsyncStorage.getItem("userCourses");
+  const userCourses: string[] = userCoursesString ? JSON.parse(userCoursesString) : [];
+
+  if (!learningCourses.includes(courseId) && !userCourses.includes(courseId)) {
+    await AsyncStorage.removeItem(`course_${courseId}`);
+    console.log(`Deleted course ${courseId} from AsyncStorage.`);
   }
 };
 
@@ -292,5 +282,5 @@ export {
   syncUserLearnList,
   saveCourse,
   deleteUserChannelCourse,
-  deleteUserLearninglCourse
+  deleteUserLearningCourse
 };
