@@ -116,6 +116,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: "#333",
+    marginBottom: 15
   },
   recentSearchText: {
     color: "#fff",

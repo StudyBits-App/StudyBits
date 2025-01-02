@@ -1,4 +1,7 @@
 const trimText = (text: string, maxTitleLength: number): string => {
+    if(!text){
+        return ''
+    }
     if (text.length <= maxTitleLength) {
         return text;
     }

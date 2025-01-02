@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, View, Text, Pressable } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Text,
+  Pressable,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useSession } from "@/context/ctx";
@@ -8,7 +13,10 @@ import auth from "@react-native-firebase/auth";
 import CourseList from "@/components/CourseList";
 import LoadingScreen from "./LoadingScreen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { fetchAndSaveCourses, fetchAndSaveUserChannelCourses, syncUserCourseList } from "@/services/fetchCacheData";
+import {
+  fetchAndSaveLearningCourses,
+  fetchAndSaveUserChannelCourses,
+} from "@/services/fetchCacheData";
 
 const HomeScreen: React.FC = () => {
   const { user } = useSession();
@@ -23,8 +31,8 @@ const HomeScreen: React.FC = () => {
           );
           if (!hasInitialized) {
             setLoading(true);
-            await fetchAndSaveCourses(user.uid);
-            await fetchAndSaveUserChannelCourses(user?.uid)
+            await fetchAndSaveLearningCourses(user.uid);
+            await fetchAndSaveUserChannelCourses(user?.uid);
             await AsyncStorage.setItem(`user_initialized_${user.uid}`, "true");
             setLoading(false);
           }
@@ -69,9 +77,7 @@ const HomeScreen: React.FC = () => {
         </View>
 
         <Pressable style={styles.learnContainer}>
-          <View
-            style={styles.learnCard}
-          >
+          <View style={styles.learnCard}>
             <Text style={styles.learnText}>What I'm Learning</Text>
           </View>
         </Pressable>
@@ -79,7 +85,10 @@ const HomeScreen: React.FC = () => {
           <Ionicons name="add" size={30} color="#fff" />
         </Pressable>
       </View>
-      <CourseList collectionName="learningCourses" link="/homePages/viewCourse"/>
+      <CourseList
+        collectionName="learningCourses"
+        link="/homePages/viewCourse"
+      />
       <Pressable style={styles.button} onPress={logout}>
         <Text style={styles.text}>Logout</Text>
       </Pressable>

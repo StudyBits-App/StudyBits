@@ -12,8 +12,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import firestore from "@react-native-firebase/firestore";
 import { useSession } from "@/context/ctx";
 import { router } from "expo-router";
-import LoadingScreen from "./LoadingScreen";
-import { saveCourse } from "@/services/fetchCacheData";
+import { saveCourseToCache } from "@/services/fetchCacheData";
 
 const AddLearning: React.FC = () => {
   const [selectedCourseKey, setSelectedCourseKey] = useState<string | null>(
@@ -62,7 +61,6 @@ const AddLearning: React.FC = () => {
   const handleSubmit = async () => {
     if (selectedCourseKey) {
       try {
-        
         await firestore()
         .collection("courses")
         .doc(selectedCourseKey)
@@ -75,7 +73,7 @@ const AddLearning: React.FC = () => {
           .doc(user?.uid)
           .collection("courses")
           .doc(selectedCourseKey)
-          .set({ studyingUnits: [0] });
+          .set({ studyingUnits: [] });
 
         console.log("Selected course:", selectedCourseKey);
         const updatedCourses = [
@@ -86,7 +84,7 @@ const AddLearning: React.FC = () => {
           "learningCourses",
           JSON.stringify(updatedCourses)
         );
-        await saveCourse(selectedCourseKey);
+        await saveCourseToCache(selectedCourseKey);
         setLearningCourses(updatedCourses);
 
         setSelectedCourseKey(null);
@@ -94,18 +92,12 @@ const AddLearning: React.FC = () => {
       } catch (error) {
         console.error("Error adding course:", error);
       }
-    } else {
-      console.log("No course selected");
     }
   };
 
   const filteredCourses = courses.filter(
     (course) => !learningCourses.includes(course)
   );
-
-  if (courses.length === 0) {
-    return <LoadingScreen />;
-  }
 
   return (
     <SafeAreaView style={styles.container}>

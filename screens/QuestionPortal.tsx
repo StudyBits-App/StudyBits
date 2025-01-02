@@ -135,8 +135,12 @@ const QuestionPortal: React.FC = () => {
         .collection("units")
         .doc(selectedUnitKey);
   
+      const courseDocRef = firestore()
+        .collection("courses")
+        .doc(selectedCourseKey);
+
       const unitDoc = await unitDocRef.get();
-  
+
       if (unitDoc.exists) {
         if (isEditing && id && typeof id === "string") {
           await updateQuestion(id, questionData);
@@ -144,10 +148,10 @@ const QuestionPortal: React.FC = () => {
           const questionDocRef = await firestore()
             .collection("questions")
             .add(questionData);
-  
           await unitDocRef.update({
             questions: firestore.FieldValue.arrayUnion(questionDocRef.id),
           });
+          await courseDocRef.update({numQuestions: firestore.FieldValue.increment(1)})
         }
       } else {
         console.error("Invalid unit or course");

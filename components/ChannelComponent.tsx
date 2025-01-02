@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, Text, View, Image, Dimensions, Pressable } from "react-native";
+import { StyleSheet, Text, View, Image, Pressable } from "react-native";
 import { getChannelData } from "@/services/getUserData";
 import { Channel } from "@/utils/interfaces";
 import LoadingScreen from "@/screens/LoadingScreen";
@@ -75,7 +75,7 @@ const ChannelDisplay: React.FC<ChannelDisplayProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 10,
+    marginVertical: 20,
     borderRadius: 10,
     overflow: "hidden",
     backgroundColor: "#2c2c2c",

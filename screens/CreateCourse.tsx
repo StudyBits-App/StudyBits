@@ -16,7 +16,6 @@ const CreateCourse: React.FC = () => {
   const [editingURL, setEditingURL] = useState<string>('');
   const { user } = useSession();
   const { id } = useLocalSearchParams();
-
   const router = useRouter();
 
   useEffect(() => {
@@ -61,9 +60,8 @@ const CreateCourse: React.FC = () => {
       course.lastModified = new Date().getTime();
       const courseRef = await firestore().collection('courses').add(course);
       const docId = courseRef.id;
-      console.log(course);
-      await courseRef.update({ key: docId });
-  
+      await courseRef.update({ key: docId, numQuestions: 0 });
+      
       const channelRef = firestore().collection('channels').doc(user?.uid);
       const channelDoc = await channelRef.get();
       const currentCourses = channelDoc.data()?.courses || [];
@@ -88,8 +86,7 @@ const CreateCourse: React.FC = () => {
     if (!(editingURL && editingURL === course.picUrl)) {
       deleteImageFromFirebase(editingURL);
       if (course.picUrl) {
-        const uploadedImageUrl = await uploadImageToFirebase(course.picUrl, 'coursePics');
-        course.picUrl = uploadedImageUrl;
+        course.picUrl = await uploadImageToFirebase(course.picUrl, 'coursePics');
       }
     }
     course.lastModified = new Date().getTime();
@@ -231,9 +228,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 30,
     borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.8,
   },
   buttonText: {
     color: '#FFFFFF',

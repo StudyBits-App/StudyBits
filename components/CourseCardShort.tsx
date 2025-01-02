@@ -83,10 +83,11 @@ const CourseCardShort: React.FC<CourseCardShortProps> = ({
           <Text style={styles.courseName}>
             {trimText(course.name, 20) || "Default Course Name"}
           </Text>
-          <Text style={styles.courseDescription}>
-            {trimText(course.description, 25) ||
-              "A course about courses, if you will."}
-          </Text>
+          {course.description && (
+            <Text style={styles.courseDescription}>
+              {trimText(course.description, 25)}
+            </Text>
+          )}
         </View>
       </View>
       {channelDisplay && (

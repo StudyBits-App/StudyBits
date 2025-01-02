@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import firestore from "@react-native-firebase/firestore";
 import { Channel, Course } from "../utils/interfaces";
 
-const fetchAndSaveCourses = async (userUid?: string) => {
+const fetchAndSaveLearningCourses = async (userUid?: string) => {
   let userCoursesQuery = firestore()
     .collection("learning")
     .doc(userUid)
@@ -73,20 +73,6 @@ const syncCourse = async (courseId: string) => {
         JSON.stringify(firestoreCourseData)
       );
       console.log(`Updated course ${courseId}`);
-    }
-
-    const courseIndexString = await AsyncStorage.getItem("learningCourses");
-    const courseIndex: string[] = courseIndexString
-      ? JSON.parse(courseIndexString)
-      : [];
-
-    if (!courseIndex.includes(courseId)) {
-      courseIndex.push(courseId);
-      await AsyncStorage.setItem(
-        "learningCourses",
-        JSON.stringify(courseIndex)
-      );
-      console.log(`Added course ${courseId} to the learning courses index.`);
     }
     console.log(`Sync complete for course ${courseId}.`);
   } catch (error) {
@@ -195,19 +181,23 @@ const deleteUserChannelCourse = async (courseId: string, userUid: string) => {
     const userCoursesString = await AsyncStorage.getItem("userCourses");
     const userCourses: string[] = userCoursesString ? JSON.parse(userCoursesString) : [];
 
-    const learningCoursesString = await AsyncStorage.getItem("learningCourses");
-    const learningCourses: string[] = learningCoursesString ? JSON.parse(learningCoursesString) : [];
-
     if (userCourses.includes(courseId)) {
-      if(learningCourses.includes(courseId)) {
-        await firestore().collection('learning').doc(userUid).collection('courses').doc(courseId).delete()
-      }
       const updatedUserCourses = userCourses.filter((id) => id !== courseId);
       await AsyncStorage.setItem("userCourses", JSON.stringify(updatedUserCourses));
       console.log(`Removed course ${courseId} from user courses index.`);
     }
 
-    await deleteUserLearningCourse(courseId);
+    const userChannelRef = firestore().collection('channels').doc(userUid);
+    const userChannelDoc = await userChannelRef.get();
+    if (userChannelDoc.exists) {
+      const userChannelData = userChannelDoc.data();
+      if (userChannelData?.courses && Array.isArray(userChannelData.courses)) {
+        const updatedCourses = userChannelData.courses.filter((id: string) => id !== courseId);
+        await userChannelRef.update({ courses: updatedCourses });
+      }
+    }
+
+    await deleteUserLearningCourse(courseId, userUid);
     console.log(`Deletion complete for course ${courseId}.`);
   } catch (error) {
     console.error(`Error deleting course ${courseId} from user courses:`, error);
@@ -215,8 +205,23 @@ const deleteUserChannelCourse = async (courseId: string, userUid: string) => {
   }
 };
 
-const deleteUserLearningCourse = async (courseId: string) => {
+const deleteUserLearningCourse = async (courseId: string, user: string) => {
   try {
+  
+    await firestore()
+    .collection("learning")
+    .doc(user)
+    .collection("courses")
+    .doc(courseId)
+    .delete();
+    
+    await firestore()
+    .collection('courses')
+    .doc(courseId)
+    .set({
+      dependency: firestore.FieldValue.increment(-1)
+    }, { merge: true });
+
     const learningCoursesString = await AsyncStorage.getItem("learningCourses");
     const learningCourses: string[] = learningCoursesString ? JSON.parse(learningCoursesString) : [];
 
@@ -228,10 +233,8 @@ const deleteUserLearningCourse = async (courseId: string) => {
 
     await deleteCourseFromStorageIfUnused(courseId);
     console.log(`Deletion complete for course ${courseId}.`);
-    return true;
   } catch (error) {
     console.error(`Error deleting course ${courseId} from learning courses:`, error);
-    return false;
   }
 };
 
@@ -248,7 +251,7 @@ const deleteCourseFromStorageIfUnused = async (courseId: string) => {
   }
 };
 
-const saveCourse = async (courseId: string) => {
+const saveCourseToCache = async (courseId: string) => {
   try {
     const courseDoc = await firestore()
       .collection("courses")
@@ -262,25 +265,19 @@ const saveCourse = async (courseId: string) => {
         `course_${courseId}`,
         JSON.stringify(courseData)
       );
-      console.log(`Saved course contents for ${courseId} to local storage`);
-      return courseData;
-    } else {
-      console.error(`Course ${courseId} not found in Firestore`);
-      return null;
-    }
+    } 
   } catch (error) {
     console.error(`Error saving course ${courseId} contents locally:`, error);
-    return null;
   }
 };
 
 export {
-  fetchAndSaveCourses,
+  fetchAndSaveLearningCourses,
   syncCourse,
   fetchAndSaveUserChannelCourses,
   syncUserCourseList,
   syncUserLearnList,
-  saveCourse,
+  saveCourseToCache,
   deleteUserChannelCourse,
   deleteUserLearningCourse
 };

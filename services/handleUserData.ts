@@ -1,6 +1,5 @@
 import { Unit } from '@/utils/interfaces';
 import firestore from '@react-native-firebase/firestore';
-import { DEFAULT_ANIMATION_CONFIG } from 'react-native-draggable-flatlist/lib/typescript/constants';
 
 const deleteExistingUnits = async (courseId: string) => {
     try {
@@ -33,7 +32,7 @@ const handleUserCourseDeletion = async (courseId: string) => {
     const courseDoc = await course.get();
     const courseData = courseDoc.data();
 
-    if (courseDoc.exists && courseData?.dependency >= 1) {
+    if (courseDoc.exists && courseData?.dependency <= 0) {
         await course.update({
           creator: 'TcoD2mfnDzQ6NmPQjbxzbpbUIJG3',
         });

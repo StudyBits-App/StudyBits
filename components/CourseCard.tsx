@@ -17,7 +17,6 @@ const CourseCard: React.FC<CourseCardProps> = ({ id, editing, cache }) => {
   const router = useRouter();
 
   useEffect(() => {
-    console.log(cache);
     const fetchCourse = async () => {
       try {
         const courseData = (await getCourseData(id)).data() as Course;

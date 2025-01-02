@@ -5,14 +5,13 @@ import {
   View,
   ScrollView,
   Pressable,
-  TouchableOpacity,
 } from "react-native";
 import { fetchUnitsAndCourseCreator } from "@/services/getUserData";
 import { router, useLocalSearchParams } from "expo-router";
 import { Unit } from "@/utils/interfaces";
 import CourseCard from "../components/CourseCard";
 import UnitCard from "@/components/UnitCard";
-import { AntDesign } from "@expo/vector-icons";
+import { AntDesign, FontAwesome } from "@expo/vector-icons";
 import firestore from "@react-native-firebase/firestore";
 import { useSession } from "@/context/ctx";
 import Back from "@/components/Back";
@@ -27,7 +26,7 @@ const ViewCoursesPage: React.FC = () => {
   const { user } = useSession();
   const [studiedCourse, setStudiedCourse] = useState(false);
   const [courseCreatorId, setCourseCreatorId] = useState<string | null>(null);
-  const [studyingUnits, setStudyingUnits] = useState<number[]>([]);
+  const [studyingUnits, setStudyingUnits] = useState<string[]>([]); 
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -55,8 +54,7 @@ const ViewCoursesPage: React.FC = () => {
               .get();
 
             const fetchedStudyingUnits = learningDoc.exists
-              ? learningDoc.data()?.studyingUnits || []
-              : [];
+              ? learningDoc.data()?.studyingUnits : [];
 
             setStudyingUnits(fetchedStudyingUnits);
           }
@@ -87,25 +85,19 @@ const ViewCoursesPage: React.FC = () => {
         .doc(user?.uid)
         .collection("courses")
         .doc(id)
-        .set({ studyingUnits: [0] });
+        .set({ studyingUnits: []});
 
       setStudiedCourse(true);
-      setStudyingUnits([0]);
+      setStudyingUnits([]);
     }
   };
 
   const deleteLearningCourse = async () => {
-    deleteUserLearningCourse(id as string);
-    await firestore()
-      .collection("learning")
-      .doc(user?.uid)
-      .collection("courses")
-      .doc(id as string)
-      .delete();
+    deleteUserLearningCourse(id as string, user?.uid as string);
     router.push("/");
   };
 
-  const handleUnitCheckboxToggle = async (unitIndex: number) => {
+  const handleUnitCheckboxToggle = async (unitId: string) => {
     if (typeof id === "string" && user?.uid) {
       try {
         const docRef = firestore()
@@ -113,12 +105,14 @@ const ViewCoursesPage: React.FC = () => {
           .doc(user.uid)
           .collection("courses")
           .doc(id);
+
         let newStudyingUnits = [...studyingUnits];
-        const existingIndex = newStudyingUnits.indexOf(unitIndex);
+        const existingIndex = newStudyingUnits.indexOf(unitId);
+
         if (existingIndex > -1) {
           newStudyingUnits.splice(existingIndex, 1);
         } else {
-          newStudyingUnits.push(unitIndex);
+          newStudyingUnits.push(unitId);
         }
         await docRef.set({ studyingUnits: newStudyingUnits }, { merge: true });
         setStudyingUnits(newStudyingUnits);
@@ -133,13 +127,22 @@ const ViewCoursesPage: React.FC = () => {
       <View style={styles.topBar}>
         <Back trueBack />
         <Text style={styles.title}>Course Details</Text>
-        <Pressable onPress={studiedCourse ? undefined : handleAddCourse}>
+        {!studiedCourse && (
           <AntDesign
-            name={studiedCourse ? "checkcircle" : "plus"}
+            name={"plus"}
             size={30}
-            color={studiedCourse ? "#4CAF50" : "#3B9EBF"}
+            color={"#3B9EBF"}
+            onPress={handleAddCourse}
           />
-        </Pressable>
+        )}
+        {studiedCourse && (
+          <FontAwesome
+            name="trash"
+            size={30}
+            color={"#FF474C"}
+            onPress={deleteLearningCourse}
+          />
+        )}
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -156,16 +159,16 @@ const ViewCoursesPage: React.FC = () => {
           <Text style={styles.unitHeaderText}>Units</Text>
           {units.length > 0 ? (
             <View style={styles.unitsContainer}>
-              {units.map((unit, index) => (
+              {units.map((unit) => (
                 <View key={unit.key} style={styles.unitRow}>
                   {studiedCourse && (
                     <Pressable
-                      onPress={() => handleUnitCheckboxToggle(index)}
+                      onPress={() => handleUnitCheckboxToggle(unit.key)}
                       style={styles.checkboxContainer}
                     >
                       <AntDesign
                         name={
-                          studyingUnits.includes(index)
+                          studyingUnits.includes(unit.key)
                             ? "checkcircle"
                             : "checkcircleo"
                         }
@@ -186,15 +189,6 @@ const ViewCoursesPage: React.FC = () => {
             </View>
           ) : (
             <Text style={styles.subText}>No units</Text>
-          )}
-          {studiedCourse && (
-            <TouchableOpacity onPress={deleteLearningCourse}>
-              <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>
-                  Remove from courses i'm are learning
-                </Text>
-              </View>
-            </TouchableOpacity>
           )}
         </View>
       </ScrollView>
@@ -240,17 +234,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "#2E2E2E",
     padding: 12,
-  },
-  errorContainer: {
-    borderRadius: 25,
-    padding: 15,
-    marginVertical: 20,
-    borderColor: "#FF474C",
-    borderWidth: 1,
-  },
-  errorText: {
-    color: "#FF474C",
-    textAlign: "center",
   },
   unitHeaderText: {
     color: "#FFFFFF",

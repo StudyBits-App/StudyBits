@@ -34,12 +34,14 @@ const UserChannelPage: React.FC = () => {
 
   return (
     <ScrollView style={styles.container}>
-      <ChannelDisplay id={user?.uid as string} displayBanner={true} />
+      <View style = {styles.paddedSection}>
+        <ChannelDisplay id={user?.uid as string} displayBanner={true} />
+      </View>
       <CourseList
         collectionName={"userCourses"}
         link="/channelExternalPages/manageCourse"
       />
-      <View style={styles.addCourseCard}>
+      <View style = {styles.paddedSection}>
         <AddCourse />
       </View>
     </ScrollView>
@@ -50,6 +52,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#1E1E1E",
+  },
+  paddedSection: {
+    marginHorizontal: 15
   },
   bannerImage: {
     height: 300,
@@ -81,16 +86,10 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: "#fff",
   },
-  profileInfo: {
-    marginLeft: 20,
-  },
   displayName: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#fff",
-  },
-  addCourseCard: {
-    paddingHorizontal: 15,
   },
   courseName: {
     fontSize: 24,

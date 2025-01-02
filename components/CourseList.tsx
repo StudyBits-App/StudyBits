@@ -40,7 +40,6 @@ const CourseList: React.FC<CourseListProps> = ({
             key={courseId}
             link={link}
             params={{ ...params, id: courseId }}
-            noSync={true}
           />
         ))}
 

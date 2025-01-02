@@ -19,7 +19,6 @@ interface CourseCardShortProps {
   params?: { [key: string]: string | number };
   selected?: boolean;
   onPress?: () => void;
-  noSync?: boolean;
 }
 
 const CourseCardShortCache: React.FC<CourseCardShortProps> = ({
@@ -58,7 +57,7 @@ const CourseCardShortCache: React.FC<CourseCardShortProps> = ({
     };
 
     loadCachedData();
-      syncData();
+    syncData();
   }, [id]);
 
   const handlePress = () => {
