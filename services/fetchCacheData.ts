@@ -197,7 +197,7 @@ const deleteUserChannelCourse = async (courseId: string, userUid: string) => {
       }
     }
 
-    await deleteUserLearningCourse(courseId, userUid);
+    await deleteCourseFromStorageIfUnused(courseId);
     console.log(`Deletion complete for course ${courseId}.`);
   } catch (error) {
     console.error(`Error deleting course ${courseId} from user courses:`, error);

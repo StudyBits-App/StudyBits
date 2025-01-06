@@ -20,7 +20,6 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useSession } from "@/context/ctx";
 import { Ionicons } from "@expo/vector-icons";
 import { trimText } from "@/utils/utils";
-import Back from "@/components/Back";
 
 const UserQuestionsPage: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);

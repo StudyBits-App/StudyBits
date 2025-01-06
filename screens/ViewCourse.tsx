@@ -5,6 +5,7 @@ import {
   View,
   ScrollView,
   Pressable,
+  Switch,
 } from "react-native";
 import { fetchUnitsAndCourseCreator } from "@/services/getUserData";
 import { router, useLocalSearchParams } from "expo-router";
@@ -26,7 +27,24 @@ const ViewCoursesPage: React.FC = () => {
   const { user } = useSession();
   const [studiedCourse, setStudiedCourse] = useState(false);
   const [courseCreatorId, setCourseCreatorId] = useState<string | null>(null);
-  const [studyingUnits, setStudyingUnits] = useState<string[]>([]); 
+  const [studyingUnits, setStudyingUnits] = useState<string[]>([]);
+  const [isSwitchOn, setIsSwitchOn] = useState(true);
+
+  const toggleSwitch = async () => {
+    const newSwitchState = !isSwitchOn;
+    setIsSwitchOn(newSwitchState); 
+    try {
+      await firestore()
+        .collection("learning")
+        .doc(user?.uid)
+        .collection("courses")
+        .doc(id as string)
+        .set({ useUnits: newSwitchState }, { merge: true }); 
+    } catch (error) {
+      console.error("Error updating Firestore:", error);
+    }
+  };
+  
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -45,19 +63,29 @@ const ViewCoursesPage: React.FC = () => {
           const isStudied = learningCourses.includes(id);
           setStudiedCourse(isStudied);
 
-          if (user?.uid) {
-            const learningDoc = await firestore()
+          if (isStudied) {
+            const courseDoc = await firestore()
               .collection("learning")
-              .doc(user.uid)
+              .doc(user?.uid)
               .collection("courses")
               .doc(id)
               .get();
-
-            const fetchedStudyingUnits = learningDoc.exists
-              ? learningDoc.data()?.studyingUnits : [];
-
-            setStudyingUnits(fetchedStudyingUnits);
+            const useUnits = courseDoc.data()?.useUnits;
+            setIsSwitchOn(useUnits ?? true);
           }
+
+          const learningDoc = await firestore()
+            .collection("learning")
+            .doc(user?.uid)
+            .collection("courses")
+            .doc(id)
+            .get();
+
+          const fetchedStudyingUnits = learningDoc.exists
+            ? learningDoc.data()?.studyingUnits
+            : [];
+
+          setStudyingUnits(fetchedStudyingUnits);
         }
       } catch (error) {
         console.error("Error fetching course data: ", error);
@@ -85,7 +113,7 @@ const ViewCoursesPage: React.FC = () => {
         .doc(user?.uid)
         .collection("courses")
         .doc(id)
-        .set({ studyingUnits: []});
+        .set({ studyingUnits: [], useUnits: true });
 
       setStudiedCourse(true);
       setStudyingUnits([]);
@@ -93,7 +121,7 @@ const ViewCoursesPage: React.FC = () => {
   };
 
   const deleteLearningCourse = async () => {
-    deleteUserLearningCourse(id as string, user?.uid as string);
+    await deleteUserLearningCourse(id as string, user?.uid as string);
     router.push("/");
   };
 
@@ -154,14 +182,21 @@ const ViewCoursesPage: React.FC = () => {
           />
         )}
         <CourseCard id={id as string} editing={false} cache={false} />
-
         <View style={styles.unitSection}>
-          <Text style={styles.unitHeaderText}>Units</Text>
+          <View style={styles.unitHeader}>
+            <Text style={styles.unitHeaderText}>Units</Text>
+            <Switch
+              value={isSwitchOn}
+              onValueChange={toggleSwitch}
+              trackColor={{ false: "#767577", true: "#3B9EBF" }}
+              thumbColor={isSwitchOn ? "#FFFFFF" : "#f4f3f4"}
+            />
+          </View>
           {units.length > 0 ? (
             <View style={styles.unitsContainer}>
               {units.map((unit) => (
                 <View key={unit.key} style={styles.unitRow}>
-                  {studiedCourse && (
+                  {(studiedCourse && isSwitchOn) && (
                     <Pressable
                       onPress={() => handleUnitCheckboxToggle(unit.key)}
                       style={styles.checkboxContainer}
@@ -201,6 +236,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#1E1E1E",
   },
+  scrollContent: {
+    flexGrow: 1,
+    padding: 16,
+  },
   topBar: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -213,12 +252,24 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
   },
-  scrollContent: {
-    flexGrow: 1,
-    padding: 16,
-  },
   unitSection: {
     marginTop: 24,
+  },
+  unitHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  unitHeaderText: {
+    color: "#FFFFFF",
+    fontSize: 22,
+    fontWeight: "bold",
+  },
+  unitsContainer: {
+    borderRadius: 12,
+    backgroundColor: "#2E2E2E",
+    padding: 12,
   },
   unitRow: {
     flexDirection: "row",
@@ -229,17 +280,6 @@ const styles = StyleSheet.create({
   },
   unitCardContainer: {
     flex: 1,
-  },
-  unitsContainer: {
-    borderRadius: 12,
-    backgroundColor: "#2E2E2E",
-    padding: 12,
-  },
-  unitHeaderText: {
-    color: "#FFFFFF",
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 16,
   },
   subText: {
     fontSize: 16,

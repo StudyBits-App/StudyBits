@@ -42,7 +42,8 @@ class CourseUnitSelector {
           console.error(`[CourseUnitSelector] Invalid course data for: ${doc.id}`);
           return null;
         }
-        return { id: doc.id, studyingUnits: data.studyingUnits as string[] };
+        const units = data.useUnits ? data.studyingUnits as string[] : [""];
+        return { id: doc.id, studyingUnits: units};
       })
       .filter((course): course is { id: string; studyingUnits: string[] } => course !== null);
 
@@ -96,7 +97,7 @@ class CourseUnitSelector {
 
     while (nextCombination) {
       try {
-        const response = await axios.post('https://slippery-panda-60.telebit.io/find_similar_courses', {
+        const response = await axios.post('https://study-bits-k7ep69795-abhinav-devarakondas-projects.vercel.app/find_similar_courses', {
           course_id: nextCombination.courseId,
           unit_id: nextCombination.unitId,
         });

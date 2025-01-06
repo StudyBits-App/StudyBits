@@ -15,7 +15,11 @@ import {
 } from "react-native";
 import LoadingScreen from "@/screens/LoadingScreen";
 import { getUnitData } from "@/services/getUserData";
-import { deleteExistingUnits, handleUserCourseDeletion, saveUnit } from "@/services/handleUserData";
+import {
+  deleteExistingUnits,
+  handleUserCourseDeletion,
+  saveUnit,
+} from "@/services/handleUserData";
 import {
   AntDesign,
   FontAwesome,
@@ -42,7 +46,7 @@ import { useSession } from "@/context/ctx";
 
 const ManageCoursesPage: React.FC = () => {
   const { id, isEditing } = useLocalSearchParams();
-  const { user } = useSession()
+  const { user } = useSession();
   const [errorVisable, setErrorVisable] = useState(false);
 
   const [units, setUnits] = useState<Unit[]>([]);
@@ -277,8 +281,8 @@ const ManageCoursesPage: React.FC = () => {
   };
 
   const deleteCourse = async () => {
-    deleteUserChannelCourse(id as string, user?.uid as string);
-    handleUserCourseDeletion(id as string)
+    await deleteUserChannelCourse(id as string, user?.uid as string);
+    await handleUserCourseDeletion(id as string);
     router.push("/channelPages/channelPage");
   };
 

@@ -73,7 +73,7 @@ const AddLearning: React.FC = () => {
           .doc(user?.uid)
           .collection("courses")
           .doc(selectedCourseKey)
-          .set({ studyingUnits: [] });
+          .set({ studyingUnits: [], useUnits: true });
 
         console.log("Selected course:", selectedCourseKey);
         const updatedCourses = [

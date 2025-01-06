@@ -8,6 +8,7 @@ import {
   Pressable,
   Modal,
   Image,
+  Animated,
 } from "react-native";
 import firestore from "@react-native-firebase/firestore";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -16,6 +17,11 @@ import { trimText } from "@/utils/utils";
 import { useSession } from "@/context/ctx";
 import CourseUnitSelector from "@/services/getQuestions";
 import LoadingScreen from "./LoadingScreen";
+import {
+  GestureHandlerRootView,
+  PinchGestureHandler,
+  State,
+} from "react-native-gesture-handler";
 
 const AnswerPage: React.FC = () => {
   const { user } = useSession();
@@ -38,6 +44,13 @@ const AnswerPage: React.FC = () => {
   const [hintModalTitle, setHintModalTitle] = useState<string>("");
   const [hintModalImage, setHintModalImage] = useState<string>("");
 
+  const baseScale = React.useRef(new Animated.Value(1)).current;
+  const pinchScale = React.useRef(new Animated.Value(1)).current;
+  const scale = Animated.multiply(baseScale, pinchScale);
+  const lastScale = React.useRef(1);
+  const [hasChanged, setHasChanged] = useState(false);
+  const [lastTap, setLastTap] = useState(0);
+
   const fetchQuestions = async () => {
     setLoading(true);
     setErrorMessage(null);
@@ -45,7 +58,9 @@ const AnswerPage: React.FC = () => {
     try {
       const response = await courseUnitSelector.fetchApiResponse();
       if (response.error || !response.similar_courses) {
-        setErrorMessage("We don't have any questions for you now! Find a fun course to learn in the meantime!");
+        setErrorMessage(
+          "We don't have any questions for you now! Find a fun course to learn in the meantime!"
+        );
         return;
       }
 
@@ -54,7 +69,9 @@ const AnswerPage: React.FC = () => {
       );
 
       if (questions.length === 0) {
-        setErrorMessage("We don't have any questions for you now! Find a fun course to learn in the meantime!");
+        setErrorMessage(
+          "We don't have any questions for you now! Find a fun course to learn in the meantime!"
+        );
         return;
       }
 
@@ -70,6 +87,7 @@ const AnswerPage: React.FC = () => {
 
   const fetchQuestionInfo = async (questionId: string) => {
     try {
+      setAnswersSubmitted(false);
       const questionDoc = await firestore()
         .collection("questions")
         .doc(questionId)
@@ -174,6 +192,33 @@ const AnswerPage: React.FC = () => {
     updateUserAccuracy();
   };
 
+  const onPinchGestureEvent = Animated.event(
+    [{ nativeEvent: { scale: pinchScale } }],
+    { useNativeDriver: true }
+  );
+
+  const onPinchHandlerStateChange = (event: {
+    nativeEvent: { state: number; scale: number };
+  }) => {
+    if (event.nativeEvent.state === State.END) {
+      setHasChanged(lastScale.current !== 1);
+      lastScale.current *= event.nativeEvent.scale;
+      pinchScale.setValue(1);
+      baseScale.setValue(lastScale.current);
+    }
+  };
+
+  const handleDoubleTap = () => {
+    const now = Date.now();
+    if (lastTap && now - lastTap < 300) {
+      lastScale.current = 1;
+      baseScale.setValue(1);
+      pinchScale.setValue(1);
+      setHasChanged(false);
+    }
+    setLastTap(now);
+  };
+
   const renderHint = ({ item }: { item: Hint }) => {
     const truncatedTitle = trimText(item.title, 10);
     const truncatedContent = trimText(item.content, 85);
@@ -267,26 +312,39 @@ const AnswerPage: React.FC = () => {
       <Modal visible={hintModalVisible} animationType="slide">
         <SafeAreaView style={styles.modalContainer}>
           <ScrollView contentContainerStyle={styles.modalContentContainer}>
-            <Text style={[styles.text, styles.modalTitleText]}>
-              {hintModalTitle}
-            </Text>
-            <View style={styles.imageContainer}>
+            {!hasChanged && (
+              <Text style={[styles.text, styles.modalTitleText]}>
+                {hintModalTitle}
+              </Text>
+            )}
+            <GestureHandlerRootView style={styles.imageContainer}>
               {hintModalImage ? (
-                <Image
-                  source={{ uri: hintModalImage }}
-                  style={styles.image}
-                  resizeMode="contain"
-                />
+                <Pressable onPress={handleDoubleTap}>
+                  <PinchGestureHandler
+                    onGestureEvent={onPinchGestureEvent}
+                    onHandlerStateChange={onPinchHandlerStateChange}
+                  >
+                    <Animated.Image
+                      source={{ uri: hintModalImage }}
+                      style={[styles.image, { transform: [{ scale }] }]}
+                      resizeMode="contain"
+                    />
+                  </PinchGestureHandler>
+                </Pressable>
               ) : null}
-            </View>
-            <Text style={[styles.text, styles.modalText]}>
-              {hintModalContent}
-            </Text>
+            </GestureHandlerRootView>
+            {!hasChanged && (
+              <Text style={[styles.text, styles.modalText]}>
+                {hintModalContent}
+              </Text>
+            )}
             <Pressable
               style={{ alignItems: "center" }}
               onPress={handleCancelViewHint}
             >
-              <Text style={{ color: "#FF0D0D", fontSize: 17 }}>Cancel</Text>
+              {!hasChanged && (
+                <Text style={{ color: "#FF0D0D", fontSize: 17 }}>Cancel</Text>
+              )}
             </Pressable>
           </ScrollView>
         </SafeAreaView>

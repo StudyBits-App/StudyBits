@@ -32,7 +32,7 @@ const handleUserCourseDeletion = async (courseId: string) => {
     const courseDoc = await course.get();
     const courseData = courseDoc.data();
 
-    if (courseDoc.exists && courseData?.dependency <= 0) {
+    if (courseDoc.exists && courseData?.dependency > 0) {
         await course.update({
           creator: 'TcoD2mfnDzQ6NmPQjbxzbpbUIJG3',
         });
