@@ -144,19 +144,12 @@ const styles = StyleSheet.create({
         textAlign: 'center'
     },
     input: {
-        backgroundColor: "#000000",
+        backgroundColor: "#333",
         color: 'white',
-        alignItems: "center",
         borderRadius: 5,
-        width: '75%',
-        flexDirection: 'row',
-        justifyContent: 'center',
-        paddingVertical: 10,
-        paddingHorizontal: '3%',
-        borderColor: 'white',
-        borderStyle: 'solid',
-        borderWidth: 1,
-        marginTop: '5%'
+        padding: 12,
+        fontSize: 16,
+        width: '75%'
     },
     background: {
         alignItems: 'center',

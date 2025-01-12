@@ -77,6 +77,12 @@ const ManageCoursesPage: React.FC = () => {
       }
     };
     fetchUnits();
+    if (isEditing === '1') {
+      setIsEditing(true);
+    }
+    else {
+      setIsEditing(false);
+    }
   }, [id]);
 
   useEffect(() => {
@@ -208,31 +214,30 @@ const ManageCoursesPage: React.FC = () => {
     setModalVisible(false);
   };
 
-  
   const handleDeleteUnit = async (key: string) => {
     try {
       swipeableRefs.current[key]?.close();
       delete swipeableRefs.current[key];
-  
+
       const updatedUnits = units
         .filter((unit) => unit.key !== key)
         .map((unit, index) => ({ ...unit, order: index }));
-  
+
       setUnits(updatedUnits);
-      await deleteQuestionsForUnit(id as string, key)
+      await deleteQuestionsForUnit(id as string, key);
       await firestore()
         .collection("courses")
         .doc(id as string)
         .collection("units")
         .doc(key)
         .delete();
-  
+
       await saveAllUnits(updatedUnits);
     } catch (error) {
       console.error("Error deleting unit:", error);
     }
   };
-  
+
   const updateLastModified = async () => {
     await firestore()
       .collection("courses")
@@ -327,15 +332,15 @@ const ManageCoursesPage: React.FC = () => {
           <View style={styles.swipeActionsContainer}>
             <Pressable
               onPress={() => openUnitEditModal(item)}
-              style={{ ...styles.swipeButton, backgroundColor: "#0D99FF" }}
+              style={styles.swipeButton}
             >
-              <Text style={{ color: "white" }}>Edit</Text>
+              <Ionicons name="pencil" size={24} color="white" />
             </Pressable>
             <Pressable
               onPress={() => handleDeleteUnit(item.key)}
-              style={{ ...styles.swipeButton, backgroundColor: "#FF0D0D" }}
+              style={styles.swipeButton}
             >
-              <Text style={{ color: "white" }}>Delete</Text>
+              <Ionicons name="trash" size={24} color="white" />
             </Pressable>
           </View>
         )}
