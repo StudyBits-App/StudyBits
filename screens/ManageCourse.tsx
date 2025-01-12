@@ -13,19 +13,13 @@ import {
   Easing,
   ScrollView,
 } from "react-native";
-import LoadingScreen from "@/screens/LoadingScreen";
 import { getUnitData } from "@/services/getUserData";
 import {
-  deleteExistingUnits,
+  deleteQuestionsForCourse,
+  deleteQuestionsForUnit,
   handleUserCourseDeletion,
-  saveUnit,
 } from "@/services/handleUserData";
-import {
-  AntDesign,
-  FontAwesome,
-  Ionicons,
-  MaterialIcons,
-} from "@expo/vector-icons";
+import { AntDesign, FontAwesome, Ionicons } from "@expo/vector-icons";
 import {
   NestableDraggableFlatList,
   RenderItemParams,
@@ -35,7 +29,6 @@ import { Swipeable } from "react-native-gesture-handler";
 import { v4 as uuidv4 } from "uuid";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
-import { useToast } from "react-native-toast-notifications";
 import { Unit } from "@/utils/interfaces";
 import CourseCard from "../components/CourseCard";
 import Back from "@/components/Back";
@@ -47,13 +40,9 @@ import { useSession } from "@/context/ctx";
 const ManageCoursesPage: React.FC = () => {
   const { id, isEditing } = useLocalSearchParams();
   const { user } = useSession();
-  const [errorVisable, setErrorVisable] = useState(false);
 
   const [units, setUnits] = useState<Unit[]>([]);
-  const [firebaseUnits, setFirebaseUnits] = useState<Unit[]>([]);
-
   const [editing, setIsEditing] = useState(false);
-  const [unsavedChanges, setUnsavedChanges] = useState(false);
 
   const [modalVisible, setModalVisible] = useState(false);
   const [unitName, setUnitName] = useState<string>("");
@@ -61,16 +50,14 @@ const ManageCoursesPage: React.FC = () => {
   const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
 
   const swipeableRefs = useRef<{ [key: string]: Swipeable | null }>({});
-  const toast = useToast();
 
   const editingAnimation = useRef(new Animated.Value(-100)).current;
   const editingOpacity = useRef(new Animated.Value(0)).current;
-  const iconAnimation = useRef(new Animated.Value(0)).current;
-  const iconOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const fetchUnits = async () => {
       try {
+        setUnits([]);
         if (typeof id === "string") {
           const unitDocs = await getUnitData(id);
           if (unitDocs) {
@@ -82,7 +69,6 @@ const ManageCoursesPage: React.FC = () => {
               });
               const sortedUnits = unitData.sort((a, b) => a.order - b.order);
               setUnits(sortedUnits);
-              setFirebaseUnits(sortedUnits);
             }
           }
         }
@@ -90,11 +76,6 @@ const ManageCoursesPage: React.FC = () => {
         console.error("Error fetching units: ", error);
       }
     };
-
-    if (isEditing === "1") {
-      setIsEditing(true);
-    }
-
     fetchUnits();
   }, [id]);
 
@@ -132,76 +113,6 @@ const ManageCoursesPage: React.FC = () => {
     }
   }, [editing]);
 
-  useEffect(() => {
-    if (unsavedChanges) {
-      Animated.parallel([
-        Animated.timing(iconAnimation, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-          easing: Easing.out(Easing.ease),
-        }),
-        Animated.timing(iconOpacity, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-          easing: Easing.out(Easing.ease),
-        }),
-      ]).start();
-    } else {
-      Animated.parallel([
-        Animated.timing(iconAnimation, {
-          toValue: 0,
-          duration: 500,
-          useNativeDriver: true,
-          easing: Easing.in(Easing.ease),
-        }),
-        Animated.timing(iconOpacity, {
-          toValue: 0,
-          duration: 500,
-          useNativeDriver: true,
-          easing: Easing.in(Easing.ease),
-        }),
-      ]).start();
-      setErrorVisable(false);
-    }
-  }, [unsavedChanges]);
-
-  useEffect(() => {
-    setUnsavedChanges(JSON.stringify(units) !== JSON.stringify(firebaseUnits));
-  }, [units, firebaseUnits]);
-
-  if (!units) {
-    return <LoadingScreen />;
-  }
-
-  const handleSave = async () => {
-    if (typeof id === "string" && units.length > 0) {
-      try {
-        await deleteExistingUnits(id);
-        const saveUnitPromises = units.map((unit) => saveUnit(id, unit));
-        const savedUnits = await Promise.all(saveUnitPromises);
-        setFirebaseUnits(savedUnits);
-        setUnits(savedUnits);
-        console.log("Units saved successfully!");
-        await firestore().collection("courses").doc(id).update({
-          lastModified: new Date().getTime(),
-        });
-      } catch (error) {
-        console.error("Error saving units or updating lastModified: ", error);
-      }
-    }
-  };
-
-  const unsavedChangesToast = () => {
-    toast.show("Please save your changes before performing this action", {
-      type: "custom",
-      placement: "bottom",
-      duration: 4000,
-      animationType: "slide-in",
-    });
-  };
-
   const createQuestionForUnit = (unit: Unit) => {
     router.push({
       pathname: "/question",
@@ -216,33 +127,74 @@ const ManageCoursesPage: React.FC = () => {
     setModalVisible(true);
   };
 
-  const addUnit = () => {
-    const newUnit: Unit = {
-      key: uuidv4(),
-      name: unitName,
-      description: unitDescription,
-      order: units.length,
-    };
-    setUnits((prevUnits) => [...prevUnits, newUnit]);
-    setModalVisible(false);
-    setUnitName("");
-    setUnitDescription("");
-  };
+  const addUnit = async () => {
+    try {
+      const newUnit: Unit = {
+        key: uuidv4(),
+        name: unitName,
+        description: unitDescription,
+        order: units.length,
+      };
+      if (!newUnit.name.trim()) return;
 
-  const updateUnit = () => {
-    if (editingUnit) {
-      setUnits((prevUnits) =>
-        prevUnits.map((unit) =>
-          unit.key === editingUnit.key
-            ? { ...unit, name: unitName, description: unitDescription }
-            : unit
-        )
-      );
-      setEditingUnit(null);
+      setUnits((prevUnits) => [...prevUnits, newUnit]);
       setModalVisible(false);
       setUnitName("");
       setUnitDescription("");
-      swipeableRefs.current[editingUnit.key]?.close();
+
+      await firestore()
+        .collection("courses")
+        .doc(id as string)
+        .collection("units")
+        .doc(newUnit.key)
+        .set(newUnit);
+
+      await updateLastModified();
+    } catch (error) {
+      console.error("Error adding unit: ", error);
+    }
+  };
+
+  const updateUnit = async () => {
+    try {
+      if (editingUnit) {
+        if (!unitName.trim()) {
+          return;
+        }
+
+        setUnits((prevUnits) =>
+          prevUnits.map((unit) =>
+            unit.key === editingUnit.key
+              ? { ...unit, name: unitName, description: unitDescription }
+              : unit
+          )
+        );
+
+        await firestore()
+          .collection("courses")
+          .doc(id as string)
+          .collection("units")
+          .doc(editingUnit.key)
+          .set(
+            {
+              name: unitName,
+              description: unitDescription,
+              order: editingUnit.order,
+              key: editingUnit.key,
+            },
+            { merge: true }
+          );
+
+        await updateLastModified();
+
+        setEditingUnit(null);
+        setModalVisible(false);
+        setUnitName("");
+        setUnitDescription("");
+        swipeableRefs.current[editingUnit.key]?.close();
+      }
+    } catch (error) {
+      console.error("Error updating unit: ", error);
     }
   };
 
@@ -256,52 +208,113 @@ const ManageCoursesPage: React.FC = () => {
     setModalVisible(false);
   };
 
-  const handleDeleteUnit = (key: string) => {
-    setUnits((prevUnits) => {
-      const updatedUnits = prevUnits.filter((unit) => unit.key !== key);
-      return updatedUnits.map((unit, index) => ({
-        ...unit,
-        order: index,
-      }));
-    });
+  
+  const handleDeleteUnit = async (key: string) => {
+    try {
+      swipeableRefs.current[key]?.close();
+      delete swipeableRefs.current[key];
+  
+      const updatedUnits = units
+        .filter((unit) => unit.key !== key)
+        .map((unit, index) => ({ ...unit, order: index }));
+  
+      setUnits(updatedUnits);
+      await deleteQuestionsForUnit(id as string, key)
+      await firestore()
+        .collection("courses")
+        .doc(id as string)
+        .collection("units")
+        .doc(key)
+        .delete();
+  
+      await saveAllUnits(updatedUnits);
+    } catch (error) {
+      console.error("Error deleting unit:", error);
+    }
+  };
+  
+  const updateLastModified = async () => {
+    await firestore()
+      .collection("courses")
+      .doc(id as string)
+      .update({
+        lastModified: new Date().getTime(),
+      });
+  };
+
+  const saveAllUnits = async (units: Unit[]) => {
+    await Promise.all(
+      units.map((unit) =>
+        firestore()
+          .collection("courses")
+          .doc(id as string)
+          .collection("units")
+          .doc(unit.key)
+          .set({
+            name: unit.name,
+            description: unit.description,
+            order: unit.order,
+            key: unit.key,
+          })
+      )
+    );
+    await updateLastModified();
   };
 
   const handleToggleEdit = () => {
     units.forEach((unit) => {
       swipeableRefs.current[unit.key]?.close();
     });
-    if (editing) {
-      if (unsavedChanges) {
-        setErrorVisable(true);
-      }
-    } else {
-      setErrorVisable(false);
-    }
     setIsEditing(!editing);
   };
 
   const deleteCourse = async () => {
-    await deleteUserChannelCourse(id as string, user?.uid as string);
-    await handleUserCourseDeletion(id as string);
+    await Promise.all([
+      deleteQuestionsForCourse(id as string),
+      deleteUserChannelCourse(id as string, user?.uid as string),
+      handleUserCourseDeletion(id as string),
+    ]);
     router.push("/channelPages/channelPage");
   };
 
-  const renderUnit = ({ item, drag }: RenderItemParams<Unit>) => {
-    const originalUnit = firebaseUnits.find((fUnit) => fUnit.key === item.key);
-    let hasNewChanges = false;
-    let hasExistingChanges = false;
+  const onDragEndHandler = async ({
+    data,
+  }: {
+    data: Unit[];
+  }): Promise<void> => {
+    try {
+      const updatedData: Unit[] = data.map(
+        (unit: Unit, index: number): Unit => ({
+          ...unit,
+          order: index,
+        })
+      );
+      setUnits(updatedData);
 
-    if (originalUnit) {
-      if (
-        originalUnit.name !== item.name ||
-        originalUnit.description !== item.description
-      ) {
-        hasExistingChanges = true;
-      }
-    } else {
-      hasNewChanges = true;
+      await Promise.all(
+        updatedData.map(
+          (unit: Unit): Promise<void> =>
+            firestore()
+              .collection("courses")
+              .doc(id as string)
+              .collection("units")
+              .doc(unit.key)
+              .set(
+                {
+                  order: unit.order,
+                },
+                { merge: true }
+              )
+        )
+      );
+
+      await updateLastModified();
+    } catch (error: unknown) {
+      console.error("Error updating unit order: ", error);
     }
+  };
 
+  const renderUnit = ({ item, drag }: RenderItemParams<Unit>) => {
     return (
       <Swipeable
         ref={(ref) => {
@@ -331,17 +344,11 @@ const ManageCoursesPage: React.FC = () => {
           style={[
             styles.contentContainer,
             !editing && styles.viewUnits,
-            editing &&
-              !(hasExistingChanges || hasExistingChanges) &&
-              styles.editingUnits,
-            editing && hasNewChanges ? styles.unsavedUnit : null,
-            editing && hasExistingChanges ? styles.editedUnit : null,
+            editing && styles.editingUnits,
           ]}
           onLongPress={editing ? drag : null}
           onPress={() => {
-            if (!editing && unsavedChanges) {
-              unsavedChangesToast();
-            } else if (!editing) {
+            if (!editing) {
               createQuestionForUnit(item);
             }
           }}
@@ -397,52 +404,15 @@ const ManageCoursesPage: React.FC = () => {
               >
                 <Text style={styles.subText}>Editing</Text>
               </Animated.View>
-              <Animated.View
-                style={{
-                  opacity: iconOpacity,
-                  transform: [{ scale: iconAnimation }],
-                }}
-              >
-                <MaterialIcons name="warning" size={25} color="yellow" />
-              </Animated.View>
             </View>
           </LinearGradient>
         </View>
-
-        {errorVisable && (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>
-              You have unsaved changes. Go back in editing mode and save them!
-            </Text>
-            <Pressable
-              onPress={() => setErrorVisable(false)}
-              style={styles.errorIconContainer}
-            >
-              <Ionicons name="close-circle" size={20} color="#888" />
-            </Pressable>
-          </View>
-        )}
 
         <CourseCard id={id as string} editing={editing} cache={true} />
 
         <View>
           <View style={styles.unitHeaderContainer}>
             <Text style={styles.unitHeaderText}>Units</Text>
-            {editing && (
-              <Animated.View
-                style={{
-                  opacity: iconOpacity,
-                  transform: [{ scale: iconAnimation }],
-                }}
-              >
-                <Pressable
-                  onPress={() => setUnits(firebaseUnits)}
-                  style={styles.resetIconSpace}
-                >
-                  <MaterialIcons name="refresh" size={30} color="#ADD8E6" />
-                </Pressable>
-              </Animated.View>
-            )}
             {editing && (
               <Pressable onPress={() => setModalVisible(true)}>
                 <Ionicons name="add-circle" size={40} color={"#3B9EBF"} />
@@ -455,22 +425,11 @@ const ManageCoursesPage: React.FC = () => {
                 data={units}
                 renderItem={renderUnit}
                 keyExtractor={(item) => item.key}
-                onDragEnd={({ data }) => {
-                  const updatedData = data.map((unit, index) => ({
-                    ...unit,
-                    order: index,
-                  }));
-                  setUnits(updatedData);
-                }}
+                onDragEnd={onDragEndHandler}
               />
             </View>
           ) : (
             <Text style={styles.subText}>No units</Text>
-          )}
-          {editing && (
-            <Pressable style={styles.saveButton} onPress={handleSave}>
-              <Text>Save Units</Text>
-            </Pressable>
           )}
         </View>
         <Modal
@@ -550,21 +509,6 @@ const styles = StyleSheet.create({
     borderRadius: 13,
     padding: 10,
   },
-  errorContainer: {
-    flexDirection: "row",
-    borderRadius: 25,
-    padding: 15,
-    marginVertical: 20,
-    borderColor: "#EED202",
-    borderWidth: 1,
-  },
-  errorText: {
-    color: "#EED202",
-    fontSize: 16,
-  },
-  errorIconContainer: {
-    marginLeft: 10,
-  },
   subText: {
     fontSize: 16,
     color: "white",
@@ -587,8 +531,7 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   unitHeaderContainer: {
-    marginTop: 20,
-    marginBottom: 20,
+    marginVertical: 20,
     flexDirection: "row",
     alignItems: "center",
   },
@@ -598,24 +541,13 @@ const styles = StyleSheet.create({
     fontSize: 25,
     fontWeight: "bold",
   },
-  resetIconSpace: {
-    marginRight: 30,
-  },
-  unsavedUnit: {
-    borderColor: "green",
-    borderWidth: 2,
-  },
-  editedUnit: {
-    borderColor: "#EED202",
-    borderWidth: 2,
-  },
-  editingUnits: {
-    borderColor: "grey",
-    borderWidth: 1,
-  },
   viewUnits: {
     borderBottomColor: "white",
     borderBottomWidth: 1,
+  },
+  editingUnits: {
+    borderColor: "white",
+    borderWidth: 0.5,
   },
   swipeActionsContainer: {
     flexDirection: "row",
@@ -655,13 +587,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderRadius: 10,
     padding: 15,
-  },
-  saveButton: {
-    marginTop: 30,
-    backgroundColor: "#ffffff",
-    padding: "3%",
-    alignItems: "center",
-    borderRadius: 10,
   },
 });
 

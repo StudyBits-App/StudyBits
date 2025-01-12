@@ -1,7 +1,7 @@
 import React from "react";
 import { Pressable, Text, TextInput, View, Image } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
-import { AntDesign, FontAwesome } from "@expo/vector-icons";
+import { AntDesign, FontAwesome, Ionicons } from "@expo/vector-icons";
 import { RenderItemParams } from "react-native-draggable-flatlist";
 import { Answer, Hint } from "@/utils/interfaces";
 import { trimText } from "@/utils/utils";
@@ -37,15 +37,15 @@ export const renderHint =
           <View style={styles.swipeActionsContainer}>
             <Pressable
               onPress={() => openHintEditModal(item)}
-              style={{ ...styles.swipeButton, backgroundColor: "#0D99FF" }}
+              style={{ ...styles.swipeButton }}
             >
-              <Text style={{ color: "white" }}>Edit</Text>
+              <Ionicons name="pencil" size={24} color="white" />
             </Pressable>
             <Pressable
               onPress={() => handleHintDelete(item.key)}
-              style={{ ...styles.swipeButton, backgroundColor: "#FF0D0D" }}
+              style={{ ...styles.swipeButton }}
             >
-              <Text style={{ color: "white" }}>Delete</Text>
+              <Ionicons name="trash" size={24} color="white" />
             </Pressable>
           </View>
         )}

@@ -127,7 +127,7 @@ export const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
     width: '40%',
-    paddingTop: '2.5%',
+    paddingTop: '3%',
   },
   swipeButton: {
     justifyContent: 'center',

@@ -1,32 +1,48 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Pressable, Image, TextInput, Text, TouchableOpacity, Dimensions, Keyboard, ScrollView } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import firestore from '@react-native-firebase/firestore';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useSession } from '@/context/ctx';
-import { uploadImageToFirebase, deleteImageFromFirebase } from '@/services/handleImages';
-import { getCourseData } from '@/services/getUserData';
-import { Course, defaultCourse } from '@/utils/interfaces';
-import Back from '@/components/Back';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useEffect, useState } from "react";
+import {
+  StyleSheet,
+  View,
+  Pressable,
+  Image,
+  TextInput,
+  Text,
+  TouchableOpacity,
+  Dimensions,
+  Keyboard,
+  ScrollView,
+} from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import firestore from "@react-native-firebase/firestore";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useSession } from "@/context/ctx";
+import {
+  uploadImageToFirebase,
+  deleteImageFromFirebase,
+} from "@/services/handleImages";
+import { getCourseData } from "@/services/getUserData";
+import { Course, defaultCourse } from "@/utils/interfaces";
+import Back from "@/components/Back";
+import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useToast } from "react-native-toast-notifications";
 
 const CreateCourse: React.FC = () => {
   const [course, setCourse] = useState<Course>(defaultCourse);
-  const [editingURL, setEditingURL] = useState<string>('');
+  const [editingURL, setEditingURL] = useState<string>("");
   const { user } = useSession();
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const toast = useToast();
 
   useEffect(() => {
     const fetchCourse = async () => {
-      if (typeof id === 'string') {
+      if (typeof id === "string") {
         try {
           const courseData = (await getCourseData(id)).data() as Course;
           setCourse(courseData);
           setEditingURL(courseData.picUrl);
         } catch (error) {
-          console.error('Error fetching course: ', error);
+          console.error("Error fetching course: ", error);
         }
       }
     };
@@ -48,63 +64,89 @@ const CreateCourse: React.FC = () => {
   };
 
   const removeImage = () => {
-    setCourse({ ...course, picUrl: '' });
+    setCourse({ ...course, picUrl: "" });
+  };
+
+  const errorToast = () => {
+    toast.show(
+      "Your question is invalid. Ensure you have a question, two answer choices, an at least 1 correct answer!",
+      {
+        type: "custom",
+        placement: "bottom",
+        duration: 4000,
+        animationType: "slide-in",
+      }
+    );
   };
 
   const handleNext = async () => {
     try {
+      if (!course.name.trim()) {
+        errorToast();
+        return;
+      }
       if (course.picUrl) {
-        const uploadedImageUrl = await uploadImageToFirebase(course.picUrl, 'coursePics');
+        const uploadedImageUrl = await uploadImageToFirebase(
+          course.picUrl,
+          "coursePics"
+        );
         course.picUrl = uploadedImageUrl;
       }
       course.lastModified = new Date().getTime();
-      const courseRef = await firestore().collection('courses').add(course);
+      const courseRef = await firestore().collection("courses").add(course);
       const docId = courseRef.id;
       await courseRef.update({ key: docId, numQuestions: 0 });
-      
-      const channelRef = firestore().collection('channels').doc(user?.uid);
+
+      const channelRef = firestore().collection("channels").doc(user?.uid);
       const channelDoc = await channelRef.get();
       const currentCourses = channelDoc.data()?.courses || [];
       await channelRef.update({ courses: [...currentCourses, docId] });
-  
-      const storedUserCourses = await AsyncStorage.getItem('userCourses');
+
+      const storedUserCourses = await AsyncStorage.getItem("userCourses");
       let userCourses = storedUserCourses ? JSON.parse(storedUserCourses) : [];
       userCourses.push(docId);
-      await AsyncStorage.setItem('userCourses', JSON.stringify(userCourses));
+      await AsyncStorage.setItem("userCourses", JSON.stringify(userCourses));
       await AsyncStorage.setItem(`course_${docId}`, JSON.stringify(course));
-  
-      router.push({ 
-        pathname: "/channelExternalPages/manageCourse", 
-        params: { id: docId, isEditing: '1' } 
+
+      router.push({
+        pathname: "/channelExternalPages/manageCourse",
+        params: { id: docId, isEditing: "1" },
       });
     } catch (error) {
-      console.error('Error adding course: ', error);
+      console.error("Error adding course: ", error);
     }
   };
-  
+
   const handleSave = async () => {
+    if (!course.name.trim()) {
+      errorToast();
+      return;
+    }
     if (!(editingURL && editingURL === course.picUrl)) {
       deleteImageFromFirebase(editingURL);
       if (course.picUrl) {
-        course.picUrl = await uploadImageToFirebase(course.picUrl, 'coursePics');
+        course.picUrl = await uploadImageToFirebase(
+          course.picUrl,
+          "coursePics"
+        );
       }
     }
     course.lastModified = new Date().getTime();
-    if(typeof id === 'string'){
-      firestore().collection('courses').doc(id).update(course);
+    if (typeof id === "string") {
+      firestore().collection("courses").doc(id).update(course);
     }
-    await AsyncStorage.setItem(
-      `course_${id}`,
-      JSON.stringify(course)
-    );
+    await AsyncStorage.setItem(`course_${id}`, JSON.stringify(course));
 
-    router.push({ pathname: "/channelExternalPages/manageCourse", params: { id: id, isEditing: '1' } });
-  }
+    router.push({
+      pathname: "/channelExternalPages/manageCourse",
+      params: { id: id, isEditing: "1" },
+    });
+  };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.backContainer}>
-        <Back link="/channelPages" params={{}}/>
+        <Back link="/channelPages" params={{}} />
       </View>
       <ScrollView>
         <Pressable style={styles.container} onPress={Keyboard.dismiss}>
@@ -155,7 +197,7 @@ const CreateCourse: React.FC = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: "#1E1E1E",
   },
   backContainer: {
     paddingHorizontal: 20,
@@ -164,36 +206,38 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   row: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 20,
   },
   circle: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#666',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#666",
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 20,
   },
   circleText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontWeight: 'bold',
+    color: "#fff",
+    textAlign: "center",
+    fontWeight: "bold",
   },
   image: {
     width: 100,
     height: 100,
-    borderRadius: Math.round((Dimensions.get('window').height + Dimensions.get('window').width) / 2),
+    borderRadius: Math.round(
+      (Dimensions.get("window").height + Dimensions.get("window").width) / 2
+    ),
     marginRight: 20,
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: "#fff",
   },
   nameInput: {
-    backgroundColor: '#333333',
-    color: '#FFFFFF',
-    borderColor: '#555',
+    backgroundColor: "#333333",
+    color: "#FFFFFF",
+    borderColor: "#555",
     borderWidth: 1,
     borderRadius: 10,
     paddingHorizontal: 10,
@@ -202,37 +246,37 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   descriptionInput: {
-    backgroundColor: '#333333',
-    color: '#FFFFFF',
-    borderColor: '#555',
+    backgroundColor: "#333333",
+    color: "#FFFFFF",
+    borderColor: "#555",
     borderWidth: 1,
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 10,
     fontSize: 16,
-    width: '100%',
+    width: "100%",
     marginBottom: 20,
   },
   headerText: {
     padding: 10,
     marginBottom: 20,
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 28,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    fontWeight: "bold",
+    textAlign: "center",
   },
   button: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: "#3B82F6",
     padding: 15,
-    width: '100%',
-    alignItems: 'center',
+    width: "100%",
+    alignItems: "center",
     marginTop: 30,
     borderRadius: 10,
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });
 

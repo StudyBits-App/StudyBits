@@ -6,6 +6,7 @@ import {
   View,
   Alert,
   Animated,
+  TouchableOpacity,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
@@ -34,6 +35,8 @@ import {
   handleHintImages,
   updateQuestion,
 } from "@/services/getQuestionData";
+import { useToast } from "react-native-toast-notifications";
+import SuccessModal from "@/components/QuestionComponents/FinalModal";
 
 const QuestionPortal: React.FC = () => {
   const [question, setQuestion] = useState<string>("");
@@ -48,7 +51,8 @@ const QuestionPortal: React.FC = () => {
   const [editingHint, setEditingHint] = useState<Hint | null>(null);
   const [hintModalError, setHintModalError] = useState<string>("");
 
-  const [modalVisible, setModalVisible] = useState(false);
+  const [courseModal, setCourseModalVisible] = useState(false);
+  const [successModalVisible, setSuccessModalVisible] = useState(false);
   const [selectedCourseKey, setSelectedCourseKey] = useState<string | null>(
     null
   );
@@ -61,7 +65,8 @@ const QuestionPortal: React.FC = () => {
   const [originalHints, setOriginalHints] = useState<Hint[]>([]);
 
   const { courseId, unitId, id } = useLocalSearchParams();
-  
+  const toast = useToast();
+
   useEffect(() => {
     if (typeof courseId === "string") {
       setSelectedCourseKey(courseId);
@@ -112,7 +117,24 @@ const QuestionPortal: React.FC = () => {
     outputRange: [0, 220],
   });
 
+  const errorToast = () => {
+    toast.show(
+      "Your question is invalid. Ensure you have a question, two answer choices, an at least 1 correct answer!",
+      {
+        type: "custom",
+        placement: "bottom",
+        duration: 4000,
+        animationType: "slide-in",
+      }
+    );
+  };
   const handleSubmit = async () => {
+    const hasCorrectAnswer = answerChoices.some((answer) => answer.answer);
+    if (!question.trim() || answerChoices.length < 2 || !hasCorrectAnswer) {
+      errorToast();
+      return;
+    }
+
     if (
       selectedCourseKey &&
       selectedUnitKey &&
@@ -120,7 +142,7 @@ const QuestionPortal: React.FC = () => {
       typeof selectedUnitKey === "string"
     ) {
       const updatedHints = await handleHintImages(hints, originalHints);
-  
+
       const questionData = {
         question: question,
         hints: updatedHints,
@@ -128,13 +150,13 @@ const QuestionPortal: React.FC = () => {
         course: selectedCourseKey,
         unit: selectedUnitKey,
       };
-  
+
       const unitDocRef = firestore()
         .collection("courses")
         .doc(selectedCourseKey)
         .collection("units")
         .doc(selectedUnitKey);
-  
+
       const courseDocRef = firestore()
         .collection("courses")
         .doc(selectedCourseKey);
@@ -151,11 +173,19 @@ const QuestionPortal: React.FC = () => {
           await unitDocRef.update({
             questions: firestore.FieldValue.arrayUnion(questionDocRef.id),
           });
-          await courseDocRef.update({numQuestions: firestore.FieldValue.increment(1)})
+          await courseDocRef.update({
+            numQuestions: firestore.FieldValue.increment(1),
+          });
         }
+        setSuccessModalVisible(true);
+        setHints([]);
+        setAnswerChoices([]);
+        setQuestion("");
+        setSelectedCourseKey("");
+        setSelectedUnitKey("");
       } else {
         console.error("Invalid unit or course");
-        setModalVisible(true);
+        setCourseModalVisible(true);
       }
     } else {
       console.error("Something went wrong");
@@ -308,7 +338,7 @@ const QuestionPortal: React.FC = () => {
   };
 
   const handleCloseModal = () => {
-    setModalVisible(false);
+    setCourseModalVisible(false);
     openDropdown();
   };
 
@@ -331,7 +361,7 @@ const QuestionPortal: React.FC = () => {
             onPress={toggleDropdown}
           >
             <Text style={styles.sectionTitle}>Course & Unit</Text>
-            <Pressable onPress={() => setModalVisible(true)}>
+            <Pressable onPress={() => setCourseModalVisible(true)}>
               <AntDesign name="edit" size={30} color={"#3B9EBF"} />
             </Pressable>
           </Pressable>
@@ -401,9 +431,9 @@ const QuestionPortal: React.FC = () => {
           />
         </View>
 
-        <Pressable style={styles.button} onPress={handleSubmit}>
+        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
           <Text>{isEditing ? "Update" : "Submit"}</Text>
-        </Pressable>
+        </TouchableOpacity>
       </NestableScrollContainer>
 
       <HintModal
@@ -423,11 +453,16 @@ const QuestionPortal: React.FC = () => {
       />
 
       <CoursesAndUnitsPage
-        isVisible={modalVisible}
+        isVisible={courseModal}
         onClose={handleCloseModal}
         onSelect={handleSelect}
         initialCourseKey={selectedCourseKey}
         initialUnitKey={selectedUnitKey}
+      />
+
+      <SuccessModal
+        visible={successModalVisible}
+        onClose={() => setSuccessModalVisible(false)}
       />
     </SafeAreaView>
   );

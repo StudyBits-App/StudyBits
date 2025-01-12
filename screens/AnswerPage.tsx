@@ -13,7 +13,7 @@ import {
 import firestore from "@react-native-firebase/firestore";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Hint, QuestionAnswer, QuestionInfo } from "@/utils/interfaces";
-import { trimText } from "@/utils/utils";
+import { shuffleArray, trimText } from "@/utils/utils";
 import { useSession } from "@/context/ctx";
 import CourseUnitSelector from "@/services/getQuestions";
 import LoadingScreen from "./LoadingScreen";
@@ -52,6 +52,7 @@ const AnswerPage: React.FC = () => {
   const [lastTap, setLastTap] = useState(0);
 
   const fetchQuestions = async () => {
+    setAnswersSubmitted(false);
     setLoading(true);
     setErrorMessage(null);
 
@@ -64,9 +65,9 @@ const AnswerPage: React.FC = () => {
         return;
       }
 
-      const questions = response.similar_courses.flatMap(
+      const questions = shuffleArray(response.similar_courses.flatMap(
         (course: any) => course.questions || []
-      );
+      ));
 
       if (questions.length === 0) {
         setErrorMessage(
@@ -74,7 +75,6 @@ const AnswerPage: React.FC = () => {
         );
         return;
       }
-
       setQuestionsQueue(questions);
       setCurrentQuestionId(questions[0]);
     } catch (error) {
@@ -87,7 +87,6 @@ const AnswerPage: React.FC = () => {
 
   const fetchQuestionInfo = async (questionId: string) => {
     try {
-      setAnswersSubmitted(false);
       const questionDoc = await firestore()
         .collection("questions")
         .doc(questionId)
@@ -112,6 +111,7 @@ const AnswerPage: React.FC = () => {
       setQuestionsQueue(remainingQuestions);
       setCurrentQuestionId(remainingQuestions[0]);
       setAnswersSubmitted(false);
+      setAnswerChoices([])
     }
   };
 
@@ -160,6 +160,7 @@ const AnswerPage: React.FC = () => {
       );
       setHints(questionInfo.hints);
       setQuestion(questionInfo.question);
+      
     }
   }, [questionInfo]);
 
@@ -201,7 +202,6 @@ const AnswerPage: React.FC = () => {
     nativeEvent: { state: number; scale: number };
   }) => {
     if (event.nativeEvent.state === State.END) {
-      setHasChanged(lastScale.current !== 1);
       lastScale.current *= event.nativeEvent.scale;
       pinchScale.setValue(1);
       baseScale.setValue(lastScale.current);

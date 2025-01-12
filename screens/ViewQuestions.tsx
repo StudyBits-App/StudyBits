@@ -4,9 +4,9 @@ import {
   Text,
   TouchableOpacity,
   ScrollView,
-  ActivityIndicator,
   StyleSheet,
   Pressable,
+  Alert,
 } from "react-native";
 import firestore from "@react-native-firebase/firestore";
 import {
@@ -18,8 +18,10 @@ import {
 } from "@/utils/interfaces";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSession } from "@/context/ctx";
-import { Ionicons } from "@expo/vector-icons";
+import { AntDesign, Ionicons } from "@expo/vector-icons";
 import { trimText } from "@/utils/utils";
+import LoadingScreen from "./LoadingScreen";
+import { Swipeable } from "react-native-gesture-handler";
 
 const UserQuestionsPage: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -30,12 +32,21 @@ const UserQuestionsPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [showCourseDropdown, setShowCourseDropdown] = useState<boolean>(false);
   const [showUnitDropdown, setShowUnitDropdown] = useState<boolean>(false);
+  const [userPage, setUserPage] = useState(true);
   const { user } = useSession();
   const { id } = useLocalSearchParams();
 
   useEffect(() => {
     fetchCourses();
   }, []);
+
+  useEffect(() => {
+    if (id) {
+      setUserPage(false);
+    } else {
+      setUserPage(true);
+    }
+  }, [id]);
 
   useEffect(() => {
     if (selectedCourse) {
@@ -193,6 +204,46 @@ const UserQuestionsPage: React.FC = () => {
     </View>
   );
 
+  const handleQuestionDelete = async (id: string) => {
+    try {
+      const unitRef = firestore()
+        .collection("courses")
+        .doc(selectedCourse as string)
+        .collection("units")
+        .doc(selectedUnit as string);
+
+      const unitDoc = await unitRef.get();
+      if (unitDoc.exists) {
+        const unitData = unitDoc.data();
+        if (unitData?.questions && Array.isArray(unitData.questions)) {
+          const updatedQuestions = unitData.questions.filter(
+            (questionId: string) => questionId !== id
+          );
+          await unitRef.update({
+            questions: updatedQuestions,
+          });
+
+          await firestore().collection("questions").doc(id).delete();
+          const courseRef = await firestore()
+            .collection("courses")
+            .doc(selectedCourse as string);
+          const courseDoc = await courseRef.get();
+          if (courseDoc.exists) {
+            const courseData = courseDoc.data();
+            if (courseData?.numQuestions) {
+              await courseRef.update({
+                numQuestions: firestore.FieldValue.increment(-1),
+              });
+            }
+          }
+        }
+      }
+      fetchQuestions(selectedCourse as string, selectedUnit as string);
+    } catch (error) {
+      console.error("Error deleting question:", error);
+    }
+  };
+
   const handleQuestionEdit = (questionId: string) => {
     router.push({
       pathname: "/question",
@@ -206,6 +257,35 @@ const UserQuestionsPage: React.FC = () => {
       params: { id: questionId },
     });
   };
+  const renderSwipeActions = (id: string) => (
+    <View style={styles.swipeActionsContainer}>
+      <TouchableOpacity
+        style={styles.swipeButton}
+        onPress={() => handleQuestionEdit(id)}
+      >
+        <Ionicons name="pencil" size={24} color="white" />
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.swipeButton}
+        onPress={() => {
+          Alert.alert(
+            "Delete Question",
+            "Are you sure you want to delete this question?",
+            [
+              { text: "Cancel", style: "cancel" },
+              {
+                text: "Delete",
+                style: "destructive",
+                onPress: () => handleQuestionDelete(id),
+              },
+            ]
+          );
+        }}
+      >
+        <Ionicons name="trash" size={24} color="white" />
+      </TouchableOpacity>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
@@ -231,30 +311,31 @@ const UserQuestionsPage: React.FC = () => {
       <View>
         <Text style={styles.heading}>Questions:</Text>
         {loading ? (
-          <ActivityIndicator
-            size="large"
-            color="#007AFF"
-            style={styles.loadingIndicator}
-          />
+          <LoadingScreen />
         ) : (
           <ScrollView>
             {questions.length > 0 ? (
               questions.map((item) => (
-                <Pressable
+                <Swipeable
                   key={item.id}
-                  style={styles.questionContainer}
-                  onPress={() => handleView(item.id)}
+                  renderRightActions={() => renderSwipeActions(item.id)}
+                  enabled={userPage}
                 >
-                  <Text style={styles.questionText}>{item.question}</Text>
-                  {!id && (
-                    <TouchableOpacity
-                      style={styles.editButton}
-                      onPress={() => handleQuestionEdit(item.id)}
-                    >
-                      <Ionicons name="pencil" color="white" size={24} />
-                    </TouchableOpacity>
-                  )}
-                </Pressable>
+                  <Pressable
+                    style={styles.questionContainer}
+                    onPress={() => handleView(item.id)}
+                  >
+                    <Text style={styles.questionText}>{item.question}</Text>
+                    {userPage && (
+                      <AntDesign
+                        name="menufold"
+                        size={20}
+                        color="white"
+                        style={{ marginLeft: 10 }}
+                      />
+                    )}
+                  </Pressable>
+                </Swipeable>
               ))
             ) : (
               <Text style={styles.emptyText}>No questions found.</Text>
@@ -315,7 +396,7 @@ const styles = StyleSheet.create({
     padding: 15,
     backgroundColor: "#333",
     borderRadius: 8,
-    marginBottom: 10,
+    marginTop: 15,
   },
   questionText: {
     fontSize: 16,
@@ -329,6 +410,18 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 20,
     color: "#888",
+  },
+  swipeActionsContainer: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    width: "40%",
+    paddingTop: "3%",
+  },
+  swipeButton: {
+    justifyContent: "center",
+    alignItems: "center",
+    width: "50%",
+    height: "100%",
   },
 });
 

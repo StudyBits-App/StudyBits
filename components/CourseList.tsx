@@ -14,14 +14,14 @@ const CourseList: React.FC<CourseListProps> = ({
   link,
   params,
 }) => {
-  const [learningCourseIds, setLearningCourseIds] = useState<string[]>([]);
+  const [courseIds, setCourseIds] = useState<string[]>([]);
   
   useEffect(() => {
     const fetchLearningCourseIds = async () => {
       try {
         const storedIds = await AsyncStorage.getItem(collectionName);
         if (storedIds) {
-          setLearningCourseIds(JSON.parse(storedIds));
+          setCourseIds(JSON.parse(storedIds));
         }
       } catch (error) {
         console.error("Error fetching learning course IDs:", error);
@@ -34,7 +34,7 @@ const CourseList: React.FC<CourseListProps> = ({
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollView}>
-        {learningCourseIds.map((courseId) => (
+        {courseIds.map((courseId) => (
           <CourseCardShortCache
             id={courseId}
             key={courseId}
@@ -43,7 +43,7 @@ const CourseList: React.FC<CourseListProps> = ({
           />
         ))}
 
-        {(learningCourseIds.length == 0 && collectionName == 'learningCourses') && (
+        {(courseIds.length == 0 && collectionName == 'learningCourses') && (
           <Text style={styles.noCourses}>
             You haven't started learning any courses yet.
           </Text>
