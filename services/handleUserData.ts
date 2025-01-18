@@ -51,8 +51,6 @@ const deleteQuestionsForUnit = async (
       await Promise.all(
         data?.questions.map((questionId: string) =>
           firestore()
-            .collection("courses")
-            .doc(courseId)
             .collection("questions")
             .doc(questionId)
             .delete()
@@ -82,8 +80,6 @@ const deleteQuestionsForCourse = async (courseId: string): Promise<void> => {
             await Promise.all(
               unitData.questions.map((questionId: string) =>
                 firestore()
-                  .collection("courses")
-                  .doc(courseId)
                   .collection("questions")
                   .doc(questionId)
                   .delete()
