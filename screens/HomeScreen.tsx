@@ -9,7 +9,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useSession } from "@/context/ctx";
 import { router } from "expo-router";
-import auth from "@react-native-firebase/auth";
 import CourseList from "@/components/CourseList";
 import LoadingScreen from "./LoadingScreen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -53,13 +52,8 @@ const HomeScreen: React.FC = () => {
     router.push("/homePages/search");
   };
 
-  const logout = async () => {
-    try {
-      await AsyncStorage.clear();
-      await auth().signOut();
-    } catch (error) {
-      console.error("Error during logout:", error);
-    }
+  const leaderboard = () => {
+    router.push("/homePages/leaderboard");
   };
 
   if (loading) {
@@ -73,6 +67,9 @@ const HomeScreen: React.FC = () => {
           <Text style={styles.greeting}>{user?.displayName}</Text>
           <Pressable style={styles.profileButton} onPress={search}>
             <Ionicons name="search" size={40} color="#fff" />
+          </Pressable>
+          <Pressable onPress={leaderboard}>
+            <Ionicons name="trophy" size={40} color="yellow"/>
           </Pressable>
         </View>
 
@@ -89,9 +86,6 @@ const HomeScreen: React.FC = () => {
         collectionName="learningCourses"
         link="/homePages/viewCourse"
       />
-      <Pressable style={styles.button} onPress={logout}>
-        <Text style={styles.text}>Logout</Text>
-      </Pressable>
     </SafeAreaView>
   );
 };

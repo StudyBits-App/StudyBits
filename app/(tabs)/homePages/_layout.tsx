@@ -28,6 +28,12 @@ export default function homePageLayout() {
                     headerShown: false
                 }}
             />
+            <Stack.Screen
+                name="leaderboard"
+                options={{
+                    headerShown: false
+                }}
+            />
         </Stack>
     ) 
 }
