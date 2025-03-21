@@ -32,19 +32,18 @@ const ViewCoursesPage: React.FC = () => {
 
   const toggleSwitch = async () => {
     const newSwitchState = !isSwitchOn;
-    setIsSwitchOn(newSwitchState); 
+    setIsSwitchOn(newSwitchState);
     try {
       await firestore()
         .collection("learning")
         .doc(user?.uid)
         .collection("courses")
         .doc(id as string)
-        .set({ useUnits: newSwitchState }, { merge: true }); 
+        .set({ useUnits: newSwitchState }, { merge: true });
     } catch (error) {
       console.error("Error updating Firestore:", error);
     }
   };
-  
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -185,18 +184,20 @@ const ViewCoursesPage: React.FC = () => {
         <View style={styles.unitSection}>
           <View style={styles.unitHeader}>
             <Text style={styles.unitHeaderText}>Units</Text>
-            <Switch
-              value={isSwitchOn}
-              onValueChange={toggleSwitch}
-              trackColor={{ false: "#767577", true: "#3B9EBF" }}
-              thumbColor={isSwitchOn ? "#FFFFFF" : "#f4f3f4"}
-            />
+            {studiedCourse && (
+              <Switch
+                value={isSwitchOn}
+                onValueChange={toggleSwitch}
+                trackColor={{ false: "#767577", true: "#3B9EBF" }}
+                thumbColor={isSwitchOn ? "#FFFFFF" : "#f4f3f4"}
+              />
+            )}
           </View>
           {units.length > 0 ? (
             <View style={styles.unitsContainer}>
               {units.map((unit) => (
                 <View key={unit.key} style={styles.unitRow}>
-                  {(studiedCourse && isSwitchOn) && (
+                  {studiedCourse && isSwitchOn && (
                     <Pressable
                       onPress={() => handleUnitCheckboxToggle(unit.key)}
                       style={styles.checkboxContainer}

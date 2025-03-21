@@ -23,7 +23,7 @@ import { Answer, Hint } from "@/utils/interfaces";
 import CoursesAndUnitsPage from "@/components/QuestionComponents/CourseUnitSelect";
 import CourseCardShort from "@/components/CourseCardShort";
 import UnitCard from "@/components/UnitCard";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import HintModal from "@/components/QuestionComponents/QuestionHintModal";
 import {
   renderAnswer,
@@ -128,6 +128,7 @@ const QuestionPortal: React.FC = () => {
       }
     );
   };
+
   const handleSubmit = async () => {
     const hasCorrectAnswer = answerChoices.some((answer) => answer.answer);
     if (!question.trim() || answerChoices.length < 2 || !hasCorrectAnswer) {
@@ -342,9 +343,27 @@ const QuestionPortal: React.FC = () => {
     openDropdown();
   };
 
+  const stopEditing = () => {
+    setIsEditing(false);
+    setHints([]);
+    setAnswerChoices([]);
+    setQuestion("");
+    setSelectedCourseKey(null);
+    setSelectedUnitKey(null);
+    router.replace(`/question`);
+
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <NestableScrollContainer>
+        <View>
+          {id && 
+            <Pressable onPress={stopEditing} style = {styles.errorContainer}>
+              <Text style = {[styles.errorText, {textAlign: 'center'}]}>Stop Editing</Text>
+            </Pressable>
+          }
+        </View>
         <Text style={styles.headerText}>Question</Text>
 
         <TextInput

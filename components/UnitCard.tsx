@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
-import { Unit, defaultUnit } from "@/utils/interfaces";
+import { Unit } from "@/utils/interfaces";
 import { getUnit } from "@/services/getUserData";
 
 interface UnitCardProps {
