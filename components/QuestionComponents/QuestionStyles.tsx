@@ -99,17 +99,14 @@ export const styles = StyleSheet.create({
     fontSize: 16,
   },
   errorContainer: {
-    flexDirection: 'row',
-    backgroundColor: 'transparent',
     borderRadius: 25,
-    padding: 15,
+    padding: 10,
     marginVertical: 20,
-    borderColor: '#EED202',
+    borderColor: '#ADD8E6',
     borderWidth: 1
   },
   errorText: {
-    flex: 1,
-    color: '#EED202',
+    color: '#ADD8E6',
     fontSize: 16,
   },
   errorIconContainer: {

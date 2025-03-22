@@ -360,7 +360,7 @@ const QuestionPortal: React.FC = () => {
         <View>
           {id && 
             <Pressable onPress={stopEditing} style = {styles.errorContainer}>
-              <Text style = {[styles.errorText, {textAlign: 'center'}]}>Stop Editing</Text>
+              <Text style = {[styles.errorText, {textAlign: 'left', marginLeft: 10}]}>Stop Editing</Text>
             </Pressable>
           }
         </View>
