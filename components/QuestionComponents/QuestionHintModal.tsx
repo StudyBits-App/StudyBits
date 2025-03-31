@@ -54,11 +54,14 @@ const HintModal: React.FC<HintModalProps> = ({
             <Text style={styles.modalTitle}>Additional Info</Text>
             <TextInput
               multiline
-              placeholderTextColor={"rgba(255, 255, 255, 0.7)"}
+              placeholderTextColor="rgba(255, 255, 255, 0.7)"
               placeholder="Title"
               value={title}
               onChangeText={onTitleChange}
-              style={styles.modalHintInputContent}
+              style={[
+                styles.modalHintInputContent,
+                { minHeight: 40, maxHeight: 100, textAlignVertical: "top" },
+              ]}
             />
             {image ? (
               <Pressable
@@ -88,17 +91,21 @@ const HintModal: React.FC<HintModalProps> = ({
               ) : null}
             </View>
             <TextInput
-              placeholderTextColor={"rgba(255, 255, 255, 0.7)"}
+              multiline
+              placeholderTextColor="rgba(255, 255, 255, 0.7)"
               placeholder="Content"
               value={content}
               onChangeText={onContentChange}
-              style={styles.modalHintInputContent}
-              multiline
+              style={[
+                styles.modalHintInputContent,
+                { minHeight: 80, maxHeight: 300, textAlignVertical: "top" },
+              ]}
             />
             {error && (
               <View style={styles.errorContainer}>
                 <Text style={styles.errorText}>
-                  Each piece of info must have a title, a description, or an image
+                  Each piece of info must have a title, a description, or an
+                  image
                 </Text>
               </View>
             )}
