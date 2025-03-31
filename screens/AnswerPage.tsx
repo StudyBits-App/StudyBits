@@ -293,7 +293,7 @@ const AnswerPage: React.FC = () => {
         ) : questionInfo ? (
           <View>
             <Text style={[styles.text, styles.question]}>{question}</Text>
-            {hints.map((hint) => renderHint({ item: hint }))}
+            {hints && hints.map((hint) => renderHint({ item: hint }))}
             {answerChoices.map((answer) => renderAnswer({ item: answer }))}
             <Pressable
               style={styles.button}
