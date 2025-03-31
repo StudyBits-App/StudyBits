@@ -220,8 +220,8 @@ const AnswerPage: React.FC = () => {
   };
 
   const renderHint = ({ item }: { item: Hint }) => {
-    const truncatedTitle = trimText(item.title, 10);
-    const truncatedContent = trimText(item.content, 85);
+    const truncatedTitle = trimText(item.title, 100);
+    const truncatedContent = trimText(item.content, 400);
 
     return (
       <View key={item.key} style={styles.hintContainer}>
@@ -394,9 +394,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   question: {
-    fontWeight: "bold",
-    textAlign: "center",
-    fontSize: 20,
+    marginTop:20,
+    fontSize: 15,
     marginBottom: "5%",
   },
   text: {

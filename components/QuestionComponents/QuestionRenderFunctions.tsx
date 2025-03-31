@@ -23,7 +23,7 @@ interface RenderAnswerProps {
 export const renderHint =
   ({ swipeableRefs, openHintEditModal, handleHintDelete }: RenderHintProps) =>
   ({ item, drag }: RenderItemParams<Hint>) => {
-    const truncatedTitle = trimText(item.title, 10);
+    const truncatedTitle = trimText(item.title, 30);
     const truncatedContent = trimText(item.content, 85);
 
     return (

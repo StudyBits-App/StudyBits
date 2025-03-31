@@ -14,7 +14,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Hint } from "@/utils/interfaces";
 import { styles } from "./QuestionStyles";
-import { Ionicons } from "@expo/vector-icons";
 
 interface HintModalProps {
   visible: boolean;
@@ -99,14 +98,8 @@ const HintModal: React.FC<HintModalProps> = ({
             {error && (
               <View style={styles.errorContainer}>
                 <Text style={styles.errorText}>
-                  Each piece of info must have a title and description or an image
+                  Each piece of info must have a title, a description, or an image
                 </Text>
-                <Pressable
-                  onPress={() => onErrorClear()}
-                  style={styles.errorIconContainer}
-                >
-                  <Ionicons name="close-circle" size={20} color="#888" />
-                </Pressable>
               </View>
             )}
 

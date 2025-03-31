@@ -239,7 +239,7 @@ const QuestionPortal: React.FC = () => {
     const text = hintModalContent.trim();
     const title = hintModalTitle.trim();
 
-    if (!(hintModalImage || (text && title))) {
+    if (!hintModalImage && !text && !title) {
       setHintModalError(
         "Missing information! Additional info must have a title and content or an image."
       );

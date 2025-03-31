@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.hackclub.studybits",
+      "bundleIdentifier": "com.app.studybits",
       "entitlements": {
         "aps-environment": "development"
       }
@@ -24,7 +24,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.hackclub.studybits"
+      "package": "com.app.studybits"
     },
     "web": {
       "bundler": "metro",
