@@ -28,7 +28,7 @@ const ViewCoursesPage: React.FC = () => {
   const [studiedCourse, setStudiedCourse] = useState(false);
   const [courseCreatorId, setCourseCreatorId] = useState<string | null>(null);
   const [studyingUnits, setStudyingUnits] = useState<string[]>([]);
-  const [isSwitchOn, setIsSwitchOn] = useState(true);
+  const [isSwitchOn, setIsSwitchOn] = useState(false);
 
   const toggleSwitch = async () => {
     const newSwitchState = !isSwitchOn;
@@ -70,7 +70,7 @@ const ViewCoursesPage: React.FC = () => {
               .doc(id)
               .get();
             const useUnits = courseDoc.data()?.useUnits;
-            setIsSwitchOn(useUnits ?? true);
+            setIsSwitchOn(useUnits ?? false);
           }
 
           const learningDoc = await firestore()
@@ -92,7 +92,7 @@ const ViewCoursesPage: React.FC = () => {
     };
 
     fetchCourseData();
-  }, [id, user?.uid]);
+  }, [id]);
 
   const handleAddCourse = async () => {
     if (typeof id === "string") {
@@ -112,7 +112,7 @@ const ViewCoursesPage: React.FC = () => {
         .doc(user?.uid)
         .collection("courses")
         .doc(id)
-        .set({ studyingUnits: [], useUnits: true });
+        .set({ studyingUnits: [], useUnits: false });
 
       setStudiedCourse(true);
       setStudyingUnits([]);
@@ -120,6 +120,8 @@ const ViewCoursesPage: React.FC = () => {
   };
 
   const deleteLearningCourse = async () => {
+    setIsSwitchOn(false);
+    setStudyingUnits([]);
     await deleteUserLearningCourse(id as string, user?.uid as string);
     router.push("/");
   };
