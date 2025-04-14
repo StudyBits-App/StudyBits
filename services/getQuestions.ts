@@ -97,7 +97,7 @@ class CourseUnitSelector {
 
     while (nextCombination) {
       try {
-        const response = await axios.post('https://study-bits-k7ep69795-abhinav-devarakondas-projects.vercel.app/find_similar_courses', {
+        const response = await axios.post('https://study-bits-fvsp5qbky-abhinav-devarakondas-projects.vercel.app/find_similar_courses', {
           course_id: nextCombination.courseId,
           unit_id: nextCombination.unitId,
         });
