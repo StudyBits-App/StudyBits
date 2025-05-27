@@ -23,7 +23,7 @@ An open source framework for a study app
 ![LearningUnits](display_images/LearningUnits.png)
 
 ### Manage the units of your courses
-![ManageCourses](display_images/ManageCourses.png)
+![ManageCourses](display_images/ManageCourse.png)
 
 ### Create questions for your courses
 ![Question](display_images/Question.png)
