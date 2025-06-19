@@ -592,6 +592,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderRadius: 10,
     padding: 15,
+    maxHeight:250
   },
 });
 

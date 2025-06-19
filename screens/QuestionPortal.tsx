@@ -164,7 +164,7 @@ const QuestionPortal: React.FC = () => {
 
       const unitDoc = await unitDocRef.get();
 
-      if (unitDoc.exists) {
+      if (unitDoc.exists()) {
         if (isEditing && id && typeof id === "string") {
           await updateQuestion(id, questionData);
         } else {

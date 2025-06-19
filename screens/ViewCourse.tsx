@@ -114,6 +114,13 @@ const ViewCoursesPage: React.FC = () => {
         .doc(id)
         .set({ studyingUnits: [], useUnits: false });
 
+      await firestore()
+        .collection("courses")
+        .doc(id)
+        .set(
+          { dependency: firestore.FieldValue.increment(1) },
+          { merge: true }
+        );
       setStudiedCourse(true);
       setStudyingUnits([]);
     }

@@ -102,7 +102,7 @@ const AddLearning: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView}>
-        <Text style={styles.title}>Select a Course</Text>
+        <Text style={styles.title}>Explore</Text>
         {filteredCourses.map((course) => (
           <CourseCardShort
             key={course}

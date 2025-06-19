@@ -1,6 +1,16 @@
 import React from "react";
-import { Modal, View, Text, Pressable, StyleSheet } from "react-native";
+import {
+  Modal,
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  Dimensions,
+  Animated,
+} from "react-native";
 import { AntDesign } from "@expo/vector-icons";
+
+const { width } = Dimensions.get("window");
 
 interface SuccessModalProps {
   visible: boolean;
@@ -11,16 +21,26 @@ const SuccessModal: React.FC<SuccessModalProps> = ({ visible, onClose }) => {
   return (
     <Modal
       transparent
-      animationType="slide"
+      animationType="fade"
       visible={visible}
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
         <View style={styles.container}>
-          <AntDesign name="checkcircle" size={80} color="#1E90FF" style={styles.icon} />
-          <Text style={styles.message}>Question saved successfully!</Text>
-          <Pressable onPress={onClose} style={styles.button}>
-            <Text style={styles.buttonText}>Close</Text>
+          <View style={styles.iconContainer}>
+            <AntDesign name="check" size={40} color="#FFFFFF" />
+          </View>
+
+          <Text style={styles.message}>Saved Successfully!</Text>
+
+          <Pressable
+            style={({ pressed }) => [
+              styles.button,
+              pressed && { opacity: 0.9 },
+            ]}
+            onPress={onClose}
+          >
+            <Text style={styles.buttonText}>Done</Text>
           </Pressable>
         </View>
       </View>
@@ -33,40 +53,47 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#000000cc",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   container: {
-    width: "90%",
+    width: width * 0.8,
     padding: 30,
-    backgroundColor: "#333333", 
+    backgroundColor: "#121214",
     borderRadius: 20,
     alignItems: "center",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.8,
-    shadowRadius: 3,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 8,
   },
-  icon: {
+  iconContainer: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: "#2DD36F",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 20,
   },
   message: {
     fontSize: 22,
-    fontWeight: "bold",
-    color: "#FFFFFF", 
+    fontWeight: "600",
+    color: "#FFFFFF",
     textAlign: "center",
-    marginBottom: 20,
+    marginBottom: 25,
   },
   button: {
-    marginTop: 20,
-    backgroundColor: "#1E90FF", 
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    borderRadius: 10,
+    backgroundColor: "#2DD36F",
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+    width: "100%",
+    alignItems: "center",
   },
   buttonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
+    color: "#fff",
+    fontSize: 17,
     fontWeight: "600",
   },
 });
