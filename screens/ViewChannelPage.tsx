@@ -1,22 +1,28 @@
 import React, { useEffect, useState } from "react";
-import { StyleSheet, View, ScrollView, Text } from "react-native";
+import { StyleSheet, View, ScrollView } from "react-native";
 import { useSession } from "@/context/ctx";
 import { useLocalSearchParams } from "expo-router";
 import LoadingScreen from "./LoadingScreen";
 import CourseCardShort from "@/components/CourseCardShort";
 import ChannelDisplay from "@/components/ChannelComponent";
 import Back from "@/components/Back";
-import { courseArray } from "@/services/getUserData";
+import { getUserCourseArray } from "@/services/getUserData";
 
-const ViewChannelPage: React.FC = () => {
+interface ViewChannelPageProps {
+  componentId?: string;
+}
+
+const ViewChannelPage: React.FC<ViewChannelPageProps> = ({ componentId }) => {
   const { isLoading } = useSession();
+  const searchParams = useLocalSearchParams();
+  const id = componentId ?? (searchParams.id as string | undefined);
+
   const [otherCourses, setOtherCourses] = useState<string[]>([]);
-  const { id } = useLocalSearchParams();
 
   useEffect(() => {
     const setCourses = async () => {
       if (id) {
-        setOtherCourses(await courseArray(id as string));
+        setOtherCourses(await getUserCourseArray(id));
       }
     };
     setCourses();
@@ -29,7 +35,7 @@ const ViewChannelPage: React.FC = () => {
   return (
     <ScrollView style={styles.container}>
       <Back trueBack />
-      {id && <ChannelDisplay id={id as string} displayBanner={true} />}
+      {id && <ChannelDisplay id={id} displayBanner={true} />}
       {otherCourses.map((course) => (
         <CourseCardShort
           id={course}

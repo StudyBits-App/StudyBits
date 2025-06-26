@@ -8,22 +8,27 @@ import {
   Pressable,
   Alert,
 } from "react-native";
-import firestore from "@react-native-firebase/firestore";
-import {
-  Course,
-  Unit,
-  Question,
-  defaultCourse,
-  defaultUnit,
-} from "@/utils/interfaces";
+import { Course, Unit, Question } from "@/utils/interfaces";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSession } from "@/context/ctx";
 import { AntDesign, Ionicons } from "@expo/vector-icons";
 import { trimText } from "@/utils/utils";
 import LoadingScreen from "./LoadingScreen";
 import { Swipeable } from "react-native-gesture-handler";
+import {
+  fetchCoursesForChannel,
+  fetchQuestionsForUnit,
+  fetchUnitsForCourse,
+} from "@/services/viewQuestionsHandlers";
+import { deleteQuestionFromUnit } from "@/services/handleQuestionData";
 
-const UserQuestionsPage: React.FC = () => {
+interface UserQuestionsPageProps {
+  componentId?: string;
+}
+
+const UserQuestionsPage: React.FC<UserQuestionsPageProps> = ({
+  componentId,
+}) => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -34,7 +39,8 @@ const UserQuestionsPage: React.FC = () => {
   const [showUnitDropdown, setShowUnitDropdown] = useState<boolean>(false);
   const [userPage, setUserPage] = useState(true);
   const { user } = useSession();
-  const { id } = useLocalSearchParams();
+  const searchParams = useLocalSearchParams();
+  const id = componentId ?? (searchParams.id as string | undefined);
 
   useEffect(() => {
     fetchCourses();
@@ -69,95 +75,32 @@ const UserQuestionsPage: React.FC = () => {
 
   const fetchCourses = async () => {
     try {
-      const channelDoc = await firestore()
-        .collection("channels")
-        .doc(id ? (id as string) : user?.uid)
-        .get();
-
-      if (channelDoc.exists) {
-        const courseIds = channelDoc.data()?.courses || [];
-        const coursePromises = courseIds.map((courseId: string) =>
-          firestore().collection("courses").doc(courseId).get()
-        );
-
-        const courseSnapshots = await Promise.all(coursePromises);
-
-        setCourses(
-          courseSnapshots.map((doc) => ({
-            ...defaultCourse,
-            key: doc.id,
-            name: doc.data()?.name || "",
-            creator: doc.data()?.creator || "",
-            picUrl: doc.data()?.picUrl || "",
-            description: doc.data()?.description || "",
-          }))
-        );
-      } else {
-        console.log("No channel found for this user.");
-        setCourses([]);
+      const channelId = id ? (id as string) : user?.uid;
+      if (channelId) {
+        const courses = await fetchCoursesForChannel(channelId);
+        setCourses(courses);
       }
     } catch (error) {
-      console.error("Error fetching courses:", error);
+      setCourses([]);
     }
   };
 
   const fetchUnits = async (courseId: string) => {
     try {
-      const snapshot = await firestore()
-        .collection("courses")
-        .doc(courseId)
-        .collection("units")
-        .get();
-
-      const units = snapshot.docs
-        .map((doc) => ({
-          ...defaultUnit,
-          key: doc.id,
-          name: doc.data().name || "",
-          description: doc.data().description || "",
-          order: doc.data().order || 0,
-        }))
-        .sort((a, b) => a.order - b.order);
-
+      const units = await fetchUnitsForCourse(courseId);
       setUnits(units);
     } catch (error) {
-      console.error("Error fetching units:", error);
+      setUnits([]);
     }
   };
 
   const fetchQuestions = async (courseId: string, unitId: string) => {
     setLoading(true);
     try {
-      const unitDoc = await firestore()
-        .collection("courses")
-        .doc(courseId)
-        .collection("units")
-        .doc(unitId)
-        .get();
-
-      const questionIds = unitDoc.data()?.questions || [];
-
-      const fetchedQuestions = await Promise.all(
-        questionIds.map(async (questionId: string) => {
-          const questionDoc = await firestore()
-            .collection("questions")
-            .doc(questionId)
-            .get();
-          const data = questionDoc.data();
-          return {
-            id: questionDoc.id,
-            question: data?.question || "",
-            course: courseId,
-            unit: unitId,
-            hints: data?.hints || [],
-            answers: data?.answers || [],
-          } as Question;
-        })
-      );
-
-      setQuestions(fetchedQuestions);
+      const questions = await fetchQuestionsForUnit(courseId, unitId);
+      setQuestions(questions);
     } catch (error) {
-      console.error("Error fetching questions:", error);
+      setQuestions([]);
     } finally {
       setLoading(false);
     }
@@ -206,39 +149,13 @@ const UserQuestionsPage: React.FC = () => {
 
   const handleQuestionDelete = async (id: string) => {
     try {
-      const unitRef = firestore()
-        .collection("courses")
-        .doc(selectedCourse as string)
-        .collection("units")
-        .doc(selectedUnit as string);
-
-      const unitDoc = await unitRef.get();
-      if (unitDoc.exists) {
-        const unitData = unitDoc.data();
-        if (unitData?.questions && Array.isArray(unitData.questions)) {
-          const updatedQuestions = unitData.questions.filter(
-            (questionId: string) => questionId !== id
-          );
-          await unitRef.update({
-            questions: updatedQuestions,
-          });
-
-          await firestore().collection("questions").doc(id).delete();
-          const courseRef = await firestore()
-            .collection("courses")
-            .doc(selectedCourse as string);
-          const courseDoc = await courseRef.get();
-          if (courseDoc.exists) {
-            const courseData = courseDoc.data();
-            if (courseData?.numQuestions) {
-              await courseRef.update({
-                numQuestions: firestore.FieldValue.increment(-1),
-              });
-            }
-          }
-        }
-      }
-      fetchQuestions(selectedCourse as string, selectedUnit as string);
+      if (!selectedCourse || !selectedUnit) return;
+      await deleteQuestionFromUnit(
+        selectedCourse as string,
+        selectedUnit as string,
+        id
+      );
+      fetchQuestions(selectedCourse, selectedUnit);
     } catch (error) {
       console.error("Error deleting question:", error);
     }

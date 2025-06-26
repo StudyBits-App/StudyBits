@@ -1,5 +1,11 @@
-import firestore from '@react-native-firebase/firestore';
-import axios from 'axios';
+import axios from "axios";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+} from '@react-native-firebase/firestore';
+
+const db = getFirestore();
 
 class CourseUnitSelector {
   uid: string;
@@ -23,44 +29,53 @@ class CourseUnitSelector {
     this.remainingCombinations = [];
     this.courses = [];
 
-    const coursesSnapshot = await firestore()
-      .collection('learning')
-      .doc(this.uid)
-      .collection('courses')
-      .get();
+    try {
+      const coursesRef = collection(db, "learning", this.uid, "courses");
+      const coursesSnapshot = await getDocs(coursesRef);
 
-    if (coursesSnapshot.empty) {
-      console.warn('[CourseUnitSelector] No courses found.');
-      this.isInitialized = false;
-      return;
-    }
+      if (coursesSnapshot.empty) {
+        console.warn("[CourseUnitSelector] No courses found.");
+        this.isInitialized = false;
+        return;
+      }
 
-    this.courses = coursesSnapshot.docs
-      .map((doc) => {
-        const data = doc.data();
-        if (!data || !Array.isArray(data.studyingUnits)) {
-          console.error(`[CourseUnitSelector] Invalid course data for: ${doc.id}`);
-          return null;
-        }
-        const units = data.useUnits ? data.studyingUnits as string[] : [""];
-        return { id: doc.id, studyingUnits: units};
-      })
-      .filter((course): course is { id: string; studyingUnits: string[] } => course !== null);
+      this.courses = coursesSnapshot.docs
+        .map((doc) => {
+          const data = doc.data();
+          if (!data || !Array.isArray(data.studyingUnits)) {
+            console.error(
+              `[CourseUnitSelector] Invalid course data for: ${doc.id}`
+            );
+            return null;
+          }
+          const units = data.useUnits ? (data.studyingUnits as string[]) : [""];
+          return { id: doc.id, studyingUnits: units };
+        })
+        .filter(
+          (course): course is { id: string; studyingUnits: string[] } =>
+            course !== null
+        );
 
-    this.courses.forEach((course) => {
-      course.studyingUnits.forEach((unitId) => {
-        this.remainingCombinations.push({ courseId: course.id, unitId });
+      this.courses.forEach((course) => {
+        course.studyingUnits.forEach((unitId) => {
+          this.remainingCombinations.push({ courseId: course.id, unitId });
+        });
       });
-    });
 
-    if (this.remainingCombinations.length === 0) {
-      console.warn('[CourseUnitSelector] No valid combinations found during initialization.');
+      if (this.remainingCombinations.length === 0) {
+        console.warn(
+          "[CourseUnitSelector] No valid combinations found during initialization."
+        );
+        this.isInitialized = false;
+        return;
+      }
+
+      this.shuffleArray(this.remainingCombinations);
+      this.isInitialized = true;
+    } catch (error) {
+      console.error("[CourseUnitSelector] Error during initialization:", error);
       this.isInitialized = false;
-      return;
     }
-
-    this.shuffleArray(this.remainingCombinations);
-    this.isInitialized = true;
   }
 
   shuffleArray(array: { courseId: string; unitId: string }[]) {
@@ -83,27 +98,39 @@ class CourseUnitSelector {
     console.log(
       `[CourseUnitSelector] Selected combination: { courseId: ${nextCombination.courseId}, unitId: ${nextCombination.unitId} }`
     );
-    this.usedCombinations.add(`${nextCombination.courseId}:${nextCombination.unitId}`);
+    this.usedCombinations.add(
+      `${nextCombination.courseId}:${nextCombination.unitId}`
+    );
 
     return nextCombination;
   }
 
   async fetchApiResponse() {
     if (!this.isInitialized) {
-      await this.initialize()
+      await this.initialize();
     }
 
     let nextCombination = await this.getNextCombination();
 
     while (nextCombination) {
       try {
-        const response = await axios.post('https://study-bits-fvsp5qbky-abhinav-devarakondas-projects.vercel.app/find_similar_courses', {
-          course_id: nextCombination.courseId,
-          unit_id: nextCombination.unitId,
-        });
+        const response = await axios.post(
+          "https://study-bits-fvsp5qbky-abhinav-devarakondas-projects.vercel.app/find_similar_courses",
+          {
+            course_id: nextCombination.courseId,
+            unit_id: nextCombination.unitId,
+          }
+        );
 
-        if (response.data && response.data.similar_courses && response.data.similar_courses.length > 0) {
-          console.log('[CourseUnitSelector] API Response:', JSON.stringify(response.data));
+        if (
+          response.data &&
+          response.data.similar_courses &&
+          response.data.similar_courses.length > 0
+        ) {
+          console.log(
+            "[CourseUnitSelector] API Response:",
+            JSON.stringify(response.data)
+          );
           return response.data;
         } else {
           console.warn(
@@ -111,14 +138,22 @@ class CourseUnitSelector {
           );
         }
       } catch (error) {
-        console.error(`[CourseUnitSelector] API Error for combination: { courseId: ${nextCombination.courseId}, unitId: ${nextCombination.unitId} }`, error);
+        console.error(
+          `[CourseUnitSelector] API Error for combination: { courseId: ${nextCombination.courseId}, unitId: ${nextCombination.unitId} }`,
+          error
+        );
       }
 
       nextCombination = await this.getNextCombination();
     }
 
-    console.error('[CourseUnitSelector] No valid results found for any combination.');
-    return { error: true, message: 'No valid results found for any course unit combination.' };
+    console.error(
+      "[CourseUnitSelector] No valid results found for any combination."
+    );
+    return {
+      error: true,
+      message: "No valid results found for any course unit combination.",
+    };
   }
 }
 

@@ -1,12 +1,6 @@
-import React from 'react';
-import UserQuestionsPage from '@/screens/ViewQuestions';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import React from "react";
+import UserQuestionsPage from "@/screens/ViewQuestions";
 
 export default function ViewQuestions() {
-  return (
-    <GestureHandlerRootView>
-      <UserQuestionsPage />
-    </GestureHandlerRootView>
-  );
+  return <UserQuestionsPage />;
 }
-

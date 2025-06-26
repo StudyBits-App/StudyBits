@@ -12,7 +12,6 @@ import {
   ScrollView,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import firestore from "@react-native-firebase/firestore";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSession } from "@/context/ctx";
 import {
@@ -25,6 +24,7 @@ import Back from "@/components/Back";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useToast } from "react-native-toast-notifications";
+import { createNewCourse, updateExistingCourse } from "@/services/handleUserData";
 
 const CreateCourse: React.FC = () => {
   const [course, setCourse] = useState<Course>(defaultCourse);
@@ -85,6 +85,7 @@ const CreateCourse: React.FC = () => {
         errorToast();
         return;
       }
+
       if (course.picUrl) {
         const uploadedImageUrl = await uploadImageToFirebase(
           course.picUrl,
@@ -92,28 +93,16 @@ const CreateCourse: React.FC = () => {
         );
         course.picUrl = uploadedImageUrl;
       }
-      course.lastModified = new Date().getTime();
-      const courseRef = await firestore().collection("courses").add(course);
-      const docId = courseRef.id;
-      await courseRef.update({ key: docId, numQuestions: 0 });
 
-      const channelRef = firestore().collection("channels").doc(user?.uid);
-      const channelDoc = await channelRef.get();
-      const currentCourses = channelDoc.data()?.courses || [];
-      await channelRef.update({ courses: [...currentCourses, docId] });
-
-      const storedUserCourses = await AsyncStorage.getItem("userCourses");
-      let userCourses = storedUserCourses ? JSON.parse(storedUserCourses) : [];
-      userCourses.push(docId);
-      await AsyncStorage.setItem("userCourses", JSON.stringify(userCourses));
-      await AsyncStorage.setItem(`course_${docId}`, JSON.stringify(course));
-
-      router.push({
-        pathname: "/channelExternalPages/manageCourse",
-        params: { id: docId, isEditing: "1" },
-      });
+      if (user?.uid) {
+        const docId = await createNewCourse(user.uid, course);
+        router.push({
+          pathname: "/channelExternalPages/manageCourse",
+          params: { id: docId, isEditing: "1" },
+        });
+      }
     } catch (error) {
-      console.error("Error adding course: ", error);
+      console.error("Error adding course:", error);
     }
   };
 
@@ -122,25 +111,32 @@ const CreateCourse: React.FC = () => {
       errorToast();
       return;
     }
-    if (!(editingURL && editingURL === course.picUrl)) {
-      deleteImageFromFirebase(editingURL);
-      if (course.picUrl) {
-        course.picUrl = await uploadImageToFirebase(
-          course.picUrl,
-          "coursePics"
-        );
-      }
-    }
-    course.lastModified = new Date().getTime();
-    if (typeof id === "string") {
-      firestore().collection("courses").doc(id).update(course);
-    }
-    await AsyncStorage.setItem(`course_${id}`, JSON.stringify(course));
 
-    router.push({
-      pathname: "/channelExternalPages/manageCourse",
-      params: { id: id, isEditing: "1" },
-    });
+    try {
+      if (!(editingURL && editingURL === course.picUrl)) {
+        deleteImageFromFirebase(editingURL);
+
+        if (course.picUrl) {
+          course.picUrl = await uploadImageToFirebase(
+            course.picUrl,
+            "coursePics"
+          );
+        }
+      }
+
+      course.lastModified = new Date().getTime();
+
+      if (typeof id === "string") {
+        await updateExistingCourse(id, course);
+      }
+
+      router.push({
+        pathname: "/channelExternalPages/manageCourse",
+        params: { id: id, isEditing: "1" },
+      });
+    } catch (error) {
+      console.error("Error saving course:", error);
+    }
   };
 
   return (

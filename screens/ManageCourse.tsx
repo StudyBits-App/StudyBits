@@ -14,11 +14,7 @@ import {
   ScrollView,
 } from "react-native";
 import { getUnitData } from "@/services/getUserData";
-import {
-  deleteQuestionsForCourse,
-  deleteQuestionsForUnit,
-  handleUserCourseDeletion,
-} from "@/services/handleUserData";
+import { handleUserCourseDeletion } from "@/services/handleUserData";
 import { AntDesign, FontAwesome, Ionicons } from "@expo/vector-icons";
 import {
   NestableDraggableFlatList,
@@ -33,9 +29,20 @@ import { Unit } from "@/utils/interfaces";
 import CourseCard from "../components/CourseCard";
 import Back from "@/components/Back";
 import { SafeAreaView } from "react-native-safe-area-context";
-import firestore from "@react-native-firebase/firestore";
 import { deleteUserChannelCourse } from "@/services/fetchCacheData";
 import { useSession } from "@/context/ctx";
+import {
+  deleteQuestionsForCourse,
+  deleteQuestionsForUnit,
+} from "@/services/handleQuestionData";
+import {
+  addUnitToCourse,
+  deleteUnitFromCourse,
+  saveAllUnitsToCourse,
+  updateCourseLastModified,
+  updateUnitInCourse,
+  updateUnitOrderInCourse,
+} from "@/services/manageCourseHelpers";
 
 const ManageCoursesPage: React.FC = () => {
   const { id, isEditing } = useLocalSearchParams();
@@ -77,10 +84,9 @@ const ManageCoursesPage: React.FC = () => {
       }
     };
     fetchUnits();
-    if (isEditing === '1') {
+    if (isEditing === "1") {
       setIsEditing(true);
-    }
-    else {
+    } else {
       setIsEditing(false);
     }
   }, [id]);
@@ -148,26 +154,18 @@ const ManageCoursesPage: React.FC = () => {
       setUnitName("");
       setUnitDescription("");
 
-      await firestore()
-        .collection("courses")
-        .doc(id as string)
-        .collection("units")
-        .doc(newUnit.key)
-        .set(newUnit);
-
-      await updateLastModified();
+      if (id) {
+        await addUnitToCourse(id as string, newUnit);
+        await updateLastModified();
+      }
     } catch (error) {
-      console.error("Error adding unit: ", error);
+      console.error("Error adding unit:", error);
     }
   };
 
   const updateUnit = async () => {
     try {
-      if (editingUnit) {
-        if (!unitName.trim()) {
-          return;
-        }
-
+      if (editingUnit && unitName.trim()) {
         setUnits((prevUnits) =>
           prevUnits.map((unit) =>
             unit.key === editingUnit.key
@@ -176,22 +174,17 @@ const ManageCoursesPage: React.FC = () => {
           )
         );
 
-        await firestore()
-          .collection("courses")
-          .doc(id as string)
-          .collection("units")
-          .doc(editingUnit.key)
-          .set(
-            {
-              name: unitName,
-              description: unitDescription,
-              order: editingUnit.order,
-              key: editingUnit.key,
-            },
-            { merge: true }
+        if (id) {
+          await updateUnitInCourse(
+            id as string,
+            editingUnit.key,
+            unitName,
+            unitDescription,
+            editingUnit.order
           );
 
-        await updateLastModified();
+          await updateLastModified();
+        }
 
         setEditingUnit(null);
         setModalVisible(false);
@@ -200,7 +193,7 @@ const ManageCoursesPage: React.FC = () => {
         swipeableRefs.current[editingUnit.key]?.close();
       }
     } catch (error) {
-      console.error("Error updating unit: ", error);
+      console.error("Error updating unit:", error);
     }
   };
 
@@ -224,46 +217,23 @@ const ManageCoursesPage: React.FC = () => {
         .map((unit, index) => ({ ...unit, order: index }));
 
       setUnits(updatedUnits);
-      await deleteQuestionsForUnit(id as string, key);
-      await firestore()
-        .collection("courses")
-        .doc(id as string)
-        .collection("units")
-        .doc(key)
-        .delete();
 
-      await saveAllUnits(updatedUnits);
+      if (id) {
+        await deleteQuestionsForUnit(id as string, key);
+        await deleteUnitFromCourse(id as string, key);
+        await saveAllUnits(updatedUnits);
+      }
     } catch (error) {
       console.error("Error deleting unit:", error);
     }
   };
 
   const updateLastModified = async () => {
-    await firestore()
-      .collection("courses")
-      .doc(id as string)
-      .update({
-        lastModified: new Date().getTime(),
-      });
+    if (id) await updateCourseLastModified(id as string);
   };
 
   const saveAllUnits = async (units: Unit[]) => {
-    await Promise.all(
-      units.map((unit) =>
-        firestore()
-          .collection("courses")
-          .doc(id as string)
-          .collection("units")
-          .doc(unit.key)
-          .set({
-            name: unit.name,
-            description: unit.description,
-            order: unit.order,
-            key: unit.key,
-          })
-      )
-    );
-    await updateLastModified();
+    if (id) await saveAllUnitsToCourse(id as string, units);
   };
 
   const handleToggleEdit = () => {
@@ -288,34 +258,18 @@ const ManageCoursesPage: React.FC = () => {
     data: Unit[];
   }): Promise<void> => {
     try {
-      const updatedData: Unit[] = data.map(
-        (unit: Unit, index: number): Unit => ({
-          ...unit,
-          order: index,
-        })
-      );
+      const updatedData = data.map((unit, index) => ({
+        ...unit,
+        order: index,
+      }));
+
       setUnits(updatedData);
 
-      await Promise.all(
-        updatedData.map(
-          (unit: Unit): Promise<void> =>
-            firestore()
-              .collection("courses")
-              .doc(id as string)
-              .collection("units")
-              .doc(unit.key)
-              .set(
-                {
-                  order: unit.order,
-                },
-                { merge: true }
-              )
-        )
-      );
-
-      await updateLastModified();
-    } catch (error: unknown) {
-      console.error("Error updating unit order: ", error);
+      if (id) {
+        await updateUnitOrderInCourse(id as string, updatedData);
+      }
+    } catch (error) {
+      console.error("Error updating unit order:", error);
     }
   };
 
@@ -360,7 +314,9 @@ const ManageCoursesPage: React.FC = () => {
         >
           <View>
             <Text style={styles.contentTitle}>{item.name}</Text>
-            <Text style={styles.subText}>{item.description}</Text>
+            {item.description && (
+              <Text style={styles.subText}>{item.description}</Text>
+            )}
           </View>
           {editing && (
             <AntDesign
@@ -592,7 +548,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderRadius: 10,
     padding: 15,
-    maxHeight:250
+    maxHeight: 250,
   },
 });
 

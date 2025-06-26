@@ -13,13 +13,18 @@ import { Unit } from "@/utils/interfaces";
 import CourseCard from "../components/CourseCard";
 import UnitCard from "@/components/UnitCard";
 import { AntDesign, FontAwesome } from "@expo/vector-icons";
-import firestore from "@react-native-firebase/firestore";
 import { useSession } from "@/context/ctx";
 import Back from "@/components/Back";
 import ChannelDisplay from "@/components/ChannelComponent";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { deleteUserLearningCourse } from "@/services/fetchCacheData";
+import {
+  addCourseToUserLearning,
+  fetchCourseInteractionData,
+  toggleStudyingUnit,
+  updateUseUnitsPreference,
+} from "@/services/viewCourseHelpers";
 
 const ViewCoursesPage: React.FC = () => {
   const { id } = useLocalSearchParams();
@@ -34,14 +39,11 @@ const ViewCoursesPage: React.FC = () => {
     const newSwitchState = !isSwitchOn;
     setIsSwitchOn(newSwitchState);
     try {
-      await firestore()
-        .collection("learning")
-        .doc(user?.uid)
-        .collection("courses")
-        .doc(id as string)
-        .set({ useUnits: newSwitchState }, { merge: true });
+      if (user?.uid && id) {
+        await updateUseUnitsPreference(user.uid, id as string, newSwitchState);
+      }
     } catch (error) {
-      console.error("Error updating Firestore:", error);
+      console.error("Error updating database:", error);
     }
   };
 
@@ -55,36 +57,14 @@ const ViewCoursesPage: React.FC = () => {
             setUnits(courseData.sortedUnits);
           }
 
-          const storedCourses = await AsyncStorage.getItem("learningCourses");
-          const learningCourses = storedCourses
-            ? JSON.parse(storedCourses)
-            : [];
-          const isStudied = learningCourses.includes(id);
-          setStudiedCourse(isStudied);
+          if (user?.uid) {
+            const { isStudied, useUnits, studyingUnits } =
+              await fetchCourseInteractionData(user.uid, id);
 
-          if (isStudied) {
-            const courseDoc = await firestore()
-              .collection("learning")
-              .doc(user?.uid)
-              .collection("courses")
-              .doc(id)
-              .get();
-            const useUnits = courseDoc.data()?.useUnits;
-            setIsSwitchOn(useUnits ?? false);
+            setStudiedCourse(isStudied);
+            setIsSwitchOn(useUnits);
+            setStudyingUnits(studyingUnits);
           }
-
-          const learningDoc = await firestore()
-            .collection("learning")
-            .doc(user?.uid)
-            .collection("courses")
-            .doc(id)
-            .get();
-
-          const fetchedStudyingUnits = learningDoc.exists
-            ? learningDoc.data()?.studyingUnits
-            : [];
-
-          setStudyingUnits(fetchedStudyingUnits);
         }
       } catch (error) {
         console.error("Error fetching course data: ", error);
@@ -95,34 +75,14 @@ const ViewCoursesPage: React.FC = () => {
   }, [id]);
 
   const handleAddCourse = async () => {
-    if (typeof id === "string") {
-      const storedCourses = await AsyncStorage.getItem("learningCourses");
-      const learningCourses = storedCourses ? JSON.parse(storedCourses) : [];
-
-      if (!learningCourses.includes(id)) {
-        const updatedCourses = [...learningCourses, id];
-        await AsyncStorage.setItem(
-          "learningCourses",
-          JSON.stringify(updatedCourses)
-        );
+    try {
+      if (user?.uid && typeof id === "string") {
+        await addCourseToUserLearning(user.uid, id);
+        setStudiedCourse(true);
+        setStudyingUnits([]);
       }
-
-      await firestore()
-        .collection("learning")
-        .doc(user?.uid)
-        .collection("courses")
-        .doc(id)
-        .set({ studyingUnits: [], useUnits: false });
-
-      await firestore()
-        .collection("courses")
-        .doc(id)
-        .set(
-          { dependency: firestore.FieldValue.increment(1) },
-          { merge: true }
-        );
-      setStudiedCourse(true);
-      setStudyingUnits([]);
+    } catch (error) {
+      console.error("Failed to add course:", error);
     }
   };
 
@@ -134,26 +94,17 @@ const ViewCoursesPage: React.FC = () => {
   };
 
   const handleUnitCheckboxToggle = async (unitId: string) => {
-    if (typeof id === "string" && user?.uid) {
+    if (user?.uid && typeof id === "string") {
       try {
-        const docRef = firestore()
-          .collection("learning")
-          .doc(user.uid)
-          .collection("courses")
-          .doc(id);
-
-        let newStudyingUnits = [...studyingUnits];
-        const existingIndex = newStudyingUnits.indexOf(unitId);
-
-        if (existingIndex > -1) {
-          newStudyingUnits.splice(existingIndex, 1);
-        } else {
-          newStudyingUnits.push(unitId);
-        }
-        await docRef.set({ studyingUnits: newStudyingUnits }, { merge: true });
-        setStudyingUnits(newStudyingUnits);
+        const updatedUnits = await toggleStudyingUnit(
+          user.uid,
+          id,
+          studyingUnits,
+          unitId
+        );
+        setStudyingUnits(updatedUnits);
       } catch (error) {
-        console.error("Error toggling unit checkbox: ", error);
+        console.error("Error toggling unit checkbox:", error);
       }
     }
   };

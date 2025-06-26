@@ -18,7 +18,7 @@ export function useUserChannel() {
       .collection('channels')
       .doc(user?.uid)
       .onSnapshot(snapshot => {
-        if (snapshot.exists) {
+        if (snapshot.exists()) {
           setHasChannel(true);
         } else {
           setHasChannel(false);

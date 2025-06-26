@@ -12,8 +12,8 @@ import {
 } from "react-native";
 import { uploadImageToFirebase } from "@/services/handleImages";
 import * as ImagePicker from "expo-image-picker";
-import firestore from "@react-native-firebase/firestore";
 import { useSession } from "@/context/ctx";
+import { createOrUpdateChannel } from "@/services/handleUserData";
 
 const CreateChannelPage: React.FC = () => {
   const [bannerImage, setBannerImage] = useState<string | null>(null);
@@ -68,8 +68,8 @@ const CreateChannelPage: React.FC = () => {
     }
 
     try {
-      let bannerURL = null;
-      let profilePicURL = null;
+      let bannerURL: string | null = null;
+      let profilePicURL: string | null = null;
 
       if (bannerImage) {
         bannerURL = await uploadImageToFirebase(bannerImage, "banners");
@@ -84,22 +84,16 @@ const CreateChannelPage: React.FC = () => {
         profilePicURL = defaultProfilePicUrl;
       }
 
-      await firestore()
-        .collection("channels")
-        .doc(user?.uid)
-        .set({
-          displayName: displayName,
-          bannerURL: bannerURL || "",
-          profilePicURL: profilePicURL,
-        });
-
-      console.log("Channel created successfully with:", {
-        bannerURL,
-        profilePicURL,
-        displayName,
-      });
+      if (user?.uid && profilePicURL) {
+        await createOrUpdateChannel(
+          user.uid,
+          displayName,
+          bannerURL || "",
+          profilePicURL
+        );
+      }
     } catch (error) {
-      console.error("Error uploading images or saving to Firestore: ", error);
+      console.error("Error uploading images or saving to cloud storage:", error);
       Alert.alert("Error", "Failed to save images. Please try again.");
     }
   };

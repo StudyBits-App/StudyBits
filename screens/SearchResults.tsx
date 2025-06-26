@@ -8,7 +8,7 @@ import {
   ScrollView,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import { searchCourses } from "@/utils/searchAlgorithm";
+import { searchCourses } from "@/services/searchAlgorithm";
 import CourseCardShort from "@/components/CourseCardShort";
 
 const Results: React.FC = () => {

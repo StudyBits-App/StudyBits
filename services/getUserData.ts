@@ -1,15 +1,21 @@
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  collection,
+  getDocs,
+} from "@react-native-firebase/firestore";
 import { Unit } from "@/utils/interfaces";
-import firestore from "@react-native-firebase/firestore";
+
+const db = getFirestore();
 
 const getChannelData = async (userId: string) => {
   if (!userId) {
     throw new Error("User ID is not provided");
   }
   try {
-    const channelsSnapshot = await firestore()
-      .collection("channels")
-      .doc(userId)
-      .get();
+    const channelRef = doc(db, "channels", userId);
+    const channelsSnapshot = await getDoc(channelRef);
     return channelsSnapshot;
   } catch (error) {
     console.error("Error fetching channel data: ", error);
@@ -19,11 +25,9 @@ const getChannelData = async (userId: string) => {
 
 const getCourseData = async (courseId: string) => {
   try {
-    const courseDoc = await firestore()
-      .collection("courses")
-      .doc(courseId)
-      .get();
-    if (!courseDoc.exists) {
+    const courseRef = doc(db, "courses", courseId);
+    const courseDoc = await getDoc(courseRef);
+    if (!courseDoc.exists()) {
       throw new Error("Course not found");
     }
     return courseDoc;
@@ -35,11 +39,8 @@ const getCourseData = async (courseId: string) => {
 
 async function getUnitData(courseId: string) {
   try {
-    const unitDocs = await firestore()
-      .collection("courses")
-      .doc(courseId)
-      .collection("units")
-      .get();
+    const unitsRef = collection(db, "courses", courseId, "units");
+    const unitDocs = await getDocs(unitsRef);
     return unitDocs;
   } catch (error) {
     console.error("Error fetching units:", error);
@@ -49,13 +50,9 @@ async function getUnitData(courseId: string) {
 
 async function getUnit(courseId: string, unitId: string) {
   try {
-    const unitDoc = await firestore()
-      .collection("courses")
-      .doc(courseId)
-      .collection("units")
-      .doc(unitId)
-      .get();
-    return unitDoc.exists ? unitDoc : false;
+    const unitRef = doc(db, "courses", courseId, "units", unitId);
+    const unitDoc = await getDoc(unitRef);
+    return unitDoc.exists() ? unitDoc : false;
   } catch (error) {
     console.error("Error checking units collection:", error);
     return false;
@@ -85,12 +82,12 @@ export const fetchUnitsAndCourseCreator = async (id: string) => {
   }
 };
 
-
-async function courseArray(userId: string) {
+async function getUserCourseArray(userId: string) {
   try {
-    const snapshot = await firestore().collection("channels").doc(userId).get();
+    const channelRef = doc(db, "channels", userId);
+    const snapshot = await getDoc(channelRef);
 
-    if (snapshot.exists) {
+    if (snapshot.exists()) {
       const data = snapshot.data();
       if (data && Array.isArray(data.courses)) {
         return data.courses.filter(
@@ -108,4 +105,10 @@ async function courseArray(userId: string) {
   }
 }
 
-export { getChannelData, getCourseData, getUnitData, getUnit, courseArray };
+export {
+  getChannelData,
+  getCourseData,
+  getUnitData,
+  getUnit,
+  getUserCourseArray,
+};

@@ -1,16 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, View, Image, Pressable } from "react-native";
 import { getChannelData } from "@/services/getUserData";
-import { Channel } from "@/utils/interfaces";
+import { Channel, ChannelDisplayProps } from "@/utils/interfaces";
 import LoadingScreen from "@/screens/LoadingScreen";
 import { router } from "expo-router";
-
-interface ChannelDisplayProps {
-  id: string;
-  displayBanner: boolean;
-  link?: string;
-  params?: { [key: string]: string | number };
-}
 
 const ChannelDisplay: React.FC<ChannelDisplayProps> = ({
   id,
@@ -24,7 +17,7 @@ const ChannelDisplay: React.FC<ChannelDisplayProps> = ({
     const fetchChannelData = async () => {
       try {
         const channelSnapshot = await getChannelData(id);
-        if (channelSnapshot.exists) {
+        if (channelSnapshot.exists()) {
           const channelData = channelSnapshot.data() as Channel;
           setChannel(channelData);
         } else {

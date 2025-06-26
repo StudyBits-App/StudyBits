@@ -8,7 +8,7 @@ interface UnitCardProps {
   courseId: string;
   selected: boolean;
   onPress?: () => void;
-  onUnitNotFound?: (unitId: string) => void; 
+  onUnitNotFound?: (unitId: string) => void;
 }
 
 const UnitCard: React.FC<UnitCardProps> = ({
@@ -22,6 +22,14 @@ const UnitCard: React.FC<UnitCardProps> = ({
 
   useEffect(() => {
     const fetchUnit = async () => {
+      if (!id?.trim() || !courseId?.trim()) {
+        console.warn("UnitCard: Missing or empty courseId or unit id", {
+          courseId,
+          id,
+        });
+        return;
+      }
+
       try {
         const unitDoc = await getUnit(courseId, id);
         if (unitDoc && "data" in unitDoc) {
@@ -48,14 +56,14 @@ const UnitCard: React.FC<UnitCardProps> = ({
       style={[
         styles.contentContainer,
         selected ? styles.selected : styles.unselected,
-        unit ? null : styles.disabled, 
+        unit ? null : styles.disabled,
       ]}
       onPress={() => {
         if (onPress && unit) {
           onPress();
         }
       }}
-      disabled={!unit} 
+      disabled={!unit}
     >
       <View>
         <Text style={styles.contentTitle}>

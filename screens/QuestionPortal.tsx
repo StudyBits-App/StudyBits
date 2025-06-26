@@ -34,7 +34,7 @@ import {
   fetchQuestion,
   handleHintImages,
   updateQuestion,
-} from "@/services/getQuestionData";
+} from "@/services/handleQuestionData";
 import { useToast } from "react-native-toast-notifications";
 import SuccessModal from "@/components/QuestionComponents/FinalModal";
 
@@ -68,13 +68,17 @@ const QuestionPortal: React.FC = () => {
   const toast = useToast();
 
   useEffect(() => {
-    if (typeof courseId === "string") {
+    if (
+      typeof courseId === "string" &&
+      courseId.trim() &&
+      typeof unitId === "string" &&
+      unitId.trim()
+    ) {
       setSelectedCourseKey(courseId);
-      if (typeof unitId === "string") {
-        setSelectedUnitKey(unitId);
-      }
+      setSelectedUnitKey(unitId);
+    } else {
+      openDropdown();
     }
-    openDropdown();
   }, [courseId, unitId]);
 
   useEffect(() => {
@@ -131,6 +135,7 @@ const QuestionPortal: React.FC = () => {
 
   const handleSubmit = async () => {
     const hasCorrectAnswer = answerChoices.some((answer) => answer.answer);
+
     if (!question.trim() || answerChoices.length < 2 || !hasCorrectAnswer) {
       errorToast();
       return;
@@ -139,57 +144,74 @@ const QuestionPortal: React.FC = () => {
     if (
       selectedCourseKey &&
       selectedUnitKey &&
-      typeof selectedCourseKey === "string" &&
-      typeof selectedUnitKey === "string"
+      selectedCourseKey.trim() !== "" &&
+      selectedUnitKey.trim() !== ""
     ) {
-      const updatedHints = await handleHintImages(hints, originalHints);
+      try {
+        const updatedHints = await handleHintImages(hints, originalHints);
 
-      const questionData = {
-        question: question,
-        hints: updatedHints,
-        answers: answerChoices,
-        course: selectedCourseKey,
-        unit: selectedUnitKey,
-      };
+        const questionData = {
+          question: question.trim(),
+          hints: updatedHints,
+          answers: answerChoices,
+          course: selectedCourseKey,
+          unit: selectedUnitKey,
+        };
 
-      const unitDocRef = firestore()
-        .collection("courses")
-        .doc(selectedCourseKey)
-        .collection("units")
-        .doc(selectedUnitKey);
+        const unitDocRef = firestore()
+          .collection("courses")
+          .doc(selectedCourseKey)
+          .collection("units")
+          .doc(selectedUnitKey);
 
-      const courseDocRef = firestore()
-        .collection("courses")
-        .doc(selectedCourseKey);
+        const courseDocRef = firestore()
+          .collection("courses")
+          .doc(selectedCourseKey);
 
-      const unitDoc = await unitDocRef.get();
+        const unitDoc = await unitDocRef.get();
 
-      if (unitDoc.exists()) {
-        if (isEditing && id && typeof id === "string") {
-          await updateQuestion(id, questionData);
+        if (unitDoc.exists()) {
+          if (isEditing && id && typeof id === "string") {
+            await updateQuestion(id, questionData);
+          } else {
+            const questionDocRef = await firestore()
+              .collection("questions")
+              .add(questionData);
+
+            await unitDocRef.update({
+              questions: firestore.FieldValue.arrayUnion(questionDocRef.id),
+            });
+
+            await courseDocRef.update({
+              numQuestions: firestore.FieldValue.increment(1),
+            });
+          }
+
+          setSuccessModalVisible(true);
+          setHints([]);
+          setAnswerChoices([]);
+          setQuestion("");
+          setSelectedCourseKey("");
+          setSelectedUnitKey("");
         } else {
-          const questionDocRef = await firestore()
-            .collection("questions")
-            .add(questionData);
-          await unitDocRef.update({
-            questions: firestore.FieldValue.arrayUnion(questionDocRef.id),
-          });
-          await courseDocRef.update({
-            numQuestions: firestore.FieldValue.increment(1),
-          });
+          console.error("Invalid unit or course in Firestore");
+          setCourseModalVisible(true);
         }
-        setSuccessModalVisible(true);
-        setHints([]);
-        setAnswerChoices([]);
-        setQuestion("");
-        setSelectedCourseKey("");
-        setSelectedUnitKey("");
-      } else {
-        console.error("Invalid unit or course");
-        setCourseModalVisible(true);
+      } catch (error) {
+        console.error("Error submitting question:", error);
+        toast.show("An error occurred while saving your question.", {
+          type: "danger",
+        });
       }
     } else {
-      console.error("Something went wrong");
+      console.warn(
+        "Missing course or unit key:",
+        selectedCourseKey,
+        selectedUnitKey
+      );
+      toast.show("Please select a valid course and unit.", {
+        type: "danger",
+      });
     }
   };
 
@@ -351,18 +373,24 @@ const QuestionPortal: React.FC = () => {
     setSelectedCourseKey(null);
     setSelectedUnitKey(null);
     router.replace(`/question`);
-
-  }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
       <NestableScrollContainer>
         <View>
-          {id && 
-            <Pressable onPress={stopEditing} style = {styles.errorContainer}>
-              <Text style = {[styles.errorText, {textAlign: 'left', marginLeft: 10}]}>Stop Editing</Text>
+          {id && (
+            <Pressable onPress={stopEditing} style={styles.errorContainer}>
+              <Text
+                style={[
+                  styles.errorText,
+                  { textAlign: "left", marginLeft: 10 },
+                ]}
+              >
+                Stop Editing
+              </Text>
             </Pressable>
-          }
+          )}
         </View>
         <Text style={styles.headerText}>Question</Text>
 
@@ -400,9 +428,9 @@ const QuestionPortal: React.FC = () => {
               No course selected
             </Text>
           )}
-          {selectedUnitKey ? (
+          {selectedCourseKey?.trim() && selectedUnitKey?.trim() ? (
             <UnitCard
-              courseId={selectedCourseKey as string}
+              courseId={selectedCourseKey}
               selected={false}
               id={selectedUnitKey}
             />

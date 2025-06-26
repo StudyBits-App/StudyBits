@@ -10,7 +10,6 @@ import {
   Image,
   Animated,
 } from "react-native";
-import firestore from "@react-native-firebase/firestore";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Hint, QuestionAnswer, QuestionInfo } from "@/utils/interfaces";
 import { shuffleArray, trimText } from "@/utils/utils";
@@ -22,6 +21,10 @@ import {
   PinchGestureHandler,
   State,
 } from "react-native-gesture-handler";
+import {
+  getQuestionInfoById,
+  incrementUserAccuracy,
+} from "@/services/answerHelpers";
 
 const AnswerPage: React.FC = () => {
   const { user } = useSession();
@@ -65,9 +68,11 @@ const AnswerPage: React.FC = () => {
         return;
       }
 
-      const questions = shuffleArray(response.similar_courses.flatMap(
-        (course: any) => course.questions || []
-      ));
+      const questions = shuffleArray(
+        response.similar_courses.flatMap(
+          (course: any) => course.questions || []
+        )
+      );
 
       if (questions.length === 0) {
         setErrorMessage(
@@ -87,18 +92,10 @@ const AnswerPage: React.FC = () => {
 
   const fetchQuestionInfo = async (questionId: string) => {
     try {
-      const questionDoc = await firestore()
-        .collection("questions")
-        .doc(questionId)
-        .get();
-      if (questionDoc.exists) {
-        const data = questionDoc.data() as QuestionInfo;
-        setQuestionInfo(data);
-      } else {
-        console.error("Question not found with the given ID");
-      }
+      const data = await getQuestionInfoById(questionId);
+      if (data) setQuestionInfo(data);
     } catch (error) {
-      console.error("Error fetching question info:", error);
+      console.error("Failed to load question info");
     }
   };
 
@@ -111,7 +108,7 @@ const AnswerPage: React.FC = () => {
       setQuestionsQueue(remainingQuestions);
       setCurrentQuestionId(remainingQuestions[0]);
       setAnswersSubmitted(false);
-      setAnswerChoices([])
+      setAnswerChoices([]);
     }
   };
 
@@ -122,17 +119,11 @@ const AnswerPage: React.FC = () => {
       }
     }
     try {
-      await firestore()
-        .collection("learning")
-        .doc(user?.uid)
-        .set(
-          {
-            accuracy: firestore.FieldValue.increment(1),
-          },
-          { merge: true }
-        );
+      if (user?.uid) {
+        await incrementUserAccuracy(user.uid);
+      }
     } catch (error) {
-      console.error("Error updating user document with answer result:", error);
+      console.error("Failed to update accuracy");
     }
   };
 
@@ -160,7 +151,6 @@ const AnswerPage: React.FC = () => {
       );
       setHints(questionInfo.hints);
       setQuestion(questionInfo.question);
-      
     }
   }, [questionInfo]);
 

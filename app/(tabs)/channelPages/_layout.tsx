@@ -1,49 +1,53 @@
-import React from "react";
-import {
-  createMaterialTopTabNavigator,
-  MaterialTopTabNavigationOptions,
-  MaterialTopTabNavigationEventMap,
-} from "@react-navigation/material-top-tabs";
-import { withLayoutContext } from "expo-router";
-import { ParamListBase, TabNavigationState } from "@react-navigation/native";
+import React, { useState } from "react";
+import { useWindowDimensions } from "react-native";
+import { TabView, SceneMap, TabBar } from "react-native-tab-view";
 import { useUserChannel } from "@/context/userChannel";
 import CreateChannelPage from "@/screens/CreateChannel";
 import LoadingScreen from "@/screens/LoadingScreen";
-
-const { Navigator } = createMaterialTopTabNavigator();
-
-export const MaterialTopTabs = withLayoutContext<
-  MaterialTopTabNavigationOptions,
-  typeof Navigator,
-  TabNavigationState<ParamListBase>,
-  MaterialTopTabNavigationEventMap
->(Navigator);
+import UserChannelPage from "@/screens/ChannelPage";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import UserQuestionsPage from "@/screens/ViewQuestions";
 
 export default function ChannelLayout() {
+  const layout = useWindowDimensions();
   const { hasChannel, loading } = useUserChannel();
+
+  const [index, setIndex] = useState(0);
+
+  const [routes] = useState([
+    { key: "channelPage", title: "Channel" },
+    { key: "questionPage", title: "Questions" },
+  ]);
+
+  const renderScene = SceneMap({
+    channelPage: UserChannelPage,
+    questionPage: UserQuestionsPage,
+  });
 
   if (loading) {
     return <LoadingScreen />;
   }
 
-  return hasChannel ? (
-    <MaterialTopTabs
-      screenOptions={{
-        tabBarStyle: { backgroundColor: "#1E1E1E" },
-        tabBarLabelStyle: { color: "#fff" },
-        tabBarIndicatorStyle: { backgroundColor: "#3B9EBF" },
-      }}
-    >
-      <MaterialTopTabs.Screen
-        name="channelPage"
-        options={{ title: "Channel" }}
+  if (!hasChannel) {
+    return <CreateChannelPage />;
+  }
+
+  return (
+    <GestureHandlerRootView>
+      <TabView
+        navigationState={{ index, routes }}
+        renderScene={renderScene}
+        onIndexChange={setIndex}
+        initialLayout={{ width: layout.width }}
+        renderTabBar={(props) => (
+          <TabBar
+            {...props}
+            style={{ backgroundColor: "#1E1E1E" }}
+            labelStyle={{ color: "white" }}
+            indicatorStyle={{ backgroundColor: "#3B9EBF" }}
+          />
+        )}
       />
-      <MaterialTopTabs.Screen
-        name="questionPage"
-        options={{ title: "Questions" }}
-      />
-    </MaterialTopTabs>
-  ) : (
-    <CreateChannelPage />
+    </GestureHandlerRootView>
   );
 }

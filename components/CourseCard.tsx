@@ -62,7 +62,9 @@ const CourseCard: React.FC<CourseCardProps> = ({ id, editing, cache }) => {
       )}
       <View style={styles.courseInfoBox}>
         <Text style={styles.courseName}>{course.name}</Text>
-        <Text style={styles.courseDescription}>{course.description}</Text>
+        {course.description && (
+          <Text style={styles.courseDescription}>{course.description}</Text>
+        )}
       </View>
     </Pressable>
   );

@@ -91,9 +91,11 @@ const CourseCardShortCache: React.FC<CourseCardShortProps> = ({
           ]}
         >
           <Text style={styles.courseName}>{trimText(course.name, 20)}</Text>
-          <Text style={styles.courseDescription}>
-            {trimText(course.description, 25)}
-          </Text>
+          {course.description && (
+            <Text style={styles.courseDescription}>
+              {trimText(course.description, 25)}
+            </Text>
+          )}
         </View>
       </View>
     </Pressable>

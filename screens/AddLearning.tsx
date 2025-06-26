@@ -9,10 +9,11 @@ import {
 } from "react-native";
 import CourseCardShort from "@/components/CourseCardShort";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import firestore from "@react-native-firebase/firestore";
 import { useSession } from "@/context/ctx";
 import { router } from "expo-router";
 import { saveCourseToCache } from "@/services/fetchCacheData";
+import { fetchCourses } from "@/services/fetchTrending";
+import { addCourseForUser } from "@/services/handleUserData";
 
 const AddLearning: React.FC = () => {
   const [selectedCourseKey, setSelectedCourseKey] = useState<string | null>(
@@ -40,13 +41,10 @@ const AddLearning: React.FC = () => {
 
     const getCourses = async () => {
       try {
-        const snapshot = await firestore()
-          .collection("courses")
-          .limit(10)
-          .get();
-        setCourses(snapshot.docs.map((doc) => doc.id));
+        const docs = await fetchCourses(10);
+        setCourses(docs.map((doc) => doc.id));
       } catch (error) {
-        console.error("Error fetching courses:", error);
+        console.error("Failed to load courses in getCourses");
       }
     };
 
@@ -59,42 +57,23 @@ const AddLearning: React.FC = () => {
   };
 
   const handleSubmit = async () => {
-    if (selectedCourseKey) {
-      try {
-        await firestore()
-        .collection("courses")
-        .doc(selectedCourseKey)
-        .update({
-          dependency: firestore.FieldValue.increment(1),
-        });
+  if (!selectedCourseKey || !user?.uid) return;
 
-        await firestore()
-          .collection("learning")
-          .doc(user?.uid)
-          .collection("courses")
-          .doc(selectedCourseKey)
-          .set({ studyingUnits: [], useUnits: false });
+  try {
+    const updatedCourses = await addCourseForUser(
+      user.uid,
+      selectedCourseKey,
+      learningCourses,
+      saveCourseToCache
+    );
 
-        console.log("Selected course:", selectedCourseKey);
-        const updatedCourses = [
-          ...new Set([...learningCourses, selectedCourseKey]),
-        ];
-
-        await AsyncStorage.setItem(
-          "learningCourses",
-          JSON.stringify(updatedCourses)
-        );
-        await saveCourseToCache(selectedCourseKey);
-        setLearningCourses(updatedCourses);
-
-        setSelectedCourseKey(null);
-        router.push("/");
-      } catch (error) {
-        console.error("Error adding course:", error);
-      }
-    }
-  };
-
+    setLearningCourses(updatedCourses);
+    setSelectedCourseKey(null);
+    router.push("/");
+  } catch (error) {
+    console.error("Error adding course:", error);
+  }
+};
   const filteredCourses = courses.filter(
     (course) => !learningCourses.includes(course)
   );

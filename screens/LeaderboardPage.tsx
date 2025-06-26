@@ -6,45 +6,23 @@ import {
   View,
   ActivityIndicator,
 } from "react-native";
-import firestore from "@react-native-firebase/firestore";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/FontAwesome";
 import Back from "@/components/Back";
+import { fetchLeaderboardUsers } from "@/services/leaderboardServices";
+import { Participant } from "@/utils/interfaces";
 
 const LeaderboardPage: React.FC = () => {
-  type Participant = {
-    name: string;
-    points: number;
-  };
+
   const [users, setUsers] = useState<Participant[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchDocuments = async () => {
     try {
-      const querySnapshot = await firestore()
-        .collection("learning")
-        .orderBy("accuracy", "desc")
-        .get();
-      const docNames = querySnapshot.docs.map((doc) => [
-        doc.id,
-        doc.data().accuracy,
-      ]);
-
-      for (const docName of docNames) {
-        let docID = docName[0];
-        let points = docName[1];
-        const user = await firestore().collection("channels").doc(docID).get();
-        if (user.data()?.displayName)
-          setUsers((prev) => [
-            ...prev,
-            {
-              name: user.data()?.displayName,
-              points: points,
-            },
-          ]);
-      }
+      const leaderboardUsers = await fetchLeaderboardUsers();
+      setUsers(leaderboardUsers);
     } catch (error) {
-      console.error("Error fetching documents:", error);
+      console.error("Error fetching leaderboard:", error);
     } finally {
       setLoading(false);
     }
@@ -56,10 +34,10 @@ const LeaderboardPage: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style = {{marginLeft: 25}}>
+      <View style={{ marginLeft: 25 }}>
         <Back link="/" />
       </View>
-      <View style= {styles.contentContainer}>
+      <View style={styles.contentContainer}>
         <Text style={styles.title}>Points Leaderboard</Text>
         <Text style={styles.description}>
           Earn points by answering questions correctly!
@@ -105,7 +83,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#1E1E1E",
   },
   contentContainer: {
-    alignItems: 'center'
+    alignItems: "center",
   },
   title: {
     fontSize: 24,
