@@ -115,7 +115,7 @@ class CourseUnitSelector {
     while (nextCombination) {
       try {
         const response = await axios.post(
-          "https://study-bits-fvsp5qbky-abhinav-devarakondas-projects.vercel.app/find_similar_courses",
+          "https://study-bits-api.vercel.app/find_similar_courses",
           {
             course_id: nextCombination.courseId,
             unit_id: nextCombination.unitId,
@@ -131,7 +131,7 @@ class CourseUnitSelector {
             "[CourseUnitSelector] API Response:",
             JSON.stringify(response.data)
           );
-          return response.data;
+          return [response.data, nextCombination.courseId, nextCombination.unitId];
         } else {
           console.warn(
             `[CourseUnitSelector] No results for combination: { courseId: ${nextCombination.courseId}, unitId: ${nextCombination.unitId} }`

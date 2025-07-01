@@ -60,6 +60,7 @@ export interface QuestionInfo {
   question: string;
   hints: Hint[];
   answers: QuestionAnswer[];
+  course: string;
 }
 
 export interface QuestionAnswer {
@@ -88,4 +89,12 @@ export interface ChannelDisplayProps {
   displayBanner: boolean;
   link?: string;
   params?: { [key: string]: string | number };
+}
+
+export interface QuestionMetadata {
+  courseName: string;
+  unitName: string;
+  questionId: string;
+  courseId: string;
+  unitId: string;
 }

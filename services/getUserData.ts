@@ -5,7 +5,7 @@ import {
   collection,
   getDocs,
 } from "@react-native-firebase/firestore";
-import { Unit } from "@/utils/interfaces";
+import { Channel, Unit } from "@/utils/interfaces";
 
 const db = getFirestore();
 
@@ -52,10 +52,13 @@ async function getUnit(courseId: string, unitId: string) {
   try {
     const unitRef = doc(db, "courses", courseId, "units", unitId);
     const unitDoc = await getDoc(unitRef);
-    return unitDoc.exists() ? unitDoc : false;
+    if (!unitDoc.exists()) {
+      throw new Error("Unit not found");
+    }
+    return unitDoc;
   } catch (error) {
-    console.error("Error checking units collection:", error);
-    return false;
+    console.error("Error fetching unit:", error);
+    throw error;
   }
 }
 
@@ -105,10 +108,43 @@ async function getUserCourseArray(userId: string) {
   }
 }
 
+async function getChannelFromCourse(courseId: string): Promise<Channel | null> {
+  try {
+    const courseDoc = await getCourseData(courseId);
+    const id = courseDoc.data()?.creator;
+    const channelSnap = await getChannelData(id);
+
+    if (channelSnap.exists()) {
+      return channelSnap.data() as Channel;
+    } else {
+      return null;
+    }
+  } catch (error) {
+    console.error("Error fetching channel from course: ", error);
+    return null;
+  }
+}
+
+async function getCourseUnitNamesFromId(courseId: string, unit_id: string) {
+  try {
+    const courseDoc = await getCourseData(courseId);
+    const courseName = courseDoc.data()?.name;
+    const id = courseDoc.data()?.key;
+    const unitDoc = await getUnit(courseId, unit_id);
+    const unitName = unitDoc.data()?.name;
+    return { courseName, unitName, id };
+  } catch (error) {
+    console.error("Error fetching course and unit names: ", error);
+    return null;
+  }
+}
+
 export {
   getChannelData,
   getCourseData,
   getUnitData,
   getUnit,
   getUserCourseArray,
+  getChannelFromCourse,
+  getCourseUnitNamesFromId,
 };
