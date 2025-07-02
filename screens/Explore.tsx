@@ -1,10 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  Text,
-  StyleSheet,
-  ScrollView,
-  SafeAreaView,
-} from "react-native";
+import { Text, StyleSheet, ScrollView, SafeAreaView } from "react-native";
 import CourseCardShort from "@/components/CourseCardShort";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
@@ -64,6 +59,12 @@ const Explore: React.FC = () => {
             onPress={() => redirect(course)}
           />
         ))}
+        {filteredCourses.length === 0 && (
+          <Text style={{ color: "#fff" }}>
+            Looks like you have all the trending courses already! Try searching
+            for courses you are interested in.
+          </Text>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

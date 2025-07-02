@@ -11,10 +11,12 @@ import {
   fetchAndSaveLearningCourses,
   fetchAndSaveUserChannelCourses,
 } from "@/services/fetchCacheData";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const HomeScreen: React.FC = () => {
   const { user } = useSession();
   const [loading, setLoading] = useState(false);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const initializeUserData = async () => {
@@ -56,7 +58,7 @@ const HomeScreen: React.FC = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.addCoursesBox}>
         <View style={styles.header}>
           <Text style={styles.greeting}>StudyBits</Text>
@@ -88,7 +90,7 @@ const HomeScreen: React.FC = () => {
         collectionName="learningCourses"
         link="/homePages/viewCourse"
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -144,7 +146,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     textAlign: "left",
     marginHorizontal: 20,
-    marginBottom: 15
+    marginBottom: 15,
   },
 });
 

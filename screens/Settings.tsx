@@ -1,12 +1,13 @@
 import React from "react";
 import { StyleSheet, View, Text, Pressable } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSession } from "@/context/ctx";
 import auth from "@react-native-firebase/auth";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const SettingsScreen: React.FC = () => {
   const { user } = useSession();
+  const insets = useSafeAreaInsets();
 
   const logout = async () => {
     try {
@@ -18,7 +19,7 @@ const SettingsScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <Text style={styles.greeting}>Settings</Text>
       </View>
@@ -28,7 +29,7 @@ const SettingsScreen: React.FC = () => {
           <Text style={styles.text}>Logout</Text>
         </Pressable>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

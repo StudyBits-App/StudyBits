@@ -96,5 +96,4 @@ export interface QuestionMetadata {
   unitName: string;
   questionId: string;
   courseId: string;
-  unitId: string;
 }
