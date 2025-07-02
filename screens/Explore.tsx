@@ -1,28 +1,18 @@
 import React, { useEffect, useState } from "react";
 import {
-  View,
   Text,
   StyleSheet,
   ScrollView,
-  Pressable,
   SafeAreaView,
 } from "react-native";
 import CourseCardShort from "@/components/CourseCardShort";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useSession } from "@/context/ctx";
 import { router } from "expo-router";
-import { saveCourseToCache } from "@/services/fetchCacheData";
 import { fetchCourses } from "@/services/fetchTrending";
-import { addCourseForUser } from "@/services/handleUserData";
 
-const AddLearning: React.FC = () => {
-  const [selectedCourseKey, setSelectedCourseKey] = useState<string | null>(
-    null
-  );
+const Explore: React.FC = () => {
   const [courses, setCourses] = useState<string[]>([]);
   const [learningCourses, setLearningCourses] = useState<string[]>([]);
-
-  const { user } = useSession();
 
   useEffect(() => {
     const fetchLearningCourses = async () => {
@@ -52,31 +42,16 @@ const AddLearning: React.FC = () => {
     getCourses();
   }, []);
 
-  const handleCourseSelect = (courseKey: string) => {
-    setSelectedCourseKey(courseKey === selectedCourseKey ? null : courseKey);
-  };
-
-  const handleSubmit = async () => {
-  if (!selectedCourseKey || !user?.uid) return;
-
-  try {
-    const updatedCourses = await addCourseForUser(
-      user.uid,
-      selectedCourseKey,
-      learningCourses,
-      saveCourseToCache
-    );
-
-    setLearningCourses(updatedCourses);
-    setSelectedCourseKey(null);
-    router.push("/");
-  } catch (error) {
-    console.error("Error adding course:", error);
-  }
-};
   const filteredCourses = courses.filter(
     (course) => !learningCourses.includes(course)
   );
+
+  const redirect = (id: string) => {
+    router.push({
+      pathname: "/homePages/viewCourse",
+      params: { id: id },
+    });
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -86,23 +61,10 @@ const AddLearning: React.FC = () => {
           <CourseCardShort
             key={course}
             id={course}
-            selected={course === selectedCourseKey}
-            onPress={() => handleCourseSelect(course)}
+            onPress={() => redirect(course)}
           />
         ))}
       </ScrollView>
-      <View style={styles.buttonContainer}>
-        <Pressable
-          style={[
-            styles.submitButton,
-            !selectedCourseKey && styles.submitButtonDisabled,
-          ]}
-          onPress={handleSubmit}
-          disabled={!selectedCourseKey}
-        >
-          <Text style={styles.submitButtonText}>Add</Text>
-        </Pressable>
-      </View>
     </SafeAreaView>
   );
 };
@@ -141,4 +103,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AddLearning;
+export default Explore;

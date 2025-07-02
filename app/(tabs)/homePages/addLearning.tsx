@@ -1,9 +1,9 @@
 import React from 'react';
-import AddLearning from '@/screens/AddLearning';
+import Explore from '@/screens/Explore';
 
 export default function addLearning() {
   return (
-    <AddLearning/>
+    <Explore/>
   );
 }
 

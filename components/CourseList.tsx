@@ -45,7 +45,7 @@ const CourseList: React.FC<CourseListProps> = ({
 
         {(courseIds.length == 0 && collectionName == 'learningCourses') && (
           <Text style={styles.noCourses}>
-            You haven't started learning any courses yet.
+            You haven't started learning any courses yet. Search or explore trending courses to get started!
           </Text>
         )}
       </ScrollView>

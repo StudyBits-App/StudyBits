@@ -17,7 +17,6 @@ import { useSession } from "@/context/ctx";
 import Back from "@/components/Back";
 import ChannelDisplay from "@/components/ChannelComponent";
 import { SafeAreaView } from "react-native-safe-area-context";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { deleteUserLearningCourse } from "@/services/fetchCacheData";
 import {
   addCourseToUserLearning,

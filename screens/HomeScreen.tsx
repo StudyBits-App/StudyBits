@@ -1,10 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  StyleSheet,
-  View,
-  Text,
-  Pressable,
-} from "react-native";
+import { StyleSheet, View, Text, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useSession } from "@/context/ctx";
@@ -64,24 +59,31 @@ const HomeScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       <View style={styles.addCoursesBox}>
         <View style={styles.header}>
-          <Text style={styles.greeting}>{user?.displayName}</Text>
-          <Pressable style={styles.profileButton} onPress={search}>
-            <Ionicons name="search" size={40} color="#fff" />
-          </Pressable>
-          <Pressable onPress={leaderboard}>
-            <Ionicons name="trophy" size={40} color="yellow"/>
-          </Pressable>
+          <Text style={styles.greeting}>StudyBits</Text>
+          <View style={styles.iconGroup}>
+            <Pressable style={styles.iconButton} onPress={search}>
+              <Ionicons name="search" size={32} color="#fff" />
+            </Pressable>
+            <Pressable style={styles.iconButton} onPress={leaderboard}>
+              <Ionicons name="trophy" size={32} color="yellow" />
+            </Pressable>
+          </View>
         </View>
 
-        <Pressable style={styles.learnContainer}>
+        <Pressable>
           <View style={styles.learnCard}>
-            <Text style={styles.learnText}>What I'm Learning</Text>
+            <View style={styles.learnRow}>
+              <Text style={styles.learnText}>Explore Trending Courses</Text>
+              <Pressable style={styles.plusInline} onPress={addLearning}>
+                <Ionicons name="arrow-forward" size={24} color="#fff" />
+              </Pressable>
+            </View>
           </View>
         </Pressable>
-        <Pressable style={styles.addButton} onPress={addLearning}>
-          <Ionicons name="add" size={30} color="#fff" />
-        </Pressable>
       </View>
+
+      <Text style={styles.sectionTitle}>What I'm Learning</Text>
+
       <CourseList
         collectionName="learningCourses"
         link="/homePages/viewCourse"
@@ -109,47 +111,40 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#fff",
   },
-  profileButton: {
-    padding: 5,
+  iconGroup: {
+    flexDirection: "row",
+    alignItems: "center",
   },
-  learnContainer: {
-    marginBottom: 20,
+  iconButton: {
+    marginLeft: 12,
   },
   learnCard: {
     backgroundColor: "#192f6a",
     borderRadius: 15,
     padding: 20,
   },
+  learnRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   learnText: {
     fontSize: 18,
     fontWeight: "600",
     color: "#fff",
-    marginBottom: 10,
   },
-  addButton: {
-    position: "absolute",
-    right: 20,
-    bottom: 20,
+  plusInline: {
     backgroundColor: "#4c669f",
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: "center",
-    alignItems: "center",
+    padding: 8,
+    borderRadius: 20,
   },
-  button: {
-    marginVertical: "10%",
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 4,
-    elevation: 3,
-    backgroundColor: "black",
-  },
-  text: {
-    color: "white",
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: "600",
+    color: "#fff",
+    textAlign: "left",
+    marginHorizontal: 20,
+    marginBottom: 15
   },
 });
 
