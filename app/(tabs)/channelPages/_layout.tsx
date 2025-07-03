@@ -1,17 +1,20 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useWindowDimensions } from "react-native";
 import { TabView, SceneMap, TabBar } from "react-native-tab-view";
-import { useUserChannel } from "@/context/userChannel";
+import { useSession } from "@/context/ctx";
 import CreateChannelPage from "@/screens/CreateChannel";
 import LoadingScreen from "@/screens/LoadingScreen";
 import UserChannelPage from "@/screens/ChannelPage";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import UserQuestionsPage from "@/screens/ViewQuestions";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import firestore from "@react-native-firebase/firestore";
 
 export default function ChannelLayout() {
   const layout = useWindowDimensions();
-  const { hasChannel, loading } = useUserChannel();
+  const { user } = useSession();
 
+  const [loading, setLoading] = useState(true);
+  const [hasChannel, setHasChannel] = useState(false);
   const [index, setIndex] = useState(0);
 
   const [routes] = useState([
@@ -19,24 +22,40 @@ export default function ChannelLayout() {
     { key: "questionPage", title: "Questions" },
   ]);
 
-  const renderScene = SceneMap({
+  const renderScene = {
     channelPage: UserChannelPage,
     questionPage: UserQuestionsPage,
-  });
+  };
 
-  if (loading) {
-    return <LoadingScreen />;
-  }
+  useEffect(() => {
+    const checkChannel = async () => {
+      if (!user) return;
 
-  if (!hasChannel) {
-    return <CreateChannelPage />;
-  }
+      try {
+        const snapshot = await firestore()
+          .collection("channels")
+          .doc(user.uid)
+          .get();
+
+        setHasChannel(snapshot.exists);
+      } catch (err) {
+        console.error("Error checking user channel:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkChannel();
+  }, [user]);
+
+  if (loading) return <LoadingScreen />;
+  if (!hasChannel) return <CreateChannelPage />;
 
   return (
     <GestureHandlerRootView>
       <TabView
         navigationState={{ index, routes }}
-        renderScene={renderScene}
+        renderScene={SceneMap(renderScene)}
         onIndexChange={setIndex}
         initialLayout={{ width: layout.width }}
         renderTabBar={(props) => (
