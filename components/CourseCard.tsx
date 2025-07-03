@@ -9,10 +9,20 @@ interface CourseCardProps {
   id: string;
   editing: boolean;
   cache: boolean;
+  showSubscribeButton?: boolean;
+  onPressSubscribe?: () => void;
+  isSubscribed?: boolean;
 }
 
 // Component for fill size course cards when managing courses
-const CourseCard: React.FC<CourseCardProps> = ({ id, editing, cache }) => {
+const CourseCard: React.FC<CourseCardProps> = ({
+  id,
+  editing,
+  cache,
+  showSubscribeButton = false,
+  onPressSubscribe,
+  isSubscribed = false,
+}) => {
   const [course, setCourse] = useState<Course>(defaultCourse);
   const router = useRouter();
 
@@ -65,6 +75,24 @@ const CourseCard: React.FC<CourseCardProps> = ({ id, editing, cache }) => {
         {course.description && (
           <Text style={styles.courseDescription}>{course.description}</Text>
         )}
+        {showSubscribeButton && onPressSubscribe && (
+          <Pressable
+            onPress={onPressSubscribe}
+            style={[
+              styles.subscribeButton,
+              isSubscribed && styles.subscribeButtonActive,
+            ]}
+          >
+            <Text
+              style={[
+                styles.subscribeButtonText,
+                isSubscribed && styles.subscribeButtonTextActive,
+              ]}
+            >
+              {isSubscribed ? "Subscribed" : "Subscribe"}
+            </Text>
+          </Pressable>
+        )}
       </View>
     </Pressable>
   );
@@ -102,6 +130,27 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "white",
     flexWrap: "wrap",
+  },
+  subscribeButton: {
+    backgroundColor: "#fff",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    marginTop: 12,
+    alignSelf: "flex-start",
+    minWidth: 90,
+    alignItems: "center",
+  },
+  subscribeButtonActive: {
+    backgroundColor: "#555",
+  },
+  subscribeButtonText: {
+    color: "#000",
+    fontWeight: "bold",
+    fontSize: 12,
+  },
+  subscribeButtonTextActive: {
+    color: "#fff",
   },
 });
 

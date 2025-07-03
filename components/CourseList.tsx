@@ -70,8 +70,8 @@ const styles = StyleSheet.create({
   noCourses: {
     fontSize: 16,
     color: "#fff",
-    textAlign: "center",
     marginTop: 20,
+    marginLeft: 15,
   },
 });
 

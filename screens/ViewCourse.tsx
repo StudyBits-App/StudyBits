@@ -21,9 +21,12 @@ import { deleteUserLearningCourse } from "@/services/fetchCacheData";
 import {
   addCourseToUserLearning,
   fetchCourseInteractionData,
+  getSubscribedCourses,
   toggleStudyingUnit,
   updateUseUnitsPreference,
 } from "@/services/viewCourseHelpers";
+import SubscriberList from "@/components/SubscriberList";
+import { subscribeToCourse, unsubscribeFromCourse } from "@/services/answerHelpers";
 
 const ViewCoursesPage: React.FC = () => {
   const { id } = useLocalSearchParams();
@@ -32,6 +35,8 @@ const ViewCoursesPage: React.FC = () => {
   const [studiedCourse, setStudiedCourse] = useState(false);
   const [courseCreatorId, setCourseCreatorId] = useState<string | null>(null);
   const [studyingUnits, setStudyingUnits] = useState<string[]>([]);
+  const [subscribedCourses, setSubscribedCourses] = useState<string[]>([]);
+  const [subscribedTo, setSubscribedTo] = useState(false);
   const [isSwitchOn, setIsSwitchOn] = useState(false);
 
   const toggleSwitch = async () => {
@@ -63,6 +68,13 @@ const ViewCoursesPage: React.FC = () => {
             setStudiedCourse(isStudied);
             setIsSwitchOn(useUnits);
             setStudyingUnits(studyingUnits);
+            if (isStudied) {
+              const subCourses = await getSubscribedCourses(user.uid, id);
+              setSubscribedCourses(subCourses);
+              if (subCourses.includes(id)) {
+                setSubscribedTo(true);
+              }
+            }
           }
         }
       } catch (error) {
@@ -108,6 +120,24 @@ const ViewCoursesPage: React.FC = () => {
     }
   };
 
+  const handleToggleSubscribe = async () => {
+    if (!user?.uid || typeof id !== "string") return;
+
+    try {
+      if (subscribedTo) {
+        await unsubscribeFromCourse(id, user.uid);
+        setSubscribedTo(false);
+        setSubscribedCourses((prev) => prev.filter((cid) => cid !== id));
+      } else {
+        await subscribeToCourse(id, user.uid);
+        setSubscribedTo(true);
+        setSubscribedCourses((prev) => [...prev, id]);
+      }
+    } catch (error) {
+      console.error("Failed to toggle subscription:", error);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.topBar}>
@@ -139,7 +169,14 @@ const ViewCoursesPage: React.FC = () => {
             displayBanner={false}
           />
         )}
-        <CourseCard id={id as string} editing={false} cache={false} />
+        <CourseCard
+          id={id as string}
+          editing={false}
+          cache={false}
+          showSubscribeButton={true}
+          onPressSubscribe={handleToggleSubscribe}
+          isSubscribed={subscribedTo}
+        />
         <View style={styles.unitSection}>
           <View style={styles.unitHeader}>
             <Text style={styles.unitHeaderText}>Units</Text>
@@ -185,6 +222,19 @@ const ViewCoursesPage: React.FC = () => {
           ) : (
             <Text style={styles.subText}>No units</Text>
           )}
+          <View>
+            {studiedCourse && (
+              <>
+                <Text style={[styles.unitHeaderText, { marginVertical: 20 }]}>
+                  Subscriptions
+                </Text>
+                <SubscriberList
+                  ids={subscribedCourses}
+                  link="/homePages/viewCourse"
+                />
+              </>
+            )}
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>

@@ -113,3 +113,24 @@ export const toggleStudyingUnit = async (
     throw error;
   }
 };
+
+export const getSubscribedCourses = async (
+  uid: string,
+  courseId: string
+): Promise<string[]> => {
+  try {
+    const courseRef = doc(db, "learning", uid, "courses", courseId);
+    const docSnap = await getDoc(courseRef);
+
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      return data?.subscribedCourses || [];
+    } else {
+      console.warn("No subscribed courses found for this user.");
+      return [];
+    }
+  } catch (error) {
+    console.error("Error in getSubscribedCourses:", error);
+    throw error;
+  }
+}
